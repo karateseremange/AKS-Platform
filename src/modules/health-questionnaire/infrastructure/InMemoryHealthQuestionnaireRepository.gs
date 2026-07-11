@@ -28,12 +28,16 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireInMemoryRepository =
     return AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(
       Object.freeze({
         saveSubmission: function (submission) {
-          if (Object.prototype.hasOwnProperty.call(submission, "answers")) {
-            throw new AKS.Core.Exception(
-              "HEALTH_REPOSITORY_ANSWERS_FORBIDDEN",
-              "Detailed answers must not be persisted."
-            );
-          }
+          ["answers", "answersJson", "responses", "responsesJson"].forEach(
+            function (forbiddenField) {
+              if (Object.prototype.hasOwnProperty.call(submission, forbiddenField)) {
+                throw new AKS.Core.Exception(
+                  "HEALTH_REPOSITORY_ANSWERS_FORBIDDEN",
+                  "Detailed answers must not be persisted."
+                );
+              }
+            }
+          );
 
           if (!submissions[submission.id]) {
             submissionOrder.push(submission.id);

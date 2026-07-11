@@ -20,6 +20,30 @@
     var validationSummary = document.getElementById("validation-summary");
     var identityNext = document.getElementById("identity-next");
     var identityStep = document.querySelector('[data-step-id="identity"]');
+    var questionsStep = document.querySelector('[data-step-id="questions"]');
+    var questionsNext = document.getElementById("questions-next");
+    var questionsValidationSummary = document.getElementById(
+      "questions-validation-summary"
+    );
+    var questionsCompleteNotice = document.getElementById(
+      "questions-complete-notice"
+    );
+    var identitySummaryName = document.getElementById("identity-summary-name");
+    var identitySummarySex = document.getElementById("identity-summary-sex");
+    var identitySummaryAge = document.getElementById("identity-summary-age");
+    var declarationStep = document.querySelector('[data-step-id="declaration"]');
+    var declarationAccepted = document.getElementById("declaration-accepted");
+    var declarationSubmit = document.getElementById("declaration-submit");
+    var declarationValidationSummary = document.getElementById(
+      "declaration-validation-summary"
+    );
+    var declarationReadyNotice = document.getElementById(
+      "declaration-ready-notice"
+    );
+    var preparedDecision = null;
+    var submissionInProgress = false;
+    var submissionRequestId =
+      "HQ-" + Date.now() + "-" + Math.random().toString(36).slice(2);
     var touched = {};
 
     if (!identityStep || !identityNext || !validationSummary || flow.length === 0) {
@@ -215,6 +239,330 @@
       return valid;
     }
 
+
+    function updateIdentitySummary() {
+      if (!identitySummaryName || !identitySummarySex || !identitySummaryAge) {
+        return;
+      }
+
+      var firstNameField = document.getElementById("firstName");
+      var lastNameField = document.getElementById("lastName");
+      var birthDateField = document.getElementById("birthDate");
+      var selectedSex = identityStep.querySelector('input[name="sex"]:checked');
+      var firstName = firstNameField ? firstNameField.value.trim() : "";
+      var lastName = lastNameField ? lastNameField.value.trim() : "";
+      var age = calculateAge(birthDateField ? birthDateField.value : "");
+
+      identitySummaryName.textContent = (firstName + " " + lastName).trim();
+      identitySummarySex.textContent = selectedSex
+        ? "Sexe : " + (selectedSex.value === "FEMALE" ? "Féminin" : "Masculin")
+        : "Sexe non renseigné";
+      identitySummaryAge.textContent = age === null
+        ? "Âge non calculé"
+        : "Âge : " + age + " ans";
+    }
+
+    function getQuestionCards() {
+      if (!questionsStep) {
+        return [];
+      }
+      return Array.prototype.slice.call(
+        questionsStep.querySelectorAll("[data-question-id]")
+      );
+    }
+
+    function clearQuestionsValidationSummary() {
+      if (!questionsValidationSummary) {
+        return;
+      }
+      questionsValidationSummary.textContent = "";
+      questionsValidationSummary.classList.remove("visible");
+    }
+
+    function showQuestionsValidationSummary(message) {
+      if (!questionsValidationSummary) {
+        return;
+      }
+      questionsValidationSummary.textContent = message;
+      questionsValidationSummary.classList.add("visible");
+      questionsValidationSummary.focus();
+    }
+
+    function validateQuestions(showErrors) {
+      var cards = getQuestionCards();
+      var valid = cards.length > 0;
+
+      cards.forEach(function (card) {
+        var questionId = card.getAttribute("data-question-id");
+        var selected = card.querySelector('input[type="radio"]:checked');
+        var message = document.getElementById(
+          "question-" + questionId + "-error"
+        );
+        var answered = !!selected;
+
+        card.classList.remove("is-answered", "is-unanswered");
+        if (answered) {
+          card.classList.add("is-answered");
+        } else {
+          valid = false;
+          if (showErrors) {
+            card.classList.add("is-unanswered");
+          }
+        }
+
+        if (message) {
+          message.textContent = showErrors && !answered
+            ? "Veuillez sélectionner Oui ou Non."
+            : "";
+        }
+      });
+
+      if (questionsNext) {
+        questionsNext.disabled = !valid;
+        questionsNext.setAttribute("aria-disabled", String(!valid));
+      }
+
+      if (!valid && questionsCompleteNotice) {
+        questionsCompleteNotice.hidden = true;
+      }
+
+      return valid;
+    }
+
+    function collectAnswers() {
+      var answers = {};
+      getQuestionCards().forEach(function (card) {
+        var questionId = card.getAttribute("data-question-id");
+        var selected = card.querySelector('input[type="radio"]:checked');
+        if (questionId && selected) {
+          answers[questionId] = selected.value;
+        }
+      });
+      return answers;
+    }
+
+    function formatFrenchDate(date) {
+      return new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function updateDeclarationSummary() {
+      var minorName = document.getElementById("declaration-minor-name");
+      var representativeName = document.getElementById(
+        "declaration-representative-name"
+      );
+      var declarationDate = document.getElementById("declaration-date");
+      var firstName = document.getElementById("firstName");
+      var lastName = document.getElementById("lastName");
+      var representativeFirstName = document.getElementById(
+        "legalRepresentativeFirstName"
+      );
+      var representativeLastName = document.getElementById(
+        "legalRepresentativeLastName"
+      );
+
+      if (minorName) {
+        minorName.textContent = (
+          (firstName ? firstName.value.trim() : "") + " " +
+          (lastName ? lastName.value.trim() : "")
+        ).trim();
+      }
+      if (representativeName) {
+        representativeName.textContent = (
+          (representativeFirstName ? representativeFirstName.value.trim() : "") +
+          " " +
+          (representativeLastName ? representativeLastName.value.trim() : "")
+        ).trim();
+      }
+      if (declarationDate) {
+        declarationDate.textContent = formatFrenchDate(new Date());
+      }
+    }
+
+    function validateDeclaration(showError) {
+      var valid = !!(declarationAccepted && declarationAccepted.checked);
+      var message = document.getElementById("declaration-accepted-error");
+
+      if (message) {
+        message.textContent = showError && !valid
+          ? "Vous devez confirmer la déclaration sur l’honneur."
+          : "";
+      }
+      if (declarationSubmit) {
+        declarationSubmit.disabled = !valid;
+        declarationSubmit.setAttribute("aria-disabled", String(!valid));
+      }
+      return valid;
+    }
+
+    function showDeclarationError(message) {
+      if (!declarationValidationSummary) {
+        return;
+      }
+      declarationValidationSummary.textContent = message;
+      declarationValidationSummary.classList.add("visible");
+      declarationValidationSummary.focus();
+    }
+
+    function clearDeclarationError() {
+      if (!declarationValidationSummary) {
+        return;
+      }
+      declarationValidationSummary.textContent = "";
+      declarationValidationSummary.classList.remove("visible");
+    }
+
+    function prepareDeclaration() {
+      var answers = collectAnswers();
+
+      if (!window.google || !google.script || !google.script.run) {
+        showQuestionsValidationSummary(
+          "Impossible de préparer la déclaration. Veuillez recharger la page."
+        );
+        return;
+      }
+
+      questionsNext.disabled = true;
+      questionsNext.textContent = "Préparation…";
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          questionsNext.textContent = "Continuer";
+          validateQuestions(false);
+
+          if (!result || !result.ok) {
+            showQuestionsValidationSummary(
+              result && result.error && result.error.message
+                ? result.error.message
+                : "Impossible de préparer la déclaration."
+            );
+            return;
+          }
+
+          preparedDecision = result.data;
+          updateDeclarationSummary();
+          validateDeclaration(false);
+          showStep(currentIndex + 1);
+        })
+        .withFailureHandler(function () {
+          questionsNext.textContent = "Continuer";
+          validateQuestions(false);
+          showQuestionsValidationSummary(
+            "Impossible de préparer la déclaration. Veuillez réessayer."
+          );
+        })
+        .AKS_prepareHealthQuestionnaireDeclaration(answers);
+    }
+
+
+    function collectIdentity() {
+      var selectedSex = identityStep.querySelector('input[name="sex"]:checked');
+      return {
+        email: document.getElementById("email").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        firstName: document.getElementById("firstName").value.trim(),
+        birthDate: document.getElementById("birthDate").value,
+        sex: selectedSex ? selectedSex.value : "",
+        legalRepresentativeLastName:
+          document.getElementById("legalRepresentativeLastName").value.trim(),
+        legalRepresentativeFirstName:
+          document.getElementById("legalRepresentativeFirstName").value.trim()
+      };
+    }
+
+    function clearTransientAnswers() {
+      getQuestionCards().forEach(function (card) {
+        Array.prototype.forEach.call(
+          card.querySelectorAll('input[type="radio"]'),
+          function (input) {
+            input.checked = false;
+          }
+        );
+        card.classList.remove("is-answered", "is-unanswered");
+      });
+      preparedDecision = null;
+    }
+
+    function showConfirmation(data) {
+      var reference = document.getElementById("confirmation-reference");
+      var resultMessage = document.getElementById("confirmation-result-message");
+
+      if (reference) {
+        reference.textContent = data.submissionId;
+      }
+      if (resultMessage) {
+        resultMessage.textContent = data.result === "MEDICAL_CERTIFICATE_REQUIRED"
+          ? "Un certificat médical devra être remis au club."
+          : "Aucun certificat médical n’est requis. Une attestation pourra être générée.";
+      }
+      clearTransientAnswers();
+      showStep(currentIndex + 1);
+    }
+
+    function submitQuestionnaire() {
+      var payload;
+
+      if (submissionInProgress) {
+        return;
+      }
+      if (!window.google || !google.script || !google.script.run) {
+        showDeclarationError(
+          "Impossible de transmettre le questionnaire. Veuillez recharger la page."
+        );
+        return;
+      }
+
+      submissionInProgress = true;
+      declarationSubmit.disabled = true;
+      declarationSubmit.setAttribute("aria-disabled", "true");
+      declarationSubmit.textContent = "Transmission…";
+
+      payload = {
+        requestId: submissionRequestId,
+        identity: collectIdentity(),
+        answers: collectAnswers(),
+        declaration: {
+          legalRepresentativeName:
+            document.getElementById("declaration-representative-name").textContent,
+          accepted: declarationAccepted.checked === true
+        }
+      };
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          submissionInProgress = false;
+          declarationSubmit.textContent = "Valider et transmettre";
+
+          if (!result || !result.ok) {
+            declarationSubmit.disabled = false;
+            declarationSubmit.setAttribute("aria-disabled", "false");
+            showDeclarationError(
+              result && result.error && result.error.message
+                ? result.error.message
+                : "Impossible de transmettre le questionnaire."
+            );
+            return;
+          }
+
+          showConfirmation(result.data);
+        })
+        .withFailureHandler(function (error) {
+          submissionInProgress = false;
+          declarationSubmit.disabled = false;
+          declarationSubmit.setAttribute("aria-disabled", "false");
+          declarationSubmit.textContent = "Valider et transmettre";
+          showDeclarationError(
+            error && error.message
+              ? error.message
+              : "Impossible de transmettre le questionnaire. Veuillez réessayer."
+          );
+        })
+        .AKS_submitPublicHealthQuestionnaire(payload);
+    }
+
     function markTouched(field) {
       if (!field || !field.name) {
         return;
@@ -276,6 +624,12 @@
       });
 
       currentIndex = nextIndex;
+      if (flow[nextIndex] && flow[nextIndex].id === "questions") {
+        updateIdentitySummary();
+      }
+      if (flow[nextIndex] && flow[nextIndex].id === "declaration") {
+        updateDeclarationSummary();
+      }
       clearValidationSummary();
       updateProgress();
       window.scrollTo(0, 0);
@@ -297,6 +651,26 @@
       validateIdentity(false);
     });
 
+    if (questionsStep) {
+      questionsStep.addEventListener("change", function () {
+        clearQuestionsValidationSummary();
+        if (questionsCompleteNotice) {
+          questionsCompleteNotice.hidden = true;
+        }
+        validateQuestions(false);
+      });
+    }
+
+    if (declarationStep && declarationAccepted) {
+      declarationAccepted.addEventListener("change", function () {
+        clearDeclarationError();
+        if (declarationReadyNotice) {
+          declarationReadyNotice.hidden = true;
+        }
+        validateDeclaration(false);
+      });
+    }
+
     document.addEventListener("click", function (event) {
       var button = findActionButton(event.target);
       var action = button ? button.getAttribute("data-flow-action") : null;
@@ -317,6 +691,37 @@
         }
       } else if (action === "back") {
         showStep(currentIndex - 1);
+      } else if (action === "questions-complete") {
+        if (validateQuestions(true)) {
+          clearQuestionsValidationSummary();
+          prepareDeclaration();
+        } else {
+          showQuestionsValidationSummary(
+            "Veuillez répondre à toutes les questions avant de continuer."
+          );
+          var firstUnanswered = questionsStep
+            ? questionsStep.querySelector(".is-unanswered input")
+            : null;
+          if (firstUnanswered) {
+            firstUnanswered.focus();
+          }
+        }
+      } else if (action === "declaration-complete") {
+        if (!preparedDecision) {
+          showDeclarationError(
+            "Le résultat du questionnaire n’a pas pu être préparé. Revenez à l’étape précédente."
+          );
+        } else if (validateDeclaration(true)) {
+          clearDeclarationError();
+          submitQuestionnaire();
+        } else {
+          showDeclarationError(
+            "Vous devez confirmer la déclaration avant de continuer."
+          );
+          if (declarationAccepted) {
+            declarationAccepted.focus();
+          }
+        }
       }
     });
 
@@ -328,6 +733,8 @@
     }
 
     validateIdentity(false);
+    validateQuestions(false);
+    validateDeclaration(false);
     showStep(0);
   }
 

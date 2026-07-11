@@ -17,18 +17,26 @@ AKS.Modules.HealthQuestionnaire.Submission = function (data) {
     "Submission data is required."
   );
 
-  if (Object.prototype.hasOwnProperty.call(data, "answers")) {
-    throw new AKS.Core.Exception(
-      "HEALTH_SUBMISSION_ANSWERS_FORBIDDEN",
-      "Detailed answers must not be persisted in a submission."
-    );
-  }
+  ["answers", "answersJson", "responses", "responsesJson"].forEach(
+    function (forbiddenField) {
+      if (Object.prototype.hasOwnProperty.call(data, forbiddenField)) {
+        throw new AKS.Core.Exception(
+          "HEALTH_SUBMISSION_ANSWERS_FORBIDDEN",
+          "Detailed answers must not be persisted in a submission."
+        );
+      }
+    }
+  );
 
   var id = requireText_(data.id, "Submission id");
   var campaignId = requireText_(data.campaignId, "Campaign id");
   var questionnaireId = requireText_(
     data.questionnaireId,
     "Questionnaire id"
+  );
+  var questionnaireVersion = requireText_(
+    data.questionnaireVersion,
+    "Questionnaire version"
   );
   var email = requireEmail_(data.email);
   var lastName = requireText_(data.lastName, "Last name");
@@ -65,10 +73,31 @@ AKS.Modules.HealthQuestionnaire.Submission = function (data) {
     );
   }
 
+  var status = requireText_(data.status || "CREATED", "Status").toUpperCase();
+  var allowedStatuses = [
+    "CREATED",
+    "PDF_GENERATED",
+    "EMAIL_SENT",
+    "COMPLETED"
+  ];
+
+  if (allowedStatuses.indexOf(status) === -1) {
+    throw new AKS.Core.Exception(
+      "HEALTH_SUBMISSION_STATUS_INVALID",
+      "Invalid submission status."
+    );
+  }
+
+  var processingVersion = requireText_(
+    data.processingVersion,
+    "Processing version"
+  );
+
   return Object.freeze({
     id: id,
     campaignId: campaignId,
     questionnaireId: questionnaireId,
+    questionnaireVersion: questionnaireVersion,
     email: email,
     lastName: lastName,
     firstName: firstName,
@@ -84,6 +113,8 @@ AKS.Modules.HealthQuestionnaire.Submission = function (data) {
       "Legal representative first name"
     ),
     result: result,
+    status: status,
+    processingVersion: processingVersion,
     submittedAt: submittedAt,
     respondentEmailSentAt:
       normalizeDate_(data.respondentEmailSentAt) || null,

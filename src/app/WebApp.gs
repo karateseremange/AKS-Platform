@@ -92,3 +92,81 @@ function AKS_renderHealthQuestionnaireWebError_(code, message) {
     }
   });
 }
+
+/**
+ * Prepares the declaration step from transient questionnaire answers.
+ * Detailed answers are never returned or persisted.
+ *
+ * @param {Object<string,string>} answers
+ * @returns {Object}
+ */
+function AKS_prepareHealthQuestionnaireDeclaration(answers) {
+  var installResult = AKS.Core.Application.install();
+
+  if (!installResult.ok) {
+    return AKS.Core.Result.failure(
+      "APPLICATION_UNAVAILABLE",
+      "Le questionnaire santé est temporairement indisponible."
+    );
+  }
+
+  return AKS.Core.Container
+    .resolve("healthQuestionnaire.webController")
+    .prepareDeclaration(answers || {});
+}
+
+
+/**
+ * Persists the administrative outcome of the public questionnaire.
+ * The request id makes repeated client calls idempotent.
+ *
+ * @param {Object} payload
+ * @returns {Object}
+ */
+function AKS_submitPublicHealthQuestionnaire(payload) {
+  var data = payload || {};
+  var requestId = String(data.requestId || "").trim();
+  var lock = LockService.getScriptLock();
+  var cache = CacheService.getScriptCache();
+  var propertyKey;
+  var cached;
+  var installResult;
+  var result;
+
+  if (!requestId) {
+    return AKS.Core.Result.failure(
+      "HEALTH_SUBMISSION_REQUEST_ID_REQUIRED",
+      "La requête de transmission est invalide."
+    );
+  }
+
+  propertyKey = "HQ_SUBMISSION_REQUEST_" + requestId;
+  lock.waitLock(30000);
+
+  try {
+    cached = cache.get(propertyKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    installResult = AKS.Core.Application.install();
+    if (!installResult.ok) {
+      return AKS.Core.Result.failure(
+        "APPLICATION_UNAVAILABLE",
+        "Le questionnaire santé est temporairement indisponible."
+      );
+    }
+
+    result = AKS.Core.Container
+      .resolve("healthQuestionnaire.webController")
+      .submitQuestionnaire(data);
+
+    if (result.ok) {
+      cache.put(propertyKey, JSON.stringify(result), 600);
+    }
+
+    return result;
+  } finally {
+    lock.releaseLock();
+  }
+}

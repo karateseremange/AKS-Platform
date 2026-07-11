@@ -7,7 +7,7 @@ function test_HQ0052Sprint1_flowIsExplicitAndOrdered() {
   var result = fixture.controller.getPublicViewModel();
 
   assertTrue_(result.ok);
-  assertEquals_(2, result.data.flow.length);
+  assertEquals_(4, result.data.flow.length);
   assertEquals_("identity", result.data.flow[0].id);
   assertEquals_("questions", result.data.flow[1].id);
 }

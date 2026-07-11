@@ -80,6 +80,7 @@ function createHQ004AdministrativeSubmissionData_() {
     id: "SUBMISSION-HQ004-1",
     campaignId: "CAMPAIGN-1",
     questionnaireId: "HQ-1",
+    questionnaireVersion: "1.0.0",
     email: "parent@example.org",
     lastName: "DUPONT",
     firstName: "Alice",
@@ -88,6 +89,8 @@ function createHQ004AdministrativeSubmissionData_() {
     legalRepresentativeLastName: "DUPONT",
     legalRepresentativeFirstName: "Marie",
     result: "NO_MEDICAL_CERTIFICATE_REQUIRED",
+    status: "CREATED",
+    processingVersion: "0.3.0-rc",
     submittedAt: new Date("2026-07-11T12:00:00Z")
   };
 }

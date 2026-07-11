@@ -46,6 +46,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
         id: submissionData.id,
         campaignId: submissionData.campaignId,
         questionnaireId: submissionData.questionnaireId,
+        questionnaireVersion: submissionData.questionnaireVersion,
         email: submissionData.email,
         lastName: submissionData.lastName,
         firstName: submissionData.firstName,
@@ -56,6 +57,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
         legalRepresentativeFirstName:
           submissionData.legalRepresentativeFirstName,
         result: evaluation.status,
+        status: submissionData.status || "CREATED",
+        processingVersion: submissionData.processingVersion,
         submittedAt: submissionData.submittedAt,
         respondentEmailSentAt:
           submissionData.respondentEmailSentAt,

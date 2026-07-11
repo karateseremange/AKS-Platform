@@ -1,24 +1,97 @@
 <section class="step" data-step-id="questions" aria-labelledby="questions-title" hidden>
-  <h2 id="questions-title" class="section-title"><?= viewModel.questionnaire.title ?></h2>
-  <p class="section-intro helper">Répondez à chaque question avec le mineur.</p>
+  <p class="regulatory-reference">
+    <?= viewModel.questionnaire.reference ?> (<?= viewModel.questionnaire.article ?>)
+  </p>
+  <h2 id="questions-title" class="section-title official-questionnaire-title">
+    <?= viewModel.questionnaire.officialTitle ?>
+  </h2>
 
-  <? for (var index = 0; index < viewModel.questionnaire.questions.length; index += 1) {
-       var question = viewModel.questionnaire.questions[index]; ?>
-    <fieldset class="question">
-      <legend><span class="question-number">Question <?= index + 1 ?></span><br><?= question.label ?></legend>
-      <div class="choice-row">
-        <label class="choice"><input type="radio" name="answer_<?= question.id ?>" value="NO" required> Non</label>
-        <label class="choice"><input type="radio" name="answer_<?= question.id ?>" value="YES" required> Oui</label>
+  <div class="regulatory-card regulatory-card-warning">
+    <h3>À destination des parents ou de la personne ayant l’autorité parentale</h3>
+    <p><?= viewModel.questionnaire.parentWarning ?></p>
+  </div>
+
+  <div class="regulatory-card regulatory-card-child">
+    <h3>Avant de répondre</h3>
+    <p><?= viewModel.questionnaire.childIntroduction ?></p>
+  </div>
+
+  <section class="identity-summary" aria-labelledby="identity-summary-title">
+    <div>
+      <h3 id="identity-summary-title">Sportif concerné</h3>
+      <p id="identity-summary-name">Informations renseignées à l’étape Identification.</p>
+      <p>
+        <span id="identity-summary-sex"></span>
+        <span aria-hidden="true"> · </span>
+        <span id="identity-summary-age"></span>
+      </p>
+    </div>
+    <button class="text-button" type="button" data-flow-action="back">
+      Modifier les informations
+    </button>
+  </section>
+
+  <p class="section-intro helper">
+    Répondez à chaque question avec le mineur. Une réponse Oui ou Non est obligatoire pour chaque question.
+  </p>
+
+  <div id="questions-validation-summary" class="validation-summary" role="alert" tabindex="-1"></div>
+
+  <? var globalQuestionIndex = 0; ?>
+  <? for (var sectionIndex = 0; sectionIndex < viewModel.questionnaire.sections.length; sectionIndex += 1) {
+       var section = viewModel.questionnaire.sections[sectionIndex]; ?>
+    <section class="question-section" data-question-section="<?= section.id ?>" aria-labelledby="section-<?= section.id ?>-title">
+      <header class="question-section-header">
+        <p class="question-section-index">Partie <?= sectionIndex + 1 ?> sur <?= viewModel.questionnaire.sections.length ?></p>
+        <h3 id="section-<?= section.id ?>-title"><?= section.title ?></h3>
+      </header>
+
+      <div class="question-list">
+        <? for (var questionIndex = 0; questionIndex < section.questions.length; questionIndex += 1) {
+             var question = section.questions[questionIndex];
+             globalQuestionIndex += 1; ?>
+          <fieldset class="question-card" data-question-id="<?= question.id ?>">
+            <legend class="question-legend">
+              <span class="question-number">Question <?= globalQuestionIndex ?> sur <?= viewModel.questionnaire.questions.length ?></span>
+              <span class="question-label"><?= question.label ?></span>
+            </legend>
+
+            <div class="answer-options" role="radiogroup" aria-label="Réponse à la question <?= globalQuestionIndex ?>">
+              <label class="answer-option">
+                <input class="answer-input" type="radio" name="answer_<?= question.id ?>" value="YES" required>
+                <span class="answer-card">
+                  <span class="answer-check" aria-hidden="true">✓</span>
+                  <span>Oui</span>
+                </span>
+              </label>
+
+              <label class="answer-option">
+                <input class="answer-input" type="radio" name="answer_<?= question.id ?>" value="NO" required>
+                <span class="answer-card">
+                  <span class="answer-check" aria-hidden="true">✓</span>
+                  <span>Non</span>
+                </span>
+              </label>
+            </div>
+
+            <p class="question-message" id="question-<?= question.id ?>-error" aria-live="polite"></p>
+          </fieldset>
+        <? } ?>
       </div>
-    </fieldset>
+    </section>
   <? } ?>
 
-  <div class="notice">
-    Sprint 1 prépare l’architecture du parcours public. Les réponses ne sont pas encore transmises ni enregistrées.
+  <div class="regulatory-card regulatory-card-instruction">
+    <h3>En cas de réponse Oui</h3>
+    <p><?= viewModel.questionnaire.positiveAnswerInstruction ?></p>
+  </div>
+
+  <div id="questions-complete-notice" class="notice questions-complete-notice" role="status" hidden>
+    Toutes les questions ont été complétées. Vous pouvez revenir en arrière pour vérifier vos réponses.
   </div>
 
   <div class="actions">
     <button class="secondary" type="button" data-flow-action="back">Retour</button>
-    <button class="primary" type="button" disabled aria-disabled="true">Envoyer — prochaine étape</button>
+    <button id="questions-next" class="primary" type="button" data-flow-action="questions-complete" disabled aria-disabled="true">Continuer</button>
   </div>
 </section>

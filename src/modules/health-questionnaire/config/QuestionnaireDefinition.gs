@@ -3,19 +3,31 @@ AKS.Modules = AKS.Modules || {};
 AKS.Modules.HealthQuestionnaire = AKS.Modules.HealthQuestionnaire || {};
 
 AKS.Modules.HealthQuestionnaire.Definition = function () {
+  var regulation =
+    AKS.Modules.HealthQuestionnaire.MinorQuestionnaire2021;
+  var questions = [];
+  var order = 1;
+
+  regulation.sections.forEach(function (section) {
+    section.questions.forEach(function (label) {
+      questions.push({
+        id: "Q" + order,
+        label: label,
+        order: order,
+        required: true,
+        category: section.id
+      });
+      order += 1;
+    });
+  });
+
   return AKS.Modules.HealthQuestionnaire.Questionnaire({
-    id: "FFK-HEALTH-QUESTIONNAIRE",
-    title: "Questionnaire santé",
-    audience: "ALL",
-    version: "0.1.0",
-    season: "2026-2027",
-    questions: [
-      {
-        id: "Q1",
-        label: "Question officielle à intégrer",
-        order: 1,
-        required: true
-      }
-    ]
+    id: regulation.id,
+    title: "Questionnaire relatif à l’état de santé du sportif mineur",
+    audience: "MINOR",
+    version: regulation.version,
+    source: regulation.source,
+    effectiveFrom: regulation.effectiveFrom,
+    questions: questions
   });
 };

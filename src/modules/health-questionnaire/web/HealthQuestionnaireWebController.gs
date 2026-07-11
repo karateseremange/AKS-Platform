@@ -71,6 +71,16 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
           id: "questions",
           label: "Questionnaire santé",
           title: questionnaire.title
+        }),
+        Object.freeze({
+          id: "declaration",
+          label: "Déclaration",
+          title: "Déclaration sur l’honneur"
+        }),
+        Object.freeze({
+          id: "confirmation",
+          label: "Confirmation",
+          title: "Questionnaire enregistré"
         })
       ];
 
@@ -91,21 +101,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
             name: campaign.name,
             season: campaign.season
           }),
-          questionnaire: Object.freeze({
-            title: questionnaire.title,
-            source: questionnaire.source ||
-              "Annexe II-23 (article A. 231-3 du Code du sport)",
-            questions: Object.freeze(
-              questionnaire.questions.map(function (question) {
-                return Object.freeze({
-                  id: question.id,
-                  label: question.label,
-                  order: question.order,
-                  required: question.required !== false
-                });
-              })
-            )
-          }),
+          questionnaire: createQuestionnaireViewModel_(questionnaire),
           flow: Object.freeze(flow),
           steps: Object.freeze({
             current: 1,
@@ -113,6 +109,63 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
           })
         })
       );
+    }
+
+
+    function createQuestionnaireViewModel_(questionnaire) {
+      var regulation =
+        AKS.Modules.HealthQuestionnaire.MinorQuestionnaire2021;
+      var questionsByCategory = Object.create(null);
+
+      questionnaire.questions.forEach(function (question) {
+        var category = question.category || "UNCLASSIFIED";
+        if (!questionsByCategory[category]) {
+          questionsByCategory[category] = [];
+        }
+        questionsByCategory[category].push(Object.freeze({
+          id: question.id,
+          label: question.label,
+          order: question.order,
+          required: question.required !== false,
+          category: category
+        }));
+      });
+
+      var sections = regulation.sections.map(function (section) {
+        return Object.freeze({
+          id: section.id,
+          title: section.title,
+          order: section.order,
+          questions: Object.freeze(
+            (questionsByCategory[section.id] || []).slice()
+          )
+        });
+      });
+
+      return Object.freeze({
+        title: questionnaire.title,
+        source: questionnaire.source || regulation.source,
+        reference: regulation.reference,
+        article: regulation.article,
+        officialTitle: regulation.title,
+        version: regulation.version,
+        effectiveFrom: regulation.effectiveFrom,
+        parentWarning: regulation.parentWarning,
+        childIntroduction: regulation.childIntroduction,
+        positiveAnswerInstruction: regulation.positiveAnswerInstruction,
+        questions: Object.freeze(
+          questionnaire.questions.map(function (question) {
+            return Object.freeze({
+              id: question.id,
+              label: question.label,
+              order: question.order,
+              required: question.required !== false,
+              category: question.category || null
+            });
+          })
+        ),
+        sections: Object.freeze(sections)
+      });
     }
 
     function parseBirthDate_(birthDate) {
@@ -220,8 +273,228 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
       }));
     }
 
+    function validateAnswers(questionnaire, answers) {
+      var source = questionnaire || {};
+      var questions = Array.isArray(source.questions) ? source.questions : [];
+      var provided = answers || {};
+      var missingQuestionIds = [];
+      var normalized = {};
+
+      questions.forEach(function (question) {
+        var questionId = String(question.id || "");
+        var answer = provided[questionId];
+        var required = question.required !== false;
+
+        if (answer === "YES" || answer === "NO") {
+          normalized[questionId] = answer;
+        } else if (required) {
+          missingQuestionIds.push(questionId);
+        }
+      });
+
+      if (missingQuestionIds.length > 0) {
+        return AKS.Core.Result.failure(
+          "HEALTH_ANSWERS_INCOMPLETE",
+          "Veuillez répondre à toutes les questions avant de continuer.",
+          Object.freeze({
+            missingQuestionIds: Object.freeze(missingQuestionIds.slice())
+          })
+        );
+      }
+
+      return AKS.Core.Result.success(Object.freeze(normalized));
+    }
+
+
+    function getActiveQuestionnaire_() {
+      var activeCampaignId = settings.getActiveCampaignId();
+      var campaign;
+      var questionnaire;
+
+      if (!activeCampaignId) {
+        return AKS.Core.Result.failure(
+          "HEALTH_ACTIVE_CAMPAIGN_NOT_CONFIGURED",
+          "Aucune campagne de questionnaire santé n'est actuellement disponible."
+        );
+      }
+
+      campaign = repository.findCampaignById(activeCampaignId);
+      if (!campaign || campaign.status !== "OPEN") {
+        return AKS.Core.Result.failure(
+          "HEALTH_CAMPAIGN_NOT_OPEN",
+          "La campagne de questionnaire santé n'est pas ouverte."
+        );
+      }
+
+      questionnaire = repository.findQuestionnaireById(
+        campaign.questionnaireId
+      );
+      if (!questionnaire) {
+        return AKS.Core.Result.failure(
+          "HEALTH_QUESTIONNAIRE_NOT_FOUND",
+          "Le questionnaire associé à la campagne est introuvable."
+        );
+      }
+
+      return AKS.Core.Result.success(questionnaire);
+    }
+
+    function prepareDeclaration(answers) {
+      var questionnaireResult = getActiveQuestionnaire_();
+      var answersResult;
+      var decision;
+
+      if (!questionnaireResult.ok) {
+        return questionnaireResult;
+      }
+
+      answersResult = validateAnswers(
+        questionnaireResult.data,
+        answers
+      );
+      if (!answersResult.ok) {
+        return answersResult;
+      }
+
+      decision = AKS.Modules.HealthQuestionnaire.Services
+        .HealthQuestionnaireDecisionEngine.evaluate(answersResult.data);
+
+      return AKS.Core.Result.success(Object.freeze({
+        result: decision.result,
+        generatedAt: decision.generatedAt.toISOString()
+      }));
+    }
+
+    function validateDeclaration(declaration) {
+      var data = declaration || {};
+      var representativeName = String(
+        data.legalRepresentativeName || ""
+      ).trim();
+      var errors = {};
+
+      if (representativeName.length < 3) {
+        errors.legalRepresentativeName =
+          "Le nom de la personne exerçant l’autorité parentale est requis.";
+      }
+
+      if (data.accepted !== true) {
+        errors.accepted =
+          "Vous devez confirmer la déclaration sur l’honneur.";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        return AKS.Core.Result.failure(
+          "HEALTH_DECLARATION_INVALID",
+          "La déclaration sur l’honneur doit être confirmée.",
+          errors
+        );
+      }
+
+      return AKS.Core.Result.success(Object.freeze({
+        legalRepresentativeName: representativeName,
+        accepted: true
+      }));
+    }
+
+
+    function createConfirmationDto_(submission) {
+      return Object.freeze({
+        submissionId: String(submission.id),
+        result: String(submission.result),
+        status: String(submission.status),
+        submittedAt: submission.submittedAt.toISOString()
+      });
+    }
+
+    function submitQuestionnaire(payload) {
+      var data = payload || {};
+      var activeCampaignId = settings.getActiveCampaignId();
+      var campaign;
+      var questionnaire;
+      var identityResult;
+      var answersResult;
+      var declarationResult;
+      var decision;
+      var submissionId;
+      var submission;
+
+      if (!activeCampaignId) {
+        return AKS.Core.Result.failure(
+          "HEALTH_ACTIVE_CAMPAIGN_NOT_CONFIGURED",
+          "Aucune campagne de questionnaire santé n'est actuellement disponible."
+        );
+      }
+
+      campaign = repository.findCampaignById(activeCampaignId);
+      if (!campaign || campaign.status !== "OPEN") {
+        return AKS.Core.Result.failure(
+          "HEALTH_CAMPAIGN_NOT_OPEN",
+          "La campagne de questionnaire santé n'est pas ouverte."
+        );
+      }
+
+      questionnaire = repository.findQuestionnaireById(campaign.questionnaireId);
+      if (!questionnaire) {
+        return AKS.Core.Result.failure(
+          "HEALTH_QUESTIONNAIRE_NOT_FOUND",
+          "Le questionnaire associé à la campagne est introuvable."
+        );
+      }
+
+      identityResult = validateIdentity(data.identity || {}, new Date());
+      if (!identityResult.ok) {
+        return identityResult;
+      }
+
+      answersResult = validateAnswers(questionnaire, data.answers || {});
+      if (!answersResult.ok) {
+        return answersResult;
+      }
+
+      declarationResult = validateDeclaration(data.declaration || {});
+      if (!declarationResult.ok) {
+        return declarationResult;
+      }
+
+      decision = AKS.Modules.HealthQuestionnaire.Services
+        .HealthQuestionnaireDecisionEngine.evaluate(answersResult.data);
+      submissionId = AKS.Modules.HealthQuestionnaire.Services
+        .SubmissionIdGenerator.generate(
+          campaign.season,
+          campaign.id,
+          repository
+        );
+
+      submission = AKS.Modules.HealthQuestionnaire.Submission({
+        id: submissionId,
+        campaignId: campaign.id,
+        questionnaireId: questionnaire.id,
+        questionnaireVersion: questionnaire.version,
+        email: identityResult.data.email,
+        lastName: identityResult.data.lastName,
+        firstName: identityResult.data.firstName,
+        birthDate: identityResult.data.birthDate,
+        sex: identityResult.data.sex,
+        legalRepresentativeLastName:
+          identityResult.data.legalRepresentativeLastName,
+        legalRepresentativeFirstName:
+          identityResult.data.legalRepresentativeFirstName,
+        result: decision.result,
+        status: "CREATED",
+        processingVersion: "rc-0.3.0",
+        submittedAt: new Date()
+      });
+
+      repository.saveSubmission(submission);
+      return AKS.Core.Result.success(createConfirmationDto_(submission));
+    }
+
     return Object.freeze({
       getPublicViewModel: getPublicViewModel,
-      validateIdentity: validateIdentity
+      validateIdentity: validateIdentity,
+      validateAnswers: validateAnswers,
+      prepareDeclaration: prepareDeclaration,
+      validateDeclaration: validateDeclaration,
+      submitQuestionnaire: submitQuestionnaire
     });
   };

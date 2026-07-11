@@ -1,0 +1,54 @@
+<section class="step" data-step-id="declaration" aria-labelledby="declaration-title" hidden>
+  <p class="regulatory-reference">Déclaration sur l’honneur</p>
+  <h2 id="declaration-title" class="section-title">
+    Confirmation de la personne exerçant l’autorité parentale
+  </h2>
+
+  <div class="regulatory-card regulatory-card-warning">
+    <p>
+      Je confirme avoir complété conjointement avec mon enfant l’ensemble du
+      « Questionnaire relatif à l’état de santé du sportif mineur » situé à
+      l’ANNEXE II-23 (article A. 231-3 du code du sport) et certifie sur
+      l’honneur l’exactitude des informations communiquées.
+    </p>
+  </div>
+
+  <dl class="declaration-summary" aria-label="Récapitulatif de la déclaration">
+    <div>
+      <dt>Sportif mineur</dt>
+      <dd id="declaration-minor-name"></dd>
+    </div>
+    <div>
+      <dt>Personne exerçant l’autorité parentale</dt>
+      <dd id="declaration-representative-name"></dd>
+    </div>
+    <div>
+      <dt>Date de la déclaration</dt>
+      <dd id="declaration-date"></dd>
+    </div>
+  </dl>
+
+  <div id="declaration-validation-summary" class="validation-summary" role="alert" tabindex="-1"></div>
+
+  <label class="declaration-consent" for="declaration-accepted">
+    <input id="declaration-accepted" name="declarationAccepted" type="checkbox"
+           aria-describedby="declaration-accepted-error">
+    <span>
+      Je confirme sur l’honneur avoir complété ce questionnaire conjointement
+      avec mon enfant et certifie l’exactitude des informations communiquées.
+    </span>
+  </label>
+  <p id="declaration-accepted-error" class="field-message" aria-live="polite"></p>
+
+  <div id="declaration-ready-notice" class="notice" role="status" hidden>
+    Votre déclaration est validée. Le questionnaire est prêt à être transmis.
+  </div>
+
+  <div class="actions">
+    <button class="secondary" type="button" data-flow-action="back">Retour</button>
+    <button id="declaration-submit" class="primary" type="button"
+            data-flow-action="declaration-complete" disabled aria-disabled="true">
+      Valider et transmettre
+    </button>
+  </div>
+</section>

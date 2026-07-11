@@ -42,6 +42,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         "submissionId",
         "campaignId",
         "questionnaireId",
+        "questionnaireVersion",
         "email",
         "lastName",
         "firstName",
@@ -51,6 +52,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         "legalRepresentativeLastName",
         "legalRepresentativeFirstName",
         "result",
+        "status",
+        "processingVersion",
         "submittedAt",
         "respondentEmailSentAt",
         "clubEmailSentAt",
@@ -251,13 +254,25 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
       return AKS.Modules.HealthQuestionnaire.Questionnaire({
         id: row[0],
         title: row[1],
-        version: row[2],
+        version: normalizeQuestionnaireVersion_(row[2]),
         audience: row[3],
         source: row[4] || null,
         effectiveFrom: row[5] || null,
         effectiveTo: row[6] || null,
         questions: JSON.parse(row[7] || "[]")
       });
+    }
+
+    function normalizeQuestionnaireVersion_(value) {
+      if (value instanceof Date) {
+        return Utilities.formatDate(
+          value,
+          "UTC",
+          "yyyy-MM-dd"
+        );
+      }
+
+      return String(value || "").trim();
     }
 
     function saveSubmission(submission) {
@@ -277,6 +292,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           submission.id,
           submission.campaignId,
           submission.questionnaireId,
+          submission.questionnaireVersion,
           submission.email,
           submission.lastName,
           submission.firstName,
@@ -286,6 +302,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           submission.legalRepresentativeLastName,
           submission.legalRepresentativeFirstName,
           submission.result,
+          submission.status,
+          submission.processingVersion,
           submission.submittedAt,
           submission.respondentEmailSentAt || "",
           submission.clubEmailSentAt || "",
@@ -301,19 +319,22 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         id: row[0],
         campaignId: row[1],
         questionnaireId: row[2],
-        email: row[3],
-        lastName: row[4],
-        firstName: row[5],
-        birthDate: row[6],
-        sex: row[8],
-        legalRepresentativeLastName: row[9],
-        legalRepresentativeFirstName: row[10],
-        result: row[11],
-        submittedAt: row[12],
-        respondentEmailSentAt: row[13] || null,
-        clubEmailSentAt: row[14] || null,
-        attestationFileId: row[15] || null,
-        attestationFileUrl: row[16] || null
+        questionnaireVersion: normalizeQuestionnaireVersion_(row[3]),
+        email: row[4],
+        lastName: row[5],
+        firstName: row[6],
+        birthDate: row[7],
+        sex: row[9],
+        legalRepresentativeLastName: row[10],
+        legalRepresentativeFirstName: row[11],
+        result: row[12],
+        status: row[13],
+        processingVersion: row[14],
+        submittedAt: row[15],
+        respondentEmailSentAt: row[16] || null,
+        clubEmailSentAt: row[17] || null,
+        attestationFileId: row[18] || null,
+        attestationFileUrl: row[19] || null
       });
     }
 

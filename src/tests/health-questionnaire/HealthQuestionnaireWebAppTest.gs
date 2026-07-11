@@ -57,7 +57,7 @@ function test_HQ0051_webContextExposesNoTechnicalIdentifiers() {
   );
 }
 
-function test_HQ0051_webContextUsesAksBrandingAndTwoSteps() {
+function test_HQ0051_webContextUsesAksBrandingAndThreeSteps() {
   var fixture = createHQ0051Fixture_();
   fixture.repository.saveQuestionnaire(createHQ0051Questionnaire_());
   fixture.repository.saveCampaign(createHQ0051Campaign_("OPEN"));
@@ -67,7 +67,7 @@ function test_HQ0051_webContextUsesAksBrandingAndTwoSteps() {
 
   assertEquals_("#2a4b9b", result.data.brand.primaryColor);
   assertEquals_("Association Karaté Serémange", result.data.brand.clubName);
-  assertEquals_(2, result.data.steps.total);
+  assertEquals_(4, result.data.steps.total);
 }
 
 function createHQ0051Fixture_() {

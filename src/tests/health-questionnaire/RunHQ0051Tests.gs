@@ -9,7 +9,7 @@ function AKS_runHQ0051Tests() {
     test_HQ0051_webContextRejectsClosedCampaign,
     test_HQ0051_webContextLoadsActiveQuestionnaire,
     test_HQ0051_webContextExposesNoTechnicalIdentifiers,
-    test_HQ0051_webContextUsesAksBrandingAndTwoSteps
+    test_HQ0051_webContextUsesAksBrandingAndThreeSteps
   ];
 
   var results = [];

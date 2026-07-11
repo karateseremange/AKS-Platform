@@ -114,6 +114,7 @@ function createHQ002SubmissionData_(id, answers) {
     id: id,
     campaignId: "CAMPAIGN-1",
     questionnaireId: "HQ-1",
+    questionnaireVersion: "1.0.0",
     email: "parent@example.org",
     lastName: "DUPONT",
     firstName: "Alice",
@@ -123,6 +124,8 @@ function createHQ002SubmissionData_(id, answers) {
     legalRepresentativeFirstName: "Marie",
     answers: answers,
     declarationAccepted: true,
+    status: "CREATED",
+    processingVersion: "0.3.0-rc",
     submittedAt: new Date("2026-07-11T12:00:00Z")
   };
 }
