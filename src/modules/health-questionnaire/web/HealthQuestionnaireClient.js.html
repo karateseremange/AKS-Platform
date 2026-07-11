@@ -121,9 +121,9 @@
 
       var age = today.getFullYear() - birthDate.getFullYear();
       var beforeBirthday =
-        today.getMonth() < birthDate.getMonth() ||
+        birthDate.getMonth() > today.getMonth() ||
         (today.getMonth() === birthDate.getMonth() &&
-          today.getDate() < birthDate.getDate());
+          birthDate.getDate() > today.getDate());
 
       return beforeBirthday ? age - 1 : age;
     }
@@ -159,7 +159,7 @@
       if (!value) {
         valid = false;
         message = messages.birthDateEmpty;
-      } else if (age === null || age < 0) {
+      } else if (age === null || 0 > age) {
         valid = false;
         message = messages.birthDateInvalid;
       } else if (age >= 18) {
@@ -243,7 +243,7 @@
       Array.prototype.forEach.call(items, function (item, index) {
         item.classList.remove("active", "done");
         item.removeAttribute("aria-current");
-        if (index < currentIndex) {
+        if (currentIndex > index) {
           item.classList.add("done");
         } else if (index === currentIndex) {
           item.classList.add("active");
@@ -257,7 +257,7 @@
     }
 
     function showStep(nextIndex) {
-      if (nextIndex < 0 || nextIndex >= flow.length) {
+      if (0 > nextIndex || nextIndex >= flow.length) {
         return;
       }
 
