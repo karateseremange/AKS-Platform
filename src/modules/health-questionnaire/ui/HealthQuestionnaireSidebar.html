@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        color: #1f2937;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 0 0 16px;
+      }
+
+      .field {
+        margin-bottom: 16px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      input[type="text"] {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 8px;
+      }
+
+      .question {
+        border-top: 1px solid #e5e7eb;
+        padding: 14px 0;
+      }
+
+      .answers {
+        display: flex;
+        gap: 18px;
+        margin-top: 8px;
+      }
+
+      .actions {
+        margin-top: 18px;
+      }
+
+      button {
+        cursor: pointer;
+        padding: 10px 14px;
+      }
+
+      .message {
+        border-radius: 4px;
+        margin-bottom: 14px;
+        padding: 10px;
+      }
+
+      .error {
+        background: #fee2e2;
+      }
+
+      .success {
+        background: #dcfce7;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Questionnaire santé</h1>
+
+    <div id="message" class="message hidden"></div>
+
+    <div class="field">
+      <label for="participantId">
+        Identifiant du licencié
+      </label>
+      <input
+        id="participantId"
+        type="text"
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="actions">
+      <button type="button" onclick="loadQuestionnaire()">
+        Charger le questionnaire
+      </button>
+    </div>
+
+    <form
+      id="questionnaireForm"
+      class="hidden"
+      onsubmit="submitQuestionnaire(event)"
+    >
+      <div id="questionnaireHeader"></div>
+      <div id="questions"></div>
+
+      <div class="field">
+        <label>
+          <input id="declarationAccepted" type="checkbox">
+          Je certifie l'exactitude des réponses fournies.
+        </label>
+      </div>
+
+      <button type="submit">
+        Envoyer
+      </button>
+    </form>
+
+    <script>
+      let currentContext = null;
+
+      function loadQuestionnaire() {
+        hideMessage();
+
+        const participantId =
+          document.getElementById("participantId")
+            .value.trim();
+
+        google.script.run
+          .withSuccessHandler(handleContext)
+          .withFailureHandler(handleFailure)
+          .AKS_getHealthQuestionnaireContext(
+            participantId
+          );
+      }
+
+      function handleContext(result) {
+        if (!result || !result.ok) {
+          showMessage(
+            result && result.error
+              ? result.error.message
+              : "Impossible de charger le questionnaire.",
+            "error"
+          );
+          return;
+        }
+
+        currentContext = result.data;
+        renderQuestionnaire(currentContext);
+      }
+
+      function renderQuestionnaire(context) {
+        const questionnaire = context.questionnaire;
+        const header =
+          document.getElementById("questionnaireHeader");
+        const questions =
+          document.getElementById("questions");
+
+        header.textContent =
+          questionnaire.title +
+          " — " +
+          context.campaign.name;
+
+        questions.innerHTML = "";
+
+        questionnaire.questions.forEach(function (question) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "question";
+
+          const label = document.createElement("div");
+          label.textContent = question.label;
+          wrapper.appendChild(label);
+
+          const answers = document.createElement("div");
+          answers.className = "answers";
+
+          ["YES", "NO"].forEach(function (value) {
+            const optionLabel =
+              document.createElement("label");
+            const radio =
+              document.createElement("input");
+
+            radio.type = "radio";
+            radio.name = "question_" + question.id;
+            radio.value = value;
+            radio.required = question.required;
+
+            optionLabel.appendChild(radio);
+            optionLabel.appendChild(
+              document.createTextNode(
+                value === "YES" ? "Oui" : "Non"
+              )
+            );
+
+            answers.appendChild(optionLabel);
+          });
+
+          wrapper.appendChild(answers);
+          questions.appendChild(wrapper);
+        });
+
+        document
+          .getElementById("questionnaireForm")
+          .classList.remove("hidden");
+      }
+
+      function submitQuestionnaire(event) {
+        event.preventDefault();
+        hideMessage();
+
+        if (!currentContext) {
+          showMessage(
+            "Le questionnaire n'est pas chargé.",
+            "error"
+          );
+          return;
+        }
+
+        const answers = {};
+
+        currentContext.questionnaire.questions
+          .forEach(function (question) {
+            const selected = document.querySelector(
+              'input[name="question_' +
+              question.id +
+              '"]:checked'
+            );
+
+            if (selected) {
+              answers[question.id] = selected.value;
+            }
+          });
+
+        const payload = {
+          participantId:
+            document.getElementById("participantId")
+              .value.trim(),
+          answers: answers,
+          declarationAccepted:
+            document.getElementById(
+              "declarationAccepted"
+            ).checked
+        };
+
+        google.script.run
+          .withSuccessHandler(handleSubmission)
+          .withFailureHandler(handleFailure)
+          .AKS_submitHealthQuestionnaire(payload);
+      }
+
+      function handleSubmission(result) {
+        if (!result || !result.ok) {
+          showMessage(
+            result && result.error
+              ? result.error.message
+              : "L'envoi a échoué.",
+            "error"
+          );
+          return;
+        }
+
+        showMessage(
+          "Le questionnaire a été enregistré. Statut : " +
+          result.data.evaluation.status,
+          "success"
+        );
+      }
+
+      function handleFailure(error) {
+        showMessage(
+          error && error.message
+            ? error.message
+            : String(error),
+          "error"
+        );
+      }
+
+      function showMessage(text, type) {
+        const element =
+          document.getElementById("message");
+
+        element.textContent = text;
+        element.className =
+          "message " + type;
+      }
+
+      function hideMessage() {
+        const element =
+          document.getElementById("message");
+
+        element.textContent = "";
+        element.className =
+          "message hidden";
+      }
+    </script>
+  </body>
+</html>

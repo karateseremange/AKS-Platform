@@ -1,3 +1,0 @@
-function onOpen() {
-  // Bootstrap
-}
