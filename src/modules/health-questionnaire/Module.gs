@@ -6,7 +6,7 @@ AKS.Modules.HealthQuestionnaire =
 AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
   id: "health-questionnaire",
   name: "Questionnaire santé",
-  version: "0.1.0",
+  version: "0.2.1",
   status: "active",
 
   getDescriptor: function () {
@@ -19,12 +19,29 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
   },
 
   install: function () {
-    if (
-      AKS.Modules.HealthQuestionnaire.SheetsRepository
-    ) {
+    var repository =
       AKS.Modules.HealthQuestionnaire
-        .SheetsRepository()
-        .ensureStorage();
+        .HealthQuestionnaireSheetsRepository();
+
+    repository.ensureStorage();
+
+    if (!AKS.Core.Container.has("healthQuestionnaire.repository")) {
+      AKS.Core.Container.register(
+        "healthQuestionnaire.repository",
+        repository
+      );
+    }
+
+    if (!AKS.Core.Container.has("healthQuestionnaire.service")) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.service",
+        function (container) {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireApplicationService(
+              container.resolve("healthQuestionnaire.repository")
+            );
+        }
+      );
     }
   }
 });

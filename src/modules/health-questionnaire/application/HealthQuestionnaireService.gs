@@ -1,32 +1,73 @@
 var AKS = AKS || {};
 AKS.Modules = AKS.Modules || {};
-AKS.Modules.HealthQuestionnaire = AKS.Modules.HealthQuestionnaire || {};
+AKS.Modules.HealthQuestionnaire =
+  AKS.Modules.HealthQuestionnaire || {};
 
-AKS.Modules.HealthQuestionnaire.Service = (function () {
-  var repository = null;
+/**
+ * Application service for questionnaire operations.
+ *
+ * @param {Object} repository
+ * @returns {Object}
+ */
+AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
+  function (repository) {
+    AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(
+      repository
+    );
 
-  function configure(options) {
-    if (!options || !options.repository) {
-      throw new AKS.Core.Exception("HEALTH_REPOSITORY_REQUIRED", "A repository is required.");
+    function submit(questionnaire, submissionData) {
+      var submission =
+        AKS.Modules.HealthQuestionnaire.Submission(submissionData);
+
+      var evaluation =
+        AKS.Modules.HealthQuestionnaire.Evaluation.evaluate(
+          questionnaire,
+          submission
+        );
+
+      var record = Object.freeze({
+        submission: submission,
+        evaluation: evaluation
+      });
+
+      repository.saveSubmission(record);
+
+      return AKS.Core.Result.success(record);
     }
-    repository = options.repository;
-  }
 
-  function submit(questionnaire, submissionData) {
-    if (!repository) {
-      throw new AKS.Core.Exception("HEALTH_SERVICE_NOT_CONFIGURED", "Service is not configured.");
+    function getLatestSubmission(participantId, campaignId) {
+      return AKS.Core.Result.success(
+        repository.findLatestSubmissionByParticipant(
+          participantId,
+          campaignId
+        )
+      );
     }
 
-    var submission = AKS.Modules.HealthQuestionnaire.Submission(submissionData);
-    var evaluation = AKS.Modules.HealthQuestionnaire.Evaluation.evaluate(questionnaire, submission);
-    var record = Object.freeze({submission: submission, evaluation: evaluation});
-    repository.save(record);
-    return AKS.Core.Result.success(record);
-  }
+    function saveCampaign(campaignData) {
+      var campaign =
+        AKS.Modules.HealthQuestionnaire.HealthCampaign(
+          campaignData
+        );
 
-  function resetForTests() {
-    repository = null;
-  }
+      repository.saveCampaign(campaign);
+      return AKS.Core.Result.success(campaign);
+    }
 
-  return Object.freeze({configure: configure, submit: submit, resetForTests: resetForTests});
-})();
+    function saveQuestionnaire(questionnaireData) {
+      var questionnaire =
+        AKS.Modules.HealthQuestionnaire.Questionnaire(
+          questionnaireData
+        );
+
+      repository.saveQuestionnaire(questionnaire);
+      return AKS.Core.Result.success(questionnaire);
+    }
+
+    return Object.freeze({
+      submit: submit,
+      getLatestSubmission: getLatestSubmission,
+      saveCampaign: saveCampaign,
+      saveQuestionnaire: saveQuestionnaire
+    });
+  };
