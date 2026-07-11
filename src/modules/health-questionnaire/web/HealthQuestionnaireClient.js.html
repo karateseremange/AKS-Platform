@@ -1,0 +1,339 @@
+(function () {
+  "use strict";
+
+  function initHealthQuestionnaire() {
+    var stepElements = Array.prototype.slice.call(
+      document.querySelectorAll("[data-step-id]")
+    );
+    var progressItems = document.querySelectorAll("[data-progress-index]");
+    var flow = stepElements.map(function (element, index) {
+      var progressLabel = progressItems[index]
+        ? progressItems[index].querySelector(".stepper-label")
+        : null;
+
+      return {
+        id: element.getAttribute("data-step-id"),
+        label: progressLabel ? progressLabel.textContent.trim() : "Étape " + (index + 1)
+      };
+    });
+    var currentIndex = 0;
+    var validationSummary = document.getElementById("validation-summary");
+    var identityNext = document.getElementById("identity-next");
+    var identityStep = document.querySelector('[data-step-id="identity"]');
+    var touched = {};
+
+    if (!identityStep || !identityNext || !validationSummary || flow.length === 0) {
+      return;
+    }
+
+    var messages = {
+      emailEmpty: "Veuillez renseigner votre adresse e-mail.",
+      emailInvalid: "Veuillez saisir une adresse e-mail valide.",
+      lastNameEmpty: "Veuillez renseigner le nom du mineur.",
+      lastNameShort: "Le nom du mineur doit contenir au moins 2 caractères.",
+      firstNameEmpty: "Veuillez renseigner le prénom du mineur.",
+      firstNameShort: "Le prénom du mineur doit contenir au moins 2 caractères.",
+      birthDateEmpty: "Veuillez renseigner la date de naissance.",
+      birthDateInvalid: "Veuillez saisir une date de naissance valide.",
+      birthDateAdult: "Ce questionnaire est réservé aux sportifs mineurs.",
+      sex: "Veuillez sélectionner le sexe du mineur.",
+      legalRepresentativeLastNameEmpty:
+        "Veuillez renseigner le nom de la personne exerçant l’autorité parentale.",
+      legalRepresentativeLastNameShort:
+        "Ce nom doit contenir au moins 2 caractères.",
+      legalRepresentativeFirstNameEmpty:
+        "Veuillez renseigner le prénom de la personne exerçant l’autorité parentale.",
+      legalRepresentativeFirstNameShort:
+        "Ce prénom doit contenir au moins 2 caractères."
+    };
+
+    function getStepElement(stepId) {
+      return document.querySelector('[data-step-id="' + stepId + '"]');
+    }
+
+    function getFieldContainer(fieldName) {
+      return identityStep.querySelector('[data-field="' + fieldName + '"]');
+    }
+
+    function getMessageElement(fieldName) {
+      return document.getElementById(fieldName + "-error");
+    }
+
+    function clearValidationSummary() {
+      validationSummary.textContent = "";
+      validationSummary.classList.remove("visible");
+    }
+
+    function showValidationSummary(message) {
+      validationSummary.textContent = message;
+      validationSummary.classList.add("visible");
+      validationSummary.focus();
+    }
+
+    function setFieldState(fieldName, valid, message, showState) {
+      var container = getFieldContainer(fieldName);
+      var messageElement = getMessageElement(fieldName);
+
+      if (!container) {
+        return;
+      }
+
+      container.classList.remove("is-valid", "is-invalid");
+      if (showState) {
+        container.classList.add(valid ? "is-valid" : "is-invalid");
+      }
+
+      if (messageElement) {
+        messageElement.textContent = showState && !valid ? message : "";
+      }
+    }
+
+    function parseDate(value) {
+      var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+      if (!match) {
+        return null;
+      }
+
+      var parsed = new Date(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3])
+      );
+
+      if (
+        parsed.getFullYear() !== Number(match[1]) ||
+        parsed.getMonth() !== Number(match[2]) - 1 ||
+        parsed.getDate() !== Number(match[3])
+      ) {
+        return null;
+      }
+
+      return parsed;
+    }
+
+    function calculateAge(value) {
+      var birthDate = parseDate(value);
+      var today = new Date();
+
+      if (!birthDate || birthDate > today) {
+        return null;
+      }
+
+      var age = today.getFullYear() - birthDate.getFullYear();
+      var beforeBirthday =
+        today.getMonth() < birthDate.getMonth() ||
+        (today.getMonth() === birthDate.getMonth() &&
+          today.getDate() < birthDate.getDate());
+
+      return beforeBirthday ? age - 1 : age;
+    }
+
+    function validateTextField(fieldName, emptyMessage, shortMessage, showState) {
+      var field = document.getElementById(fieldName);
+      var value = field ? field.value.trim() : "";
+      var valid = value.length >= 2;
+      var message = value.length === 0 ? emptyMessage : shortMessage;
+
+      setFieldState(fieldName, valid, message, showState);
+      return valid;
+    }
+
+    function validateEmail(showState) {
+      var field = document.getElementById("email");
+      var value = field ? field.value.trim() : "";
+      var valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      var message = value.length === 0 ? messages.emailEmpty : messages.emailInvalid;
+
+      setFieldState("email", valid, message, showState);
+      return valid;
+    }
+
+    function validateBirthDate(showState) {
+      var field = document.getElementById("birthDate");
+      var ageElement = document.getElementById("birthDate-age");
+      var value = field ? field.value : "";
+      var age = calculateAge(value);
+      var message = "";
+      var valid = true;
+
+      if (!value) {
+        valid = false;
+        message = messages.birthDateEmpty;
+      } else if (age === null || age < 0) {
+        valid = false;
+        message = messages.birthDateInvalid;
+      } else if (age >= 18) {
+        valid = false;
+        message = messages.birthDateAdult;
+      }
+
+      ageElement.textContent = valid ? "Âge calculé : " + age + " ans" : "";
+      setFieldState("birthDate", valid, message, showState);
+      return valid;
+    }
+
+    function validateSex(showState) {
+      var selected = identityStep.querySelector('input[name="sex"]:checked');
+      var valid = !!selected;
+      setFieldState("sex", valid, messages.sex, showState);
+      return valid;
+    }
+
+    function validateIdentity(forceErrors) {
+      var valid = true;
+
+      valid = validateEmail(forceErrors || !!touched.email) && valid;
+      valid = validateTextField(
+        "lastName",
+        messages.lastNameEmpty,
+        messages.lastNameShort,
+        forceErrors || !!touched.lastName
+      ) && valid;
+      valid = validateTextField(
+        "firstName",
+        messages.firstNameEmpty,
+        messages.firstNameShort,
+        forceErrors || !!touched.firstName
+      ) && valid;
+      valid = validateBirthDate(forceErrors || !!touched.birthDate) && valid;
+      valid = validateSex(forceErrors || !!touched.sex) && valid;
+      valid = validateTextField(
+        "legalRepresentativeLastName",
+        messages.legalRepresentativeLastNameEmpty,
+        messages.legalRepresentativeLastNameShort,
+        forceErrors || !!touched.legalRepresentativeLastName
+      ) && valid;
+      valid = validateTextField(
+        "legalRepresentativeFirstName",
+        messages.legalRepresentativeFirstNameEmpty,
+        messages.legalRepresentativeFirstNameShort,
+        forceErrors || !!touched.legalRepresentativeFirstName
+      ) && valid;
+
+      identityNext.disabled = !valid;
+      identityNext.setAttribute("aria-disabled", String(!valid));
+      return valid;
+    }
+
+    function markTouched(field) {
+      if (!field || !field.name) {
+        return;
+      }
+      touched[field.name] = true;
+      if (field.name === "sex") {
+        touched.sex = true;
+      }
+    }
+
+    function findActionButton(target) {
+      var node = target;
+      while (node && node !== document) {
+        if (node.getAttribute && node.getAttribute("data-flow-action")) {
+          return node;
+        }
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function updateProgress() {
+      var label = document.getElementById("step-label");
+      var items = document.querySelectorAll("[data-progress-index]");
+
+      Array.prototype.forEach.call(items, function (item, index) {
+        item.classList.remove("active", "done");
+        item.removeAttribute("aria-current");
+        if (index < currentIndex) {
+          item.classList.add("done");
+        } else if (index === currentIndex) {
+          item.classList.add("active");
+          item.setAttribute("aria-current", "step");
+        }
+      });
+
+      label.textContent =
+        "Étape " + (currentIndex + 1) + " sur " + flow.length +
+        " — " + flow[currentIndex].label;
+    }
+
+    function showStep(nextIndex) {
+      if (nextIndex < 0 || nextIndex >= flow.length) {
+        return;
+      }
+
+      flow.forEach(function (step, index) {
+        var element = getStepElement(step.id);
+        if (!element) {
+          return;
+        }
+        element.hidden = index !== nextIndex;
+        element.classList.remove("is-entering");
+        if (index === nextIndex) {
+          window.setTimeout(function () {
+            element.classList.add("is-entering");
+          }, 0);
+        }
+      });
+
+      currentIndex = nextIndex;
+      clearValidationSummary();
+      updateProgress();
+      window.scrollTo(0, 0);
+    }
+
+    identityStep.addEventListener("input", function (event) {
+      clearValidationSummary();
+      validateIdentity(false);
+    });
+
+    identityStep.addEventListener("change", function (event) {
+      markTouched(event.target);
+      clearValidationSummary();
+      validateIdentity(false);
+    });
+
+    identityStep.addEventListener("focusout", function (event) {
+      markTouched(event.target);
+      validateIdentity(false);
+    });
+
+    document.addEventListener("click", function (event) {
+      var button = findActionButton(event.target);
+      var action = button ? button.getAttribute("data-flow-action") : null;
+
+      if (action === "next") {
+        if (validateIdentity(true)) {
+          showStep(currentIndex + 1);
+        } else {
+          showValidationSummary(
+            "Certaines informations doivent être corrigées avant de continuer."
+          );
+          var firstInvalid = identityStep.querySelector(
+            ".is-invalid input, .is-invalid select, .is-invalid textarea"
+          );
+          if (firstInvalid) {
+            firstInvalid.focus();
+          }
+        }
+      } else if (action === "back") {
+        showStep(currentIndex - 1);
+      }
+    });
+
+    var form = document.getElementById("health-form");
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+      });
+    }
+
+    validateIdentity(false);
+    showStep(0);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initHealthQuestionnaire);
+  } else {
+    initHealthQuestionnaire();
+  }
+})();

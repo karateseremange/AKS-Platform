@@ -1,0 +1,21 @@
+<header class="card-header">
+  <p class="official-label">Questionnaire officiel</p>
+  <h1 id="questionnaire-title">Questionnaire relatif à l’état de santé du sportif mineur</h1>
+  <p class="campaign"><?= viewModel.campaign.name ?></p>
+  <div class="header-meta" aria-label="Informations sur le questionnaire">
+    <span>⏱ Temps estimé : <?= viewModel.presentation.estimatedDuration ?></span>
+    <span><?= viewModel.questionnaire.source ?></span>
+  </div>
+
+  <ol class="stepper" aria-label="Progression du formulaire">
+    <? for (var index = 0; index < viewModel.flow.length; index += 1) { ?>
+      <li class="stepper-item<?= index === 0 ? ' active' : '' ?>"
+          data-progress-index="<?= index ?>"
+          <?= index === 0 ? 'aria-current="step"' : '' ?>>
+        <span class="stepper-number"><?= index + 1 ?></span>
+        <span class="stepper-label"><?= viewModel.flow[index].label ?></span>
+      </li>
+    <? } ?>
+  </ol>
+  <p id="step-label" class="step-label">Étape 1 sur <?= viewModel.steps.total ?> — <?= viewModel.flow[0].label ?></p>
+</header>

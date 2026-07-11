@@ -11,44 +11,76 @@ AKS.Modules.HealthQuestionnaire =
  */
 AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
   function (repository) {
-    AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(
-      repository
-    );
+    AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(repository);
 
     function submit(questionnaire, submissionData) {
-      var submission =
-        AKS.Modules.HealthQuestionnaire.Submission(submissionData);
+      validateRequired_(
+        submissionData,
+        "HEALTH_SUBMISSION_REQUIRED",
+        "Submission data is required."
+      );
 
       var evaluation =
         AKS.Modules.HealthQuestionnaire.Evaluation.evaluate(
           questionnaire,
-          submission
+          {
+            questionnaireId: submissionData.questionnaireId,
+            answers: submissionData.answers || {},
+            declarationAccepted:
+              submissionData.declarationAccepted === true
+          }
         );
 
-      var record = Object.freeze({
+      if (
+        evaluation.status ===
+        AKS.Modules.HealthQuestionnaire.Evaluation.INCOMPLETE
+      ) {
+        return AKS.Core.Result.failure(
+          "HEALTH_SUBMISSION_INCOMPLETE",
+          "The questionnaire is incomplete.",
+          { missingQuestionIds: evaluation.missingQuestionIds }
+        );
+      }
+
+      var submission = AKS.Modules.HealthQuestionnaire.Submission({
+        id: submissionData.id,
+        campaignId: submissionData.campaignId,
+        questionnaireId: submissionData.questionnaireId,
+        email: submissionData.email,
+        lastName: submissionData.lastName,
+        firstName: submissionData.firstName,
+        birthDate: submissionData.birthDate,
+        sex: submissionData.sex,
+        legalRepresentativeLastName:
+          submissionData.legalRepresentativeLastName,
+        legalRepresentativeFirstName:
+          submissionData.legalRepresentativeFirstName,
+        result: evaluation.status,
+        submittedAt: submissionData.submittedAt,
+        respondentEmailSentAt:
+          submissionData.respondentEmailSentAt,
+        clubEmailSentAt: submissionData.clubEmailSentAt,
+        attestationFileId: submissionData.attestationFileId,
+        attestationFileUrl: submissionData.attestationFileUrl
+      });
+
+      repository.saveSubmission(submission);
+
+      return AKS.Core.Result.success({
         submission: submission,
         evaluation: evaluation
       });
-
-      repository.saveSubmission(record);
-
-      return AKS.Core.Result.success(record);
     }
 
-    function getLatestSubmission(participantId, campaignId) {
+    function getSubmissionById(submissionId) {
       return AKS.Core.Result.success(
-        repository.findLatestSubmissionByParticipant(
-          participantId,
-          campaignId
-        )
+        repository.findSubmissionById(submissionId)
       );
     }
 
     function saveCampaign(campaignData) {
       var campaign =
-        AKS.Modules.HealthQuestionnaire.HealthCampaign(
-          campaignData
-        );
+        AKS.Modules.HealthQuestionnaire.HealthCampaign(campaignData);
 
       repository.saveCampaign(campaign);
       return AKS.Core.Result.success(campaign);
@@ -56,9 +88,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
 
     function saveQuestionnaire(questionnaireData) {
       var questionnaire =
-        AKS.Modules.HealthQuestionnaire.Questionnaire(
-          questionnaireData
-        );
+        AKS.Modules.HealthQuestionnaire.Questionnaire(questionnaireData);
 
       repository.saveQuestionnaire(questionnaire);
       return AKS.Core.Result.success(questionnaire);
@@ -66,7 +96,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireApplicationService =
 
     return Object.freeze({
       submit: submit,
-      getLatestSubmission: getLatestSubmission,
+      getSubmissionById: getSubmissionById,
       saveCampaign: saveCampaign,
       saveQuestionnaire: saveQuestionnaire
     });

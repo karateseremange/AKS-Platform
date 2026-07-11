@@ -6,11 +6,16 @@ AKS.Modules.HealthQuestionnaire.Definition = function () {
   return AKS.Modules.HealthQuestionnaire.Questionnaire({
     id: "FFK-HEALTH-QUESTIONNAIRE",
     title: "Questionnaire santé",
-    audience: "to-be-confirmed",
+    audience: "ALL",
     version: "0.1.0",
     season: "2026-2027",
     questions: [
-      {id: "Q1", label: "Official question text to be inserted", required: true}
+      {
+        id: "Q1",
+        label: "Question officielle à intégrer",
+        order: 1,
+        required: true
+      }
     ]
   });
 };

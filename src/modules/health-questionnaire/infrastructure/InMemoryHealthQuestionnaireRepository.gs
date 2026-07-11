@@ -3,44 +3,57 @@ AKS.Modules = AKS.Modules || {};
 AKS.Modules.HealthQuestionnaire =
   AKS.Modules.HealthQuestionnaire || {};
 
-/**
- * In-memory repository used by tests.
- *
- * @returns {Object}
- */
 AKS.Modules.HealthQuestionnaire.HealthQuestionnaireInMemoryRepository =
   function () {
-    var submissions = [];
+    var submissions = Object.create(null);
+    var submissionOrder = [];
     var campaigns = Object.create(null);
     var questionnaires = Object.create(null);
 
+    function listCampaigns() {
+      return Object.keys(campaigns)
+        .map(function (campaignId) {
+          return campaigns[campaignId];
+        })
+        .sort(function (left, right) {
+          var seasonComparison = String(right.season).localeCompare(
+            String(left.season)
+          );
+          return seasonComparison !== 0
+            ? seasonComparison
+            : String(left.name).localeCompare(String(right.name));
+        });
+    }
+
     return AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(
       Object.freeze({
-        saveSubmission: function (record) {
-          submissions.push(record);
-          return record;
-        },
-
-        findLatestSubmissionByParticipant: function (
-          participantId,
-          campaignId
-        ) {
-          for (
-            var index = submissions.length - 1;
-            index >= 0;
-            index -= 1
-          ) {
-            var submission = submissions[index].submission;
-
-            if (
-              submission.participantId === String(participantId) &&
-              submission.campaignId === String(campaignId)
-            ) {
-              return submissions[index];
-            }
+        saveSubmission: function (submission) {
+          if (Object.prototype.hasOwnProperty.call(submission, "answers")) {
+            throw new AKS.Core.Exception(
+              "HEALTH_REPOSITORY_ANSWERS_FORBIDDEN",
+              "Detailed answers must not be persisted."
+            );
           }
 
-          return null;
+          if (!submissions[submission.id]) {
+            submissionOrder.push(submission.id);
+          }
+          submissions[submission.id] = submission;
+          return submission;
+        },
+
+        findSubmissionById: function (submissionId) {
+          return submissions[submissionId] || null;
+        },
+
+        listSubmissionsByCampaign: function (campaignId) {
+          return submissionOrder
+            .map(function (submissionId) {
+              return submissions[submissionId];
+            })
+            .filter(function (submission) {
+              return submission.campaignId === String(campaignId);
+            });
         },
 
         saveCampaign: function (campaign) {
@@ -52,6 +65,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireInMemoryRepository =
           return campaigns[campaignId] || null;
         },
 
+        listCampaigns: listCampaigns,
+
         saveQuestionnaire: function (questionnaire) {
           questionnaires[questionnaire.id] = questionnaire;
           return questionnaire;
@@ -62,7 +77,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireInMemoryRepository =
         },
 
         clear: function () {
-          submissions = [];
+          submissions = Object.create(null);
+          submissionOrder = [];
           campaigns = Object.create(null);
           questionnaires = Object.create(null);
         }

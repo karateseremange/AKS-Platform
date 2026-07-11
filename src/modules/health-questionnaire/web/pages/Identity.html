@@ -1,0 +1,76 @@
+<section class="step" data-step-id="identity" aria-labelledby="identity-title">
+  <aside class="information-card" aria-labelledby="privacy-title">
+    <div class="information-card-icon" aria-hidden="true">🔒</div>
+    <div>
+      <h2 id="privacy-title" class="information-card-title">Confidentialité des réponses</h2>
+      <p class="information-card-text">
+        Vos réponses servent uniquement à déterminer si un certificat médical est nécessaire.
+        Elles ne sont ni conservées par AKS Platform, ni communiquées au club.
+      </p>
+    </div>
+  </aside>
+
+  <h2 id="identity-title" class="section-title">Informations du mineur</h2>
+  <p class="section-intro helper">Tous les champs sont obligatoires.</p>
+
+  <div class="grid">
+    <div class="field full" data-field="email">
+      <label for="email">Adresse mail</label>
+      <input id="email" name="email" type="email" autocomplete="email" required
+             aria-describedby="email-error" inputmode="email">
+      <p id="email-error" class="field-message" aria-live="polite"></p>
+    </div>
+    <div class="field" data-field="lastName">
+      <label for="lastName">Nom</label>
+      <input id="lastName" name="lastName" type="text" autocomplete="family-name"
+             minlength="2" required aria-describedby="lastName-error">
+      <p id="lastName-error" class="field-message" aria-live="polite"></p>
+    </div>
+    <div class="field" data-field="firstName">
+      <label for="firstName">Prénom</label>
+      <input id="firstName" name="firstName" type="text" autocomplete="given-name"
+             minlength="2" required aria-describedby="firstName-error">
+      <p id="firstName-error" class="field-message" aria-live="polite"></p>
+    </div>
+    <div class="field" data-field="birthDate">
+      <label for="birthDate">Date de naissance</label>
+      <input id="birthDate" name="birthDate" type="date" required
+             aria-describedby="birthDate-age birthDate-error">
+      <p id="birthDate-age" class="age-display" aria-live="polite"></p>
+      <p id="birthDate-error" class="field-message" aria-live="polite"></p>
+    </div>
+    <fieldset class="field" data-field="sex" aria-describedby="sex-error">
+      <legend>Sexe</legend>
+      <div class="choice-row">
+        <label class="choice"><input type="radio" name="sex" value="FEMALE" required> Féminin</label>
+        <label class="choice"><input type="radio" name="sex" value="MALE" required> Masculin</label>
+      </div>
+      <p id="sex-error" class="field-message" aria-live="polite"></p>
+    </fieldset>
+  </div>
+
+  <h2 class="section-title">Personne exerçant l’autorité parentale</h2>
+  <p class="section-intro helper">Indiquez l’identité de la personne qui complète ce questionnaire avec le mineur.</p>
+  <div class="grid">
+    <div class="field" data-field="legalRepresentativeLastName">
+      <label for="legalRepresentativeLastName">Nom</label>
+      <input id="legalRepresentativeLastName" name="legalRepresentativeLastName" type="text"
+             autocomplete="family-name" minlength="2" required
+             aria-describedby="legalRepresentativeLastName-error">
+      <p id="legalRepresentativeLastName-error" class="field-message" aria-live="polite"></p>
+    </div>
+    <div class="field" data-field="legalRepresentativeFirstName">
+      <label for="legalRepresentativeFirstName">Prénom</label>
+      <input id="legalRepresentativeFirstName" name="legalRepresentativeFirstName" type="text"
+             autocomplete="given-name" minlength="2" required
+             aria-describedby="legalRepresentativeFirstName-error">
+      <p id="legalRepresentativeFirstName-error" class="field-message" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="identity-next" class="primary" type="button" data-flow-action="next" disabled>
+      Continuer
+    </button>
+  </div>
+</section>

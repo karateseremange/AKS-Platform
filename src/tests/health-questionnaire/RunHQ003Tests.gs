@@ -8,7 +8,11 @@ function AKS_runHQ003Tests() {
     test_HQ003_contextFailsWithoutActiveCampaign,
     test_HQ003_contextLoadsOpenCampaign,
     test_HQ003_contextRejectsClosedCampaign,
-    test_HQ003_submitPersistsAnswers
+    test_HQ003_submitPersistsAdministrativeResultOnly,
+    test_HQ003_listsCampaignOptionsWithoutTechnicalInput,
+    test_HQ003_listsNoCampaignWhenRepositoryIsEmpty,
+    test_HQ003_createsAndActivatesCampaign,
+    test_HQ003_rejectsDuplicateCampaignSeason
   ];
 
   var passed = 0;

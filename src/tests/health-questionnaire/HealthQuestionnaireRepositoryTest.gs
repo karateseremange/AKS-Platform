@@ -47,7 +47,7 @@ function test_HQ002_inMemoryRepositoryStoresQuestionnaire() {
   );
 }
 
-function test_HQ002_serviceStoresSubmission() {
+function test_HQ002_serviceStoresSubmissionWithoutAnswers() {
   var repository =
     AKS.Modules.HealthQuestionnaire
       .HealthQuestionnaireInMemoryRepository();
@@ -56,38 +56,30 @@ function test_HQ002_serviceStoresSubmission() {
     AKS.Modules.HealthQuestionnaire
       .HealthQuestionnaireApplicationService(repository);
 
-  var questionnaire = createHQ002Questionnaire_();
-
   var result = service.submit(
-    questionnaire,
-    {
-      id: "SUBMISSION-1",
-      campaignId: "CAMPAIGN-1",
-      questionnaireId: "HQ-1",
-      participantId: "MEMBER-1",
-      answers: {
-        Q1: "NO",
-        Q2: "NO"
-      },
-      declarationAccepted: true
-    }
+    createHQ002Questionnaire_(),
+    createHQ002SubmissionData_("SUBMISSION-1", {
+      Q1: "NO",
+      Q2: "NO"
+    })
   );
 
   assertTrue_(result.ok, "Submission should succeed.");
 
-  var stored = repository.findLatestSubmissionByParticipant(
-    "MEMBER-1",
-    "CAMPAIGN-1"
-  );
+  var stored = repository.findSubmissionById("SUBMISSION-1");
 
+  assertEquals_("SUBMISSION-1", stored.id);
   assertEquals_(
-    "SUBMISSION-1",
-    stored.submission.id,
-    "Submission should be stored."
+    "NO_MEDICAL_CERTIFICATE_REQUIRED",
+    stored.result
+  );
+  assertTrue_(
+    !Object.prototype.hasOwnProperty.call(stored, "answers"),
+    "Detailed answers must not be persisted."
   );
 }
 
-function test_HQ002_repositoryReturnsLatestSubmission() {
+function test_HQ002_repositoryListsSubmissionsByCampaign() {
   var repository =
     AKS.Modules.HealthQuestionnaire
       .HealthQuestionnaireInMemoryRepository();
@@ -96,36 +88,43 @@ function test_HQ002_repositoryReturnsLatestSubmission() {
     AKS.Modules.HealthQuestionnaire
       .HealthQuestionnaireApplicationService(repository);
 
-  var questionnaire = createHQ002Questionnaire_();
-
-  service.submit(questionnaire, {
-    id: "SUBMISSION-1",
-    campaignId: "CAMPAIGN-1",
-    questionnaireId: "HQ-1",
-    participantId: "MEMBER-1",
-    answers: { Q1: "NO", Q2: "NO" },
-    declarationAccepted: true
-  });
-
-  service.submit(questionnaire, {
-    id: "SUBMISSION-2",
-    campaignId: "CAMPAIGN-1",
-    questionnaireId: "HQ-1",
-    participantId: "MEMBER-1",
-    answers: { Q1: "YES", Q2: "NO" },
-    declarationAccepted: true
-  });
-
-  var latest = repository.findLatestSubmissionByParticipant(
-    "MEMBER-1",
-    "CAMPAIGN-1"
+  service.submit(
+    createHQ002Questionnaire_(),
+    createHQ002SubmissionData_("SUBMISSION-1", {
+      Q1: "NO",
+      Q2: "NO"
+    })
   );
+
+  var second = createHQ002SubmissionData_("SUBMISSION-2", {
+    Q1: "YES",
+    Q2: "NO"
+  });
+  second.campaignId = "CAMPAIGN-2";
+  service.submit(createHQ002Questionnaire_(), second);
 
   assertEquals_(
-    "SUBMISSION-2",
-    latest.submission.id,
-    "Latest submission should be returned."
+    1,
+    repository.listSubmissionsByCampaign("CAMPAIGN-1").length
   );
+}
+
+function createHQ002SubmissionData_(id, answers) {
+  return {
+    id: id,
+    campaignId: "CAMPAIGN-1",
+    questionnaireId: "HQ-1",
+    email: "parent@example.org",
+    lastName: "DUPONT",
+    firstName: "Alice",
+    birthDate: "2014-05-12",
+    sex: "FEMALE",
+    legalRepresentativeLastName: "DUPONT",
+    legalRepresentativeFirstName: "Marie",
+    answers: answers,
+    declarationAccepted: true,
+    submittedAt: new Date("2026-07-11T12:00:00Z")
+  };
 }
 
 function createHQ002Questionnaire_() {

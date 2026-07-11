@@ -6,7 +6,7 @@ AKS.Modules.HealthQuestionnaire =
 AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
   id: "health-questionnaire",
   name: "Questionnaire santé",
-  version: "0.3.0",
+  version: "0.5.1",
   status: "active",
 
   getDescriptor: function () {
@@ -73,6 +73,25 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
               ),
               container.resolve(
                 "healthQuestionnaire.service"
+              ),
+              container.resolve(
+                "healthQuestionnaire.settings"
+              )
+            );
+        }
+      );
+    }
+
+    if (!AKS.Core.Container.has(
+      "healthQuestionnaire.webController"
+    )) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.webController",
+        function (container) {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireWebController(
+              container.resolve(
+                "healthQuestionnaire.repository"
               ),
               container.resolve(
                 "healthQuestionnaire.settings"

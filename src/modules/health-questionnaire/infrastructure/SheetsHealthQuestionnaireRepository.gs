@@ -42,15 +42,20 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         "submissionId",
         "campaignId",
         "questionnaireId",
-        "participantId",
-        "respondentType",
-        "answersJson",
-        "declarationAccepted",
-        "status",
-        "missingQuestionIdsJson",
-        "positiveQuestionIdsJson",
+        "email",
+        "lastName",
+        "firstName",
+        "birthDate",
+        "ageAtSubmission",
+        "sex",
+        "legalRepresentativeLastName",
+        "legalRepresentativeFirstName",
+        "result",
         "submittedAt",
-        "evaluatedAt"
+        "respondentEmailSentAt",
+        "clubEmailSentAt",
+        "attestationFileId",
+        "attestationFileUrl"
       ]
     });
 
@@ -60,14 +65,12 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
       }
 
       var active = SpreadsheetApp.getActiveSpreadsheet();
-
       if (!active) {
         throw new AKS.Core.Exception(
           "HEALTH_SPREADSHEET_NOT_AVAILABLE",
           "No active spreadsheet is available."
         );
       }
-
       return active;
     }
 
@@ -80,14 +83,59 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
         sheet.setFrozenRows(1);
       }
-
       return sheet;
+    }
+
+    function headersMatch_(sheet, expectedHeaders) {
+      if (sheet.getLastColumn() !== expectedHeaders.length) {
+        return false;
+      }
+
+      var actual = sheet
+        .getRange(1, 1, 1, expectedHeaders.length)
+        .getValues()[0];
+
+      return expectedHeaders.every(function (header, index) {
+        return String(actual[index]) === header;
+      });
+    }
+
+    function createLegacySheetName_() {
+      return "HQ_Submissions_Legacy_" +
+        Utilities.formatDate(
+          new Date(),
+          Session.getScriptTimeZone(),
+          "yyyyMMdd_HHmmss"
+        );
+    }
+
+    function migrateSubmissionStorage() {
+      var spreadsheet = getSpreadsheet_();
+      var sheet = spreadsheet.getSheetByName(SHEETS.submissions);
+
+      if (!sheet) {
+        ensureSheet_(SHEETS.submissions, HEADERS.submissions);
+        return { migrated: false, backupSheetName: null };
+      }
+
+      if (headersMatch_(sheet, HEADERS.submissions)) {
+        return { migrated: false, backupSheetName: null };
+      }
+
+      var backupSheetName = createLegacySheetName_();
+      sheet.setName(backupSheetName);
+      ensureSheet_(SHEETS.submissions, HEADERS.submissions);
+
+      return {
+        migrated: true,
+        backupSheetName: backupSheetName
+      };
     }
 
     function ensureStorage() {
       ensureSheet_(SHEETS.campaigns, HEADERS.campaigns);
       ensureSheet_(SHEETS.questionnaires, HEADERS.questionnaires);
-      ensureSheet_(SHEETS.submissions, HEADERS.submissions);
+      var migration = migrateSubmissionStorage();
 
       return {
         spreadsheetId: getSpreadsheet_().getId(),
@@ -95,27 +143,22 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           SHEETS.campaigns,
           SHEETS.questionnaires,
           SHEETS.submissions
-        ]
+        ],
+        submissionMigration: migration
       };
     }
 
     function saveCampaign(campaign) {
-      upsertById_(
-        SHEETS.campaigns,
-        HEADERS.campaigns,
+      upsertById_(SHEETS.campaigns, HEADERS.campaigns, campaign.id, [
         campaign.id,
-        [
-          campaign.id,
-          campaign.name,
-          campaign.season,
-          campaign.questionnaireId,
-          campaign.status,
-          campaign.opensAt || "",
-          campaign.closesAt || "",
-          campaign.createdAt || new Date()
-        ]
-      );
-
+        campaign.name,
+        campaign.season,
+        campaign.questionnaireId,
+        campaign.status,
+        campaign.opensAt || "",
+        campaign.closesAt || "",
+        campaign.createdAt || new Date()
+      ]);
       return campaign;
     }
 
@@ -125,11 +168,9 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         HEADERS.campaigns,
         campaignId
       );
-
       if (!row) {
         return null;
       }
-
       return AKS.Modules.HealthQuestionnaire.HealthCampaign({
         id: row[0],
         name: row[1],
@@ -140,6 +181,43 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         closesAt: row[6] || null,
         createdAt: row[7] || null
       });
+    }
+
+    function listCampaigns() {
+      var values = ensureSheet_(
+        SHEETS.campaigns,
+        HEADERS.campaigns
+      ).getDataRange().getValues();
+      var campaigns = [];
+
+      for (var index = 1; index < values.length; index += 1) {
+        var row = values[index];
+        if (!row[0]) {
+          continue;
+        }
+        campaigns.push(
+          AKS.Modules.HealthQuestionnaire.HealthCampaign({
+            id: row[0],
+            name: row[1],
+            season: row[2],
+            questionnaireId: row[3],
+            status: row[4],
+            opensAt: row[5] || null,
+            closesAt: row[6] || null,
+            createdAt: row[7] || null
+          })
+        );
+      }
+
+      campaigns.sort(function (left, right) {
+        var seasonComparison = String(right.season).localeCompare(
+          String(left.season)
+        );
+        return seasonComparison !== 0
+          ? seasonComparison
+          : String(left.name).localeCompare(String(right.name));
+      });
+      return campaigns;
     }
 
     function saveQuestionnaire(questionnaire) {
@@ -158,7 +236,6 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           JSON.stringify(questionnaire.questions)
         ]
       );
-
       return questionnaire;
     }
 
@@ -168,11 +245,9 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
         HEADERS.questionnaires,
         questionnaireId
       );
-
       if (!row) {
         return null;
       }
-
       return AKS.Modules.HealthQuestionnaire.Questionnaire({
         id: row[0],
         title: row[1],
@@ -185,73 +260,88 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
       });
     }
 
-    function saveSubmission(record) {
-      var submission = record.submission;
-      var evaluation = record.evaluation;
+    function saveSubmission(submission) {
+      if (Object.prototype.hasOwnProperty.call(submission, "answers")) {
+        throw new AKS.Core.Exception(
+          "HEALTH_REPOSITORY_ANSWERS_FORBIDDEN",
+          "Detailed answers must not be persisted."
+        );
+      }
 
-      ensureSheet_(
+      migrateSubmissionStorage();
+      upsertById_(
         SHEETS.submissions,
-        HEADERS.submissions
-      ).appendRow([
+        HEADERS.submissions,
         submission.id,
-        submission.campaignId,
-        submission.questionnaireId,
-        submission.participantId,
-        submission.respondentType,
-        JSON.stringify(submission.answers),
-        submission.declarationAccepted,
-        evaluation.status,
-        JSON.stringify(evaluation.missingQuestionIds),
-        JSON.stringify(evaluation.positiveQuestionIds),
-        submission.submittedAt,
-        evaluation.evaluatedAt
-      ]);
-
-      return record;
+        [
+          submission.id,
+          submission.campaignId,
+          submission.questionnaireId,
+          submission.email,
+          submission.lastName,
+          submission.firstName,
+          submission.birthDate,
+          submission.ageAtSubmission,
+          submission.sex,
+          submission.legalRepresentativeLastName,
+          submission.legalRepresentativeFirstName,
+          submission.result,
+          submission.submittedAt,
+          submission.respondentEmailSentAt || "",
+          submission.clubEmailSentAt || "",
+          submission.attestationFileId || "",
+          submission.attestationFileUrl || ""
+        ]
+      );
+      return submission;
     }
 
-    function findLatestSubmissionByParticipant(
-      participantId,
-      campaignId
-    ) {
+    function rowToSubmission_(row) {
+      return AKS.Modules.HealthQuestionnaire.Submission({
+        id: row[0],
+        campaignId: row[1],
+        questionnaireId: row[2],
+        email: row[3],
+        lastName: row[4],
+        firstName: row[5],
+        birthDate: row[6],
+        sex: row[8],
+        legalRepresentativeLastName: row[9],
+        legalRepresentativeFirstName: row[10],
+        result: row[11],
+        submittedAt: row[12],
+        respondentEmailSentAt: row[13] || null,
+        clubEmailSentAt: row[14] || null,
+        attestationFileId: row[15] || null,
+        attestationFileUrl: row[16] || null
+      });
+    }
+
+    function findSubmissionById(submissionId) {
+      migrateSubmissionStorage();
+      var row = findRowById_(
+        SHEETS.submissions,
+        HEADERS.submissions,
+        submissionId
+      );
+      return row ? rowToSubmission_(row) : null;
+    }
+
+    function listSubmissionsByCampaign(campaignId) {
+      migrateSubmissionStorage();
       var values = ensureSheet_(
         SHEETS.submissions,
         HEADERS.submissions
       ).getDataRange().getValues();
+      var submissions = [];
 
-      for (var index = values.length - 1; index >= 1; index -= 1) {
+      for (var index = 1; index < values.length; index += 1) {
         var row = values[index];
-
-        if (
-          String(row[3]) === String(participantId) &&
-          String(row[1]) === String(campaignId)
-        ) {
-          return {
-            submission: AKS.Modules.HealthQuestionnaire.Submission({
-              id: row[0],
-              campaignId: row[1],
-              questionnaireId: row[2],
-              participantId: row[3],
-              respondentType: row[4],
-              answers: JSON.parse(row[5] || "{}"),
-              declarationAccepted: row[6] === true,
-              submittedAt: row[10]
-            }),
-            evaluation: Object.freeze({
-              status: row[7],
-              missingQuestionIds: Object.freeze(
-                JSON.parse(row[8] || "[]")
-              ),
-              positiveQuestionIds: Object.freeze(
-                JSON.parse(row[9] || "[]")
-              ),
-              evaluatedAt: row[11]
-            })
-          };
+        if (row[0] && String(row[1]) === String(campaignId)) {
+          submissions.push(rowToSubmission_(row));
         }
       }
-
-      return null;
+      return submissions;
     }
 
     function upsertById_(sheetName, headers, id, rowValues) {
@@ -266,7 +356,6 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           return;
         }
       }
-
       sheet.appendRow(rowValues);
     }
 
@@ -279,18 +368,19 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireSheetsRepository =
           return values[index];
         }
       }
-
       return null;
     }
 
     return AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(
       Object.freeze({
         ensureStorage: ensureStorage,
+        migrateSubmissionStorage: migrateSubmissionStorage,
         saveSubmission: saveSubmission,
-        findLatestSubmissionByParticipant:
-          findLatestSubmissionByParticipant,
+        findSubmissionById: findSubmissionById,
+        listSubmissionsByCampaign: listSubmissionsByCampaign,
         saveCampaign: saveCampaign,
         findCampaignById: findCampaignById,
+        listCampaigns: listCampaigns,
         saveQuestionnaire: saveQuestionnaire,
         findQuestionnaireById: findQuestionnaireById
       })

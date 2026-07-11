@@ -5,22 +5,17 @@ AKS.Modules.HealthQuestionnaire =
 
 /**
  * Defines the repository contract expected by the application layer.
- *
- * Implementations must provide:
- * - saveSubmission(record)
- * - findLatestSubmissionByParticipant(participantId, campaignId)
- * - saveCampaign(campaign)
- * - findCampaignById(campaignId)
- * - saveQuestionnaire(questionnaire)
- * - findQuestionnaireById(questionnaireId)
+ * Detailed questionnaire answers are explicitly outside this contract.
  */
 AKS.Modules.HealthQuestionnaire.RepositoryContract = Object.freeze({
   validate: function (repository) {
     var methods = [
       "saveSubmission",
-      "findLatestSubmissionByParticipant",
+      "findSubmissionById",
+      "listSubmissionsByCampaign",
       "saveCampaign",
       "findCampaignById",
+      "listCampaigns",
       "saveQuestionnaire",
       "findQuestionnaireById"
     ];

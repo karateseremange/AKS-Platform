@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <style><?!= AKS_includeHealthQuestionnaireWebFile_("modules/health-questionnaire/web/HealthQuestionnaireStyle") ?></style>
+  </head>
+  <body>
+    <main class="page">
+      <?!= AKS_renderHealthQuestionnaireWebPartial_("modules/health-questionnaire/web/partials/Brand", viewModel) ?>
+
+      <? if (!viewModel.available) { ?>
+        <?!= AKS_renderHealthQuestionnaireWebPartial_("modules/health-questionnaire/web/pages/Error", viewModel) ?>
+      <? } else { ?>
+        <section class="card" aria-labelledby="questionnaire-title">
+          <?!= AKS_renderHealthQuestionnaireWebPartial_("modules/health-questionnaire/web/partials/Header", viewModel) ?>
+
+          <div class="card-body">
+            <div id="validation-summary" class="validation-summary" role="alert" tabindex="-1"></div>
+
+            <form id="health-form" novalidate>
+              <?!= AKS_renderHealthQuestionnaireWebPartial_("modules/health-questionnaire/web/pages/Identity", viewModel) ?>
+              <?!= AKS_renderHealthQuestionnaireWebPartial_("modules/health-questionnaire/web/pages/Questions", viewModel) ?>
+            </form>
+          </div>
+        </section>
+      <? } ?>
+    </main>
+
+    <? if (viewModel.available) { ?>
+      <script><?!= AKS_includeHealthQuestionnaireWebFile_("modules/health-questionnaire/web/HealthQuestionnaireClient.js") ?></script>
+    <? } ?>
+  </body>
+</html>

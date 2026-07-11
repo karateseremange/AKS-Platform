@@ -1,0 +1,24 @@
+<section class="step" data-step-id="questions" aria-labelledby="questions-title" hidden>
+  <h2 id="questions-title" class="section-title"><?= viewModel.questionnaire.title ?></h2>
+  <p class="section-intro helper">Répondez à chaque question avec le mineur.</p>
+
+  <? for (var index = 0; index < viewModel.questionnaire.questions.length; index += 1) {
+       var question = viewModel.questionnaire.questions[index]; ?>
+    <fieldset class="question">
+      <legend><span class="question-number">Question <?= index + 1 ?></span><br><?= question.label ?></legend>
+      <div class="choice-row">
+        <label class="choice"><input type="radio" name="answer_<?= question.id ?>" value="NO" required> Non</label>
+        <label class="choice"><input type="radio" name="answer_<?= question.id ?>" value="YES" required> Oui</label>
+      </div>
+    </fieldset>
+  <? } ?>
+
+  <div class="notice">
+    Sprint 1 prépare l’architecture du parcours public. Les réponses ne sont pas encore transmises ni enregistrées.
+  </div>
+
+  <div class="actions">
+    <button class="secondary" type="button" data-flow-action="back">Retour</button>
+    <button class="primary" type="button" disabled aria-disabled="true">Envoyer — prochaine étape</button>
+  </div>
+</section>

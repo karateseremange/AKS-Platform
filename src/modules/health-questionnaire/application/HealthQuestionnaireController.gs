@@ -13,7 +13,7 @@ AKS.Modules.HealthQuestionnaire =
  */
 AKS.Modules.HealthQuestionnaire.HealthQuestionnaireController =
   function (repository, service, settings) {
-    function getContext(participantId) {
+    function getContext() {
       var activeCampaignId =
         settings.getActiveCampaignId();
 
@@ -53,20 +53,9 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireController =
         );
       }
 
-      var latestSubmission = null;
-
-      if (participantId) {
-        latestSubmission =
-          repository.findLatestSubmissionByParticipant(
-            participantId,
-            campaign.id
-          );
-      }
-
       return AKS.Core.Result.success({
         campaign: campaign,
-        questionnaire: questionnaire,
-        latestSubmission: latestSubmission
+        questionnaire: questionnaire
       });
     }
 
@@ -78,9 +67,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireController =
         );
       }
 
-      var contextResult = getContext(
-        payload.participantId
-      );
+      var contextResult = getContext();
 
       if (!contextResult.ok) {
         return contextResult;
@@ -95,15 +82,102 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireController =
           campaignId: context.campaign.id,
           questionnaireId:
             context.questionnaire.id,
-          participantId: payload.participantId,
-          respondentType:
-            payload.respondentType || "PARTICIPANT",
+          email: payload.email,
+          lastName: payload.lastName,
+          firstName: payload.firstName,
+          birthDate: payload.birthDate,
+          sex: payload.sex,
+          legalRepresentativeLastName:
+            payload.legalRepresentativeLastName,
+          legalRepresentativeFirstName:
+            payload.legalRepresentativeFirstName,
           answers: payload.answers || {},
           declarationAccepted:
             payload.declarationAccepted === true,
           submittedAt: new Date()
         }
       );
+    }
+
+    function getCampaignOptions() {
+      var campaigns = repository.listCampaigns();
+      var activeCampaignId = settings.getActiveCampaignId();
+
+      return AKS.Core.Result.success({
+        activeCampaignId: activeCampaignId || null,
+        campaigns: campaigns.map(function (campaign) {
+          return {
+            id: campaign.id,
+            name: campaign.name,
+            season: campaign.season,
+            status: campaign.status,
+            isActive: campaign.id === activeCampaignId
+          };
+        })
+      });
+    }
+
+    function createCampaign(campaignData) {
+      if (!campaignData || typeof campaignData !== "object") {
+        return AKS.Core.Result.failure(
+          "HEALTH_CAMPAIGN_DATA_REQUIRED",
+          "Les informations de la campagne sont requises."
+        );
+      }
+
+      var season = String(campaignData.season || "").trim();
+      var name = String(campaignData.name || "").trim();
+
+      if (!season) {
+        return AKS.Core.Result.failure(
+          "HEALTH_CAMPAIGN_SEASON_REQUIRED",
+          "La saison de la campagne est requise."
+        );
+      }
+
+      if (!name) {
+        name = "Campagne santé " + season;
+      }
+
+      var campaignId = "HQ-CAMPAIGN-" + season
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      if (repository.findCampaignById(campaignId)) {
+        return AKS.Core.Result.failure(
+          "HEALTH_CAMPAIGN_ALREADY_EXISTS",
+          "Une campagne existe déjà pour cette saison."
+        );
+      }
+
+      var questionnaire =
+        AKS.Modules.HealthQuestionnaire.Definition();
+
+      service.saveQuestionnaire(questionnaire);
+
+      var campaignResult = service.saveCampaign({
+        id: campaignId,
+        name: name,
+        season: season,
+        questionnaireId: questionnaire.id,
+        status: "OPEN",
+        opensAt: new Date(),
+        closesAt: null,
+        createdAt: new Date()
+      });
+
+      if (!campaignResult.ok) {
+        return campaignResult;
+      }
+
+      settings.setActiveCampaignId(campaignId);
+
+      return AKS.Core.Result.success({
+        campaign: campaignResult.data,
+        questionnaire: questionnaire,
+        activeCampaignId: campaignId
+      });
     }
 
     function setActiveCampaign(campaignId) {
@@ -127,6 +201,8 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireController =
     return Object.freeze({
       getContext: getContext,
       submit: submit,
+      getCampaignOptions: getCampaignOptions,
+      createCampaign: createCampaign,
       setActiveCampaign: setActiveCampaign
     });
   };

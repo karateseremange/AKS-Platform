@@ -37,7 +37,7 @@ function test_HQ001_allNoIsEligible() {
     );
 
   assertEquals_(
-    "ELIGIBLE",
+    "NO_MEDICAL_CERTIFICATE_REQUIRED",
     evaluation.status,
     "All NO answers should be eligible."
   );
@@ -57,7 +57,7 @@ function test_HQ001_yesRequiresMedicalReview() {
     );
 
   assertEquals_(
-    "MEDICAL_REVIEW_REQUIRED",
+    "MEDICAL_CERTIFICATE_REQUIRED",
     evaluation.status,
     "A YES answer should require medical review."
   );
@@ -117,15 +117,22 @@ function test_HQ001_campaignRejectsInvalidStatus() {
   );
 }
 
-function test_HQ001_submissionRejectsInvalidAnswer() {
-  assertThrows_(
-    function () {
-      createHQ001Submission_({
-        Q1: "MAYBE",
-        Q2: "NO"
-      }, true);
-    },
-    "HEALTH_SUBMISSION_ANSWER_INVALID"
+function test_HQ001_evaluationRejectsInvalidAnswer() {
+  var questionnaire = createHQ001Questionnaire_();
+  var evaluation =
+    AKS.Modules.HealthQuestionnaire.Evaluation.evaluate(
+      questionnaire,
+      {
+        questionnaireId: "HQ-1",
+        answers: { Q1: "MAYBE", Q2: "NO" },
+        declarationAccepted: true
+      }
+    );
+
+  assertEquals_(
+    "INCOMPLETE",
+    evaluation.status,
+    "An invalid answer should make the assessment incomplete."
   );
 }
 
@@ -143,12 +150,9 @@ function createHQ001Questionnaire_() {
 }
 
 function createHQ001Submission_(answers, declarationAccepted) {
-  return AKS.Modules.HealthQuestionnaire.Submission({
-    id: Utilities.getUuid(),
-    campaignId: "CAMPAIGN-1",
+  return {
     questionnaireId: "HQ-1",
-    participantId: "MEMBER-1",
     answers: answers,
     declarationAccepted: declarationAccepted
-  });
+  };
 }

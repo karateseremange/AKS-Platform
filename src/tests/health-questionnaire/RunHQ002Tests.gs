@@ -8,8 +8,8 @@ function AKS_runHQ002Tests() {
     test_HQ002_repositoryContractRejectsIncompleteRepository,
     test_HQ002_inMemoryRepositoryStoresCampaign,
     test_HQ002_inMemoryRepositoryStoresQuestionnaire,
-    test_HQ002_serviceStoresSubmission,
-    test_HQ002_repositoryReturnsLatestSubmission
+    test_HQ002_serviceStoresSubmissionWithoutAnswers,
+    test_HQ002_repositoryListsSubmissionsByCampaign
   ];
 
   var results = [];

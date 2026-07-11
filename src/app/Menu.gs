@@ -14,7 +14,11 @@ AKS.App.Menu = Object.freeze({
         "AKS_openHealthQuestionnaire"
       )
       .addItem(
-        "Configurer la campagne active",
+        "Créer une campagne santé",
+        "AKS_createHealthCampaign"
+      )
+      .addItem(
+        "Sélectionner la campagne active",
         "AKS_configureActiveHealthCampaign"
       )
       .addSeparator()

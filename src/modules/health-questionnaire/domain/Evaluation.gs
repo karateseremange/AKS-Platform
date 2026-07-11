@@ -4,30 +4,39 @@ AKS.Modules.HealthQuestionnaire =
   AKS.Modules.HealthQuestionnaire || {};
 
 AKS.Modules.HealthQuestionnaire.Evaluation = Object.freeze({
-  ELIGIBLE: "ELIGIBLE",
-  MEDICAL_REVIEW_REQUIRED: "MEDICAL_REVIEW_REQUIRED",
+  NO_MEDICAL_CERTIFICATE_REQUIRED:
+    "NO_MEDICAL_CERTIFICATE_REQUIRED",
+  MEDICAL_CERTIFICATE_REQUIRED:
+    "MEDICAL_CERTIFICATE_REQUIRED",
   INCOMPLETE: "INCOMPLETE",
 
   /**
-   * Evaluates a submission against a questionnaire.
+   * Evaluates transient answers. The returned details must not be persisted.
    *
    * @param {Object} questionnaire
-   * @param {Object} submission
+   * @param {Object} assessment
    * @returns {Object}
    */
-  evaluate: function (questionnaire, submission) {
-    if (questionnaire.id !== submission.questionnaireId) {
+  evaluate: function (questionnaire, assessment) {
+    validateRequired_(
+      assessment,
+      "HEALTH_ASSESSMENT_REQUIRED",
+      "Assessment data is required."
+    );
+
+    if (questionnaire.id !== assessment.questionnaireId) {
       throw new AKS.Core.Exception(
         "HEALTH_EVALUATION_QUESTIONNAIRE_MISMATCH",
-        "Submission does not belong to the questionnaire."
+        "Assessment does not belong to the questionnaire."
       );
     }
 
+    var answers = Object.assign({}, assessment.answers || {});
     var missingQuestionIds = [];
     var positiveQuestionIds = [];
 
     questionnaire.questions.forEach(function (question) {
-      var answer = submission.answers[question.id];
+      var answer = answers[question.id];
 
       if (question.required && answer !== "YES" && answer !== "NO") {
         missingQuestionIds.push(question.id);
@@ -38,16 +47,16 @@ AKS.Modules.HealthQuestionnaire.Evaluation = Object.freeze({
       }
     });
 
-    if (!submission.declarationAccepted) {
+    if (assessment.declarationAccepted !== true) {
       missingQuestionIds.push("DECLARATION");
     }
 
-    var status = this.ELIGIBLE;
+    var status = this.NO_MEDICAL_CERTIFICATE_REQUIRED;
 
     if (missingQuestionIds.length > 0) {
       status = this.INCOMPLETE;
     } else if (positiveQuestionIds.length > 0) {
-      status = this.MEDICAL_REVIEW_REQUIRED;
+      status = this.MEDICAL_CERTIFICATE_REQUIRED;
     }
 
     return Object.freeze({

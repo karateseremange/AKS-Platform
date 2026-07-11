@@ -12,7 +12,7 @@ function AKS_runHQ001Tests() {
     test_HQ001_missingAnswerIsIncomplete,
     test_HQ001_missingDeclarationIsIncomplete,
     test_HQ001_campaignRejectsInvalidStatus,
-    test_HQ001_submissionRejectsInvalidAnswer
+    test_HQ001_evaluationRejectsInvalidAnswer
   ];
 
   var results = [];
