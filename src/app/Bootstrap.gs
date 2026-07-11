@@ -1,11 +1,15 @@
-function AKS_start() {
-  try {
-    return AKS.Core.Application.start();
-  } catch (error) {
-    AKS.Core.Logger.error("AKS Platform startup failed.", error);
-    return AKS.Core.Result.failure(
-      error && error.code ? error.code : "STARTUP_FAILED",
-      error && error.message ? error.message : String(error)
-    );
+var AKS = AKS || {};
+AKS.App = AKS.App || {};
+
+/**
+ * Declares the modules available to the application.
+ *
+ * The bootstrap layer is the only place where concrete modules are listed.
+ */
+AKS.App.Bootstrap = Object.freeze({
+  getModules: function () {
+    return [
+      AKS.Modules.HealthQuestionnaire.Module
+    ];
   }
-}
+});
