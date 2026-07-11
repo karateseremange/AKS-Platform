@@ -1,36 +1,60 @@
 var AKS = AKS || {};
 AKS.Modules = AKS.Modules || {};
-AKS.Modules.HealthQuestionnaire = AKS.Modules.HealthQuestionnaire || {};
+AKS.Modules.HealthQuestionnaire =
+  AKS.Modules.HealthQuestionnaire || {};
 
 AKS.Modules.HealthQuestionnaire.Evaluation = Object.freeze({
-  STATUS_ELIGIBLE: "ELIGIBLE",
-  STATUS_MEDICAL_REVIEW_REQUIRED: "MEDICAL_REVIEW_REQUIRED",
-  STATUS_INCOMPLETE: "INCOMPLETE",
+  ELIGIBLE: "ELIGIBLE",
+  MEDICAL_REVIEW_REQUIRED: "MEDICAL_REVIEW_REQUIRED",
+  INCOMPLETE: "INCOMPLETE",
 
+  /**
+   * Evaluates a submission against a questionnaire.
+   *
+   * @param {Object} questionnaire
+   * @param {Object} submission
+   * @returns {Object}
+   */
   evaluate: function (questionnaire, submission) {
-    var missing = [];
-    var positive = [];
+    if (questionnaire.id !== submission.questionnaireId) {
+      throw new AKS.Core.Exception(
+        "HEALTH_EVALUATION_QUESTIONNAIRE_MISMATCH",
+        "Submission does not belong to the questionnaire."
+      );
+    }
+
+    var missingQuestionIds = [];
+    var positiveQuestionIds = [];
 
     questionnaire.questions.forEach(function (question) {
       var answer = submission.answers[question.id];
+
       if (question.required && answer !== "YES" && answer !== "NO") {
-        missing.push(question.id);
+        missingQuestionIds.push(question.id);
       }
+
       if (answer === "YES") {
-        positive.push(question.id);
+        positiveQuestionIds.push(question.id);
       }
     });
 
     if (!submission.declarationAccepted) {
-      missing.push("DECLARATION");
+      missingQuestionIds.push("DECLARATION");
     }
 
-    if (missing.length > 0) {
-      return Object.freeze({status: this.STATUS_INCOMPLETE, missingQuestionIds: missing, positiveQuestionIds: positive});
+    var status = this.ELIGIBLE;
+
+    if (missingQuestionIds.length > 0) {
+      status = this.INCOMPLETE;
+    } else if (positiveQuestionIds.length > 0) {
+      status = this.MEDICAL_REVIEW_REQUIRED;
     }
-    if (positive.length > 0) {
-      return Object.freeze({status: this.STATUS_MEDICAL_REVIEW_REQUIRED, missingQuestionIds: [], positiveQuestionIds: positive});
-    }
-    return Object.freeze({status: this.STATUS_ELIGIBLE, missingQuestionIds: [], positiveQuestionIds: []});
+
+    return Object.freeze({
+      status: status,
+      missingQuestionIds: Object.freeze(missingQuestionIds),
+      positiveQuestionIds: Object.freeze(positiveQuestionIds),
+      evaluatedAt: new Date()
+    });
   }
 });
