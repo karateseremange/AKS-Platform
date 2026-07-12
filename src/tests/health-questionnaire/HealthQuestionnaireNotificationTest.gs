@@ -26,7 +26,7 @@ function test_HQ007_certificateRequiredHasNoAttachment() {
   ) !== -1);
 }
 
-function test_HQ007_clubReceivesReferenceOnly() {
+function test_HQ007_clubReceivesAdministrativeIdentityAndFormalityOnly() {
   var fixture = createHQ007Fixture_();
   fixture.service.notify(
     createHQ007Submission_("NO_MEDICAL_CERTIFICATE_REQUIRED")
@@ -35,9 +35,12 @@ function test_HQ007_clubReceivesReferenceOnly() {
   var serialized = JSON.stringify(clubMessage);
 
   assertTrue_(serialized.indexOf("QS-2026-000001") !== -1);
-  assertTrue_(serialized.indexOf("Alice") === -1);
-  assertTrue_(serialized.indexOf("DUPONT") === -1);
-  assertTrue_(serialized.indexOf("NO_MEDICAL") === -1);
+  assertTrue_(serialized.indexOf("Alice DUPONT") !== -1);
+  assertTrue_(serialized.indexOf("12/05/2014") !== -1);
+  assertTrue_(serialized.indexOf("Aucun certificat médical requis") !== -1);
+  assertTrue_(serialized.indexOf("Marie") === -1);
+  assertTrue_(serialized.indexOf("parent@example.org") === -1);
+  assertTrue_(serialized.indexOf("NO_MEDICAL_CERTIFICATE_REQUIRED") === -1);
   assertTrue_(serialized.indexOf("drive-file") === -1);
 }
 

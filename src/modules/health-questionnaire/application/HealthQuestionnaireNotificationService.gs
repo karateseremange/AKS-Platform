@@ -102,18 +102,36 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
 
     function createClubMessage_(submission) {
       var reference = escapeHtml_(submission.id);
+      var minorName = submission.firstName + " " + submission.lastName;
+      var birthDate = formatDate_(submission.birthDate);
+      var formality = submission.result === "MEDICAL_CERTIFICATE_REQUIRED"
+        ? "Certificat médical requis"
+        : "Aucun certificat médical requis";
       return {
         to: clubEmail,
         from: clubEmail,
         senderName: senderName,
         subject: "Nouvelle soumission questionnaire santé — " + submission.id,
         textBody:
-          "Une nouvelle soumission a été enregistrée.\n\nRéférence : " +
-          submission.id,
+          "Une nouvelle soumission a été enregistrée.\n\n" +
+          "Licencié : " + minorName + "\n" +
+          "Date de naissance : " + birthDate + "\n" +
+          "Référence : " + submission.id + "\n" +
+          "Formalité : " + formality,
         htmlBody:
           "<p>Une nouvelle soumission a été enregistrée.</p>" +
-          "<p>Référence : <strong>" + reference + "</strong></p>"
+          "<p>Licencié : <strong>" + escapeHtml_(minorName) + "</strong><br>" +
+          "Date de naissance : <strong>" + escapeHtml_(birthDate) + "</strong><br>" +
+          "Référence : <strong>" + reference + "</strong><br>" +
+          "Formalité : <strong>" + escapeHtml_(formality) + "</strong></p>"
       };
+    }
+
+    function formatDate_(value) {
+      var date = value instanceof Date ? value : new Date(value);
+      var day = String(date.getDate()).padStart(2, "0");
+      var month = String(date.getMonth() + 1).padStart(2, "0");
+      return day + "/" + month + "/" + date.getFullYear();
     }
 
     function validateSubmission_(submission) {

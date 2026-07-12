@@ -10,8 +10,8 @@ Livrable candidat à la validation Apps Script.
 - adresse d’envoi et de réponse : `contact@karate-seremange.fr` ;
 - résultat `NO_MEDICAL_CERTIFICATE_REQUIRED` : le représentant légal reçoit l’attestation FFKDA en pièce jointe ;
 - résultat `MEDICAL_CERTIFICATE_REQUIRED` : le représentant légal reçoit les consignes sans pièce jointe ;
-- le club reçoit uniquement une notification administrative contenant la référence ;
-- le club ne reçoit ni identité, ni résultat, ni PDF, ni lien Drive ;
+- le club reçoit le nom, le prénom et la date de naissance du licencié mineur, la référence et la formalité attendue ;
+- le club ne reçoit ni coordonnées du représentant légal, ni réponses détaillées, ni PDF, ni lien Drive ;
 - aucune réponse détaillée ne franchit la frontière du service de notification.
 
 ## Workflow
@@ -19,7 +19,7 @@ Livrable candidat à la validation Apps Script.
 1. la soumission administrative est enregistrée ;
 2. HQ-006 génère le PDF lorsque le résultat le permet ;
 3. le représentant légal est notifié et `respondentEmailSentAt` est persisté ;
-4. le club est notifié et `clubEmailSentAt` est persisté ;
+4. le club est notifié de l’identité administrative du licencié et de la formalité attendue, puis `clubEmailSentAt` est persisté ;
 5. la soumission passe au statut `COMPLETED`.
 
 Chaque envoi réussi est persisté immédiatement. Une reprise avec la même soumission ignore les destinataires déjà notifiés.

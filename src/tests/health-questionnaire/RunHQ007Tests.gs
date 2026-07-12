@@ -3,7 +3,7 @@ function AKS_runHQ007Tests() {
   var tests = [
     test_HQ007_eligibleRespondentReceivesPdfAndClubDoesNot,
     test_HQ007_certificateRequiredHasNoAttachment,
-    test_HQ007_clubReceivesReferenceOnly,
+    test_HQ007_clubReceivesAdministrativeIdentityAndFormalityOnly,
     test_HQ007_persistsEachSuccessfulDelivery,
     test_HQ007_retrySkipsAlreadySentRespondentEmail,
     test_HQ007_rejectsDetailedAnswers,

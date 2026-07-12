@@ -5,13 +5,13 @@
 - notification conditionnelle du représentant légal ;
 - attestation FFKDA jointe uniquement lorsqu’aucun certificat médical n’est requis ;
 - consignes sans PDF lorsqu’un certificat médical est requis ;
-- notification administrative du club limitée à la référence ;
+- notification administrative du club contenant l’identité du licencié, sa date de naissance, la référence et la formalité attendue ;
 - horodatage indépendant des deux envois et reprise sans doublon ;
 - passerelle Gmail/Drive injectable et tests automatisés dédiés.
 
 ## Confidentialité
 
-Les réponses détaillées ne sont ni enregistrées, ni envoyées. Le message du club ne contient ni identité, ni décision, ni PDF, ni lien Drive.
+Les réponses détaillées ne sont ni enregistrées, ni envoyées. Le message du club ne contient ni coordonnées du représentant légal, ni PDF, ni lien Drive.
 
 ## Validation attendue
 

@@ -4,7 +4,7 @@
 
 - Ajout des notifications conditionnelles du représentant légal.
 - Envoi du PDF FFKDA uniquement lorsqu’aucun certificat médical n’est requis.
-- Ajout de la notification administrative du club limitée à la référence.
+- Ajout de la notification administrative du club avec identité du licencié, date de naissance, référence et formalité attendue.
 - Persistance indépendante des deux horodatages d’envoi.
 - Ajout de 7 tests automatisés HQ-007.
 
