@@ -12,10 +12,11 @@ AKS.Modules.HealthQuestionnaire =
  * @param {Object} repository
  * @param {Object} settings
  * @param {Object=} attestationService
+ * @param {Object=} notificationService
  * @returns {Object}
  */
 AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
-  function (repository, settings, attestationService) {
+  function (repository, settings, attestationService, notificationService) {
     AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(repository);
 
     if (!settings || typeof settings.getActiveCampaignId !== "function") {
@@ -482,7 +483,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
           identityResult.data.legalRepresentativeFirstName,
         result: decision.result,
         status: "CREATED",
-        processingVersion: "rc-0.3.0",
+        processingVersion: "hq-007",
         submittedAt: new Date()
       });
 
@@ -493,6 +494,10 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
         attestationService
       ) {
         submission = attestationService.generateForSubmission(submission);
+      }
+
+      if (notificationService) {
+        submission = notificationService.notify(submission);
       }
 
       return AKS.Core.Result.success(createConfirmationDto_(submission));
