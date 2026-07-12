@@ -2,6 +2,7 @@
 
 - génération automatique réservée au résultat `NO_MEDICAL_CERTIFICATE_REQUIRED` ;
 - attestation FFKDA préremplie pour le représentant légal et le mineur ;
+- logo officiel FFKDA intégré depuis la référence documentaire validée ;
 - zone Date et signature conservée vierge ;
 - QR code discret contenant uniquement la référence opaque de soumission ;
 - stockage dans un dossier Google Drive privé configuré ;

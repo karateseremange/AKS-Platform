@@ -6,7 +6,7 @@ Validé dans Apps Script le 12 juillet 2026.
 
 ## Source documentaire
 
-Le rendu reprend l’attestation mineur FFKDA conservée dans le dépôt documentaire sous `references/ffkda/2-Attestation mineur.pdf`.
+Le rendu reprend l’attestation mineur FFKDA conservée dans le dépôt documentaire sous `references/ffkda/2-Attestation mineur.pdf`. Le logo officiel provient de `references/ffkda/LOGO-FFKarate_H_RVB.png`.
 
 ## Règles
 
