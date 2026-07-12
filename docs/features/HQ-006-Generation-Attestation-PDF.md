@@ -16,6 +16,7 @@ Le rendu reprend l’attestation mineur FFKDA conservée dans le dépôt documen
 - référence de soumission visible en pied de page ;
 - QR code limité au format opaque `AKS-QS|1|<référence>` ;
 - image QR produite côté serveur par l’API QuickChart à partir de cette seule référence opaque ;
+- URL HTTPS utilisée directement dans le modèle HTML afin d’être rendue lors de la conversion PDF Apps Script ;
 - aucune réponse, information médicale ou identité dans le QR code ;
 - stockage privé dans un dossier Drive configuré ;
 - persistance de l’identifiant et de l’URL Drive dans `HQ_Submissions` ;

@@ -38,6 +38,10 @@ function test_HQ006_prefillsNamesAndKeepsAnswersOutsideGenerator() {
 
   assertEquals_("Marie DUPONT", fixture.generated.viewModel.legalRepresentativeName);
   assertEquals_("Alice DUPONT", fixture.generated.viewModel.minorName);
+  assertEquals_(
+    "https://qr.example/test.png",
+    fixture.generated.viewModel.qrCodeUrl
+  );
   assertTrue_(!Object.prototype.hasOwnProperty.call(
     fixture.generated.viewModel,
     "answers"
@@ -52,7 +56,7 @@ function createHQ006Fixture_() {
     .HealthQuestionnaireAttestationGenerator({
       qrProvider: function (payload) {
         generated.qrPayload = payload;
-        return "data:image/png;base64,TEST";
+        return "https://qr.example/test.png";
       },
       pdfRenderer: function (viewModel) {
         generated.viewModel = viewModel;

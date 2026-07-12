@@ -16,7 +16,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireAttestationGenerator =
     var services = dependencies || {};
     var pdfRenderer = services.pdfRenderer || renderPdf_;
     var fileStore = services.fileStore || storePdf_;
-    var qrProvider = services.qrProvider || createQrDataUri_;
+    var qrProvider = services.qrProvider || createQrImageUrl_;
 
     function generate(submission) {
       validateSubmission_(submission);
@@ -29,7 +29,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireAttestationGenerator =
           submission.legalRepresentativeLastName
         ),
         minorName: joinName_(submission.firstName, submission.lastName),
-        qrCodeDataUri: qrProvider(verificationPayload)
+        qrCodeUrl: qrProvider(verificationPayload)
       });
       var storedFile = fileStore(pdfBlob, createFileName_(submission));
 
@@ -93,22 +93,9 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireAttestationGenerator =
         .setName("attestation.pdf");
     }
 
-    function createQrDataUri_(payload) {
-      var response = UrlFetchApp.fetch(
-        "https://quickchart.io/qr?size=120&margin=0&ecLevel=M&text=" +
-          encodeURIComponent(payload),
-        { muteHttpExceptions: true }
-      );
-
-      if (response.getResponseCode() !== 200) {
-        throw new AKS.Core.Exception(
-          "HEALTH_ATTESTATION_QR_UNAVAILABLE",
-          "The verification QR code could not be generated."
-        );
-      }
-
-      return "data:image/png;base64," +
-        Utilities.base64Encode(response.getBlob().getBytes());
+    function createQrImageUrl_(payload) {
+      return "https://quickchart.io/qr?size=180&margin=1&ecLevel=M&text=" +
+        encodeURIComponent(payload);
     }
 
     function storePdf_(blob, fileName) {
