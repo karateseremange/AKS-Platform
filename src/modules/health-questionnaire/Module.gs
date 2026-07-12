@@ -6,7 +6,7 @@ AKS.Modules.HealthQuestionnaire =
 AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
   id: "health-questionnaire",
   name: "Questionnaire santé",
-  version: "0.5.1",
+  version: "0.6.0",
   status: "active",
 
   getDescriptor: function () {
@@ -98,6 +98,9 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
               ),
               container.resolve(
                 "healthQuestionnaire.attestationService"
+              ),
+              container.resolve(
+                "healthQuestionnaire.notificationService"
               )
             );
         }
@@ -126,6 +129,37 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
             .HealthQuestionnaireAttestationService(
               container.resolve("healthQuestionnaire.repository"),
               container.resolve("healthQuestionnaire.attestationGenerator")
+            );
+        }
+      );
+    }
+
+    if (!AKS.Core.Container.has(
+      "healthQuestionnaire.emailGateway"
+    )) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.emailGateway",
+        function () {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireEmailGateway();
+        }
+      );
+    }
+
+    if (!AKS.Core.Container.has(
+      "healthQuestionnaire.notificationService"
+    )) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.notificationService",
+        function (container) {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireNotificationService(
+              container.resolve("healthQuestionnaire.repository"),
+              container.resolve("healthQuestionnaire.emailGateway"),
+              {
+                clubEmail: "contact@karate-seremange.fr",
+                senderName: "Association Karaté Serémange"
+              }
             );
         }
       );
