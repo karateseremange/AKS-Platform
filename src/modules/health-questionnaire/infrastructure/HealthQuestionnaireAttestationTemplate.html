@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      @page { size: A4; margin: 0; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, sans-serif; color: #000; }
+      .page { width: 210mm; height: 297mm; padding: 13mm 20mm 12mm; position: relative; }
+      .brand { font-weight: 700; font-size: 10pt; line-height: .95; letter-spacing: .4px; }
+      .brand strong { display: block; font-size: 15pt; letter-spacing: 1px; }
+      .notice { position: absolute; top: 16mm; right: 10mm; color: #f00; border: .3mm solid #f00; padding: 2mm 5mm; font-size: 10pt; }
+      .annex { margin: 4mm 0 9mm 7mm; font-size: 14pt; text-decoration: underline; }
+      .title { border: .25mm solid #000; margin: 0 5mm 16mm; padding: 6mm 4mm 7mm; text-align: center; }
+      .title h1 { font-size: 12pt; line-height: 1.35; text-decoration: underline; margin: 0 0 7mm; }
+      .title h2 { font-size: 18pt; margin: 0; }
+      .fields { margin: 0 7mm; font-size: 12pt; }
+      .field { margin: 0 0 12mm; line-height: 9mm; }
+      .value { display: inline-block; min-width: 110mm; margin-left: 2mm; border-bottom: .25mm solid #000; font-weight: 700; padding: 0 2mm; }
+      .statement { margin-top: 7mm; line-height: 1.45; }
+      .signature { margin-top: 31mm; }
+      .footer { position: absolute; left: 27mm; right: 22mm; bottom: 10mm; font-size: 7.5pt; color: #555; }
+      .reference { position: absolute; bottom: 0; left: 0; }
+      .qr { position: absolute; width: 18mm; height: 18mm; right: 0; bottom: -2mm; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="brand">FÉDÉRATION<br>FRANÇAISE<strong>KARATÉ</strong></div>
+      <div class="notice">EXEMPLAIRE À REMETTRE AU CLUB ET À CONSERVER PAR CE DERNIER</div>
+      <div class="annex">Annexe n°2</div>
+      <section class="title">
+        <h1>ATTESTATION SUR L’HONNEUR DE RÉPONSE AU CONTENU DU QUESTIONNAIRE RELATIF<br>
+          À L’ÉTAT DE SANTÉ DU SPORTIF MINEUR EN VUE DE L’OBTENTION, DU<br>
+          RENOUVELLEMENT D’UNE LICENCE OU DE L’INSCRIPTION À UNE COMPÉTITION</h1>
+        <h2>LICENCIÉ MINEUR</h2>
+      </section>
+      <main class="fields">
+        <div class="field">Je soussigné(e)<span class="value"><?= attestation.legalRepresentativeName ?></span></div>
+        <div class="field">exerce l’autorité parentale sur<span class="value"><?= attestation.minorName ?></span></div>
+        <p class="statement">atteste avoir complété conjointement avec mon enfant l’ensemble du « Questionnaire relatif à l’état de santé du sportif mineur » situé à l’ANNEXE II-23 (article A. 231-3 du code sport) et avoir conjointement répondu <strong><u>négativement</u></strong> à l’ensemble des items présentés.</p>
+        <p class="signature">Date et signature (de la personne exerçant l’autorité parentale) :</p>
+      </main>
+      <footer class="footer">
+        <span class="reference">Référence : <?= attestation.submissionId ?></span>
+        <img class="qr" src="<?= attestation.qrCodeDataUri ?>" alt="QR code de vérification">
+      </footer>
+    </div>
+  </body>
+</html>

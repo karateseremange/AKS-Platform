@@ -95,7 +95,37 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
               ),
               container.resolve(
                 "healthQuestionnaire.settings"
+              ),
+              container.resolve(
+                "healthQuestionnaire.attestationService"
               )
+            );
+        }
+      );
+    }
+
+    if (!AKS.Core.Container.has(
+      "healthQuestionnaire.attestationGenerator"
+    )) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.attestationGenerator",
+        function () {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireAttestationGenerator();
+        }
+      );
+    }
+
+    if (!AKS.Core.Container.has(
+      "healthQuestionnaire.attestationService"
+    )) {
+      AKS.Core.Container.factory(
+        "healthQuestionnaire.attestationService",
+        function (container) {
+          return AKS.Modules.HealthQuestionnaire
+            .HealthQuestionnaireAttestationService(
+              container.resolve("healthQuestionnaire.repository"),
+              container.resolve("healthQuestionnaire.attestationGenerator")
             );
         }
       );
