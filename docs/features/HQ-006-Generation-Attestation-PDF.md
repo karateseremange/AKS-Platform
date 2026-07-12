@@ -2,7 +2,7 @@
 
 ## Statut
 
-À valider dans Apps Script.
+Validé dans Apps Script le 12 juillet 2026.
 
 ## Source documentaire
 
@@ -39,3 +39,12 @@ Le générateur reçoit exclusivement un objet `Submission`. Les réponses déta
 ## Validation
 
 Exécuter `AKS_runHQ006Tests()`, puis réaliser une soumission entièrement négative dans la Web App. Vérifier le PDF créé dans Drive ainsi que la mise à jour de `HQ_Submissions`.
+
+Validation réalisée :
+
+- 4 tests automatisés réussis ;
+- génération réelle du PDF dans Drive ;
+- préremplissage des identités vérifié ;
+- QR code visible, lisible et limité à la référence opaque ;
+- statut `PDF_GENERATED` et références Drive persistés ;
+- absence de réponses détaillées confirmée.
