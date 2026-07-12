@@ -129,9 +129,20 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
 
     function formatDate_(value) {
       var date = value instanceof Date ? value : new Date(value);
-      var day = String(date.getDate()).padStart(2, "0");
-      var month = String(date.getMonth() + 1).padStart(2, "0");
-      return day + "/" + month + "/" + date.getFullYear();
+      var isUtcMidnight =
+        date.getUTCHours() === 0 &&
+        date.getUTCMinutes() === 0 &&
+        date.getUTCSeconds() === 0;
+      var day = isUtcMidnight ? date.getUTCDate() : date.getDate();
+      var month = isUtcMidnight
+        ? date.getUTCMonth() + 1
+        : date.getMonth() + 1;
+      var year = isUtcMidnight
+        ? date.getUTCFullYear()
+        : date.getFullYear();
+
+      return String(day).padStart(2, "0") + "/" +
+        String(month).padStart(2, "0") + "/" + year;
     }
 
     function validateSubmission_(submission) {
