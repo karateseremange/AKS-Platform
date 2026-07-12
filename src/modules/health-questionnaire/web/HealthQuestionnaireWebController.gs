@@ -408,6 +408,17 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
       });
     }
 
+    function createRespondentAnswerSummary_(questionnaire, answers) {
+      return Object.freeze(
+        questionnaire.questions.map(function (question) {
+          return Object.freeze({
+            question: String(question.label),
+            answer: answers[question.id] === "YES" ? "Oui" : "Non"
+          });
+        })
+      );
+    }
+
     function submitQuestionnaire(payload) {
       var data = payload || {};
       var activeCampaignId = settings.getActiveCampaignId();
@@ -497,7 +508,13 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
       }
 
       if (notificationService) {
-        submission = notificationService.notify(submission);
+        submission = notificationService.notify(
+          submission,
+          createRespondentAnswerSummary_(
+            questionnaire,
+            answersResult.data
+          )
+        );
       }
 
       return AKS.Core.Result.success(createConfirmationDto_(submission));

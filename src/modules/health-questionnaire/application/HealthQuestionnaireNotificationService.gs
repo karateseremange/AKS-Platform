@@ -33,13 +33,16 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
     ).trim();
     var now = clock || function () { return new Date(); };
 
-    function notify(submission) {
+    function notify(submission, answerSummary) {
       validateSubmission_(submission);
 
       var current = submission;
 
       if (!current.respondentEmailSentAt) {
-        emailGateway.send(createRespondentMessage_(current));
+        validateAnswerSummary_(answerSummary);
+        emailGateway.send(
+          createRespondentMessage_(current, answerSummary)
+        );
         current = copySubmission_(current, {
           status: "EMAIL_SENT",
           respondentEmailSentAt: now()
@@ -59,7 +62,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
       return current;
     }
 
-    function createRespondentMessage_(submission) {
+    function createRespondentMessage_(submission, answerSummary) {
       var reference = escapeHtml_(submission.id);
       var minorName = escapeHtml_(
         submission.firstName + " " + submission.lastName
@@ -81,6 +84,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
           "Nous vous invitons à la dater, à la signer et à la transmettre à " +
           "l'Association Karaté Serémange afin de finaliser le dossier d'inscription.\n\n" +
           "Aucune réponse apportée au questionnaire n'a été enregistrée ni transmise au club.\n\n" +
+          createAnswerSummaryText_(answerSummary) + "\n\n" +
           "Référence du dossier : " + submission.id + "\n\n" +
           "Cordialement,\n\nAssociation Karaté Serémange\n" + clubEmail;
         common.htmlBody =
@@ -92,6 +96,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
           "Nous vous invitons à la dater, à la signer et à la transmettre à " +
           "l’Association Karaté Serémange afin de finaliser le dossier d’inscription.</p>" +
           "<p>Aucune réponse apportée au questionnaire n’a été enregistrée ni transmise au club.</p>" +
+          createAnswerSummaryHtml_(answerSummary) +
           "<p>Référence du dossier : <strong>" + reference + "</strong></p>" +
           "<p>Cordialement,</p><p>Association Karaté Serémange<br>" +
           escapeHtml_(clubEmail) + "</p>";
@@ -107,6 +112,7 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
         "Au regard de la déclaration effectuée, un certificat médical devra être " +
         "transmis à l'Association Karaté Serémange afin de finaliser le dossier d'inscription.\n\n" +
         "Aucune réponse apportée au questionnaire n'a été enregistrée ni transmise au club.\n\n" +
+        createAnswerSummaryText_(answerSummary) + "\n\n" +
         "Référence du dossier : " + submission.id + "\n\n" +
         "Cordialement,\n\nAssociation Karaté Serémange\n" + clubEmail;
       common.htmlBody =
@@ -116,10 +122,53 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
         "<p>Au regard de la déclaration effectuée, un certificat médical devra être " +
         "transmis à l’Association Karaté Serémange afin de finaliser le dossier d’inscription.</p>" +
         "<p>Aucune réponse apportée au questionnaire n’a été enregistrée ni transmise au club.</p>" +
+        createAnswerSummaryHtml_(answerSummary) +
         "<p>Référence du dossier : <strong>" + reference + "</strong></p>" +
         "<p>Cordialement,</p><p>Association Karaté Serémange<br>" +
         escapeHtml_(clubEmail) + "</p>";
       return common;
+    }
+
+    function validateAnswerSummary_(answerSummary) {
+      if (!Array.isArray(answerSummary) || answerSummary.length === 0) {
+        throw new AKS.Core.Exception(
+          "HEALTH_NOTIFICATION_ANSWER_SUMMARY_REQUIRED",
+          "The ephemeral answer summary is required for the respondent e-mail."
+        );
+      }
+
+      answerSummary.forEach(function (item) {
+        if (
+          !item ||
+          !String(item.question || "").trim() ||
+          ["Oui", "Non"].indexOf(item.answer) === -1
+        ) {
+          throw new AKS.Core.Exception(
+            "HEALTH_NOTIFICATION_ANSWER_SUMMARY_INVALID",
+            "The ephemeral answer summary is invalid."
+          );
+        }
+      });
+    }
+
+    function createAnswerSummaryText_(answerSummary) {
+      var lines = ["Récapitulatif du questionnaire"];
+      answerSummary.forEach(function (item, index) {
+        lines.push(
+          (index + 1) + ". " + item.question + "\nRéponse : " + item.answer
+        );
+      });
+      return lines.join("\n\n");
+    }
+
+    function createAnswerSummaryHtml_(answerSummary) {
+      var items = answerSummary.map(function (item) {
+        return "<li>" + escapeHtml_(item.question) +
+          "<br><strong>Réponse : " + escapeHtml_(item.answer) +
+          "</strong></li>";
+      }).join("");
+      return "<h3>Récapitulatif du questionnaire</h3><ol>" +
+        items + "</ol>";
     }
 
     function createClubMessage_(submission) {

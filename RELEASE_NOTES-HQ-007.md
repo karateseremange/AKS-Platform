@@ -8,10 +8,11 @@
 - notification administrative du club contenant l’identité du licencié, sa date de naissance, la référence et la formalité attendue ;
 - horodatage indépendant des deux envois et reprise sans doublon ;
 - passerelle Gmail/Drive injectable et tests automatisés dédiés.
+- récapitulatif éphémère des questions et réponses envoyé uniquement au représentant légal.
 
 ## Confidentialité
 
-Les réponses détaillées ne sont ni enregistrées, ni envoyées. Le message du club ne contient ni coordonnées du représentant légal, ni PDF, ni lien Drive.
+Les réponses détaillées ne sont jamais enregistrées et sont envoyées uniquement au représentant légal pendant la soumission. Le message du club ne contient ni réponses détaillées, ni coordonnées du représentant légal, ni PDF, ni lien Drive.
 
 ## Validation attendue
 

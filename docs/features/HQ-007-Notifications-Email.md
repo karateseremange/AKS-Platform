@@ -14,6 +14,8 @@ Livrable candidat à la validation Apps Script.
 - le club ne reçoit ni coordonnées du représentant légal, ni réponses détaillées, ni PDF, ni lien Drive ;
 - aucune réponse détaillée ne franchit la frontière du service de notification.
 
+Les réponses détaillées constituent une exception éphémère limitée au message du représentant légal : le contrôleur construit un récapitulatif temporaire avec chaque question et sa réponse, le transmet au service de notification pendant la soumission, puis l’abandonne. Ce récapitulatif n’entre jamais dans `Submission`, le repository, Google Sheets, Drive, le PDF, les journaux ou le message du club.
+
 Les messages adressés au représentant légal utilisent une formulation institutionnelle, rappellent la confidentialité des réponses et précisent la formalité nécessaire pour finaliser le dossier d’inscription.
 
 ## Workflow

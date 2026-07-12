@@ -1,7 +1,8 @@
 function test_HQ007_eligibleRespondentReceivesPdfAndClubDoesNot() {
   var fixture = createHQ007Fixture_();
   var completed = fixture.service.notify(
-    createHQ007Submission_("NO_MEDICAL_CERTIFICATE_REQUIRED")
+    createHQ007Submission_("NO_MEDICAL_CERTIFICATE_REQUIRED"),
+    createHQ007AnswerSummary_("Non")
   );
 
   assertEquals_(2, fixture.messages.length);
@@ -16,6 +17,12 @@ function test_HQ007_eligibleRespondentReceivesPdfAndClubDoesNot() {
   assertTrue_(fixture.messages[0].textBody.indexOf(
     "Aucune réponse apportée au questionnaire"
   ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Avez-vous ressenti une douleur inhabituelle ?"
+  ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Réponse : Non"
+  ) !== -1);
   assertEquals_("contact@karate-seremange.fr", fixture.messages[1].to);
   assertTrue_(!fixture.messages[1].attachmentFileId);
   assertEquals_("COMPLETED", completed.status);
@@ -24,7 +31,8 @@ function test_HQ007_eligibleRespondentReceivesPdfAndClubDoesNot() {
 function test_HQ007_certificateRequiredHasNoAttachment() {
   var fixture = createHQ007Fixture_();
   fixture.service.notify(
-    createHQ007Submission_("MEDICAL_CERTIFICATE_REQUIRED")
+    createHQ007Submission_("MEDICAL_CERTIFICATE_REQUIRED"),
+    createHQ007AnswerSummary_("Oui")
   );
 
   assertEquals_(2, fixture.messages.length);
@@ -36,12 +44,16 @@ function test_HQ007_certificateRequiredHasNoAttachment() {
   assertTrue_(fixture.messages[0].textBody.indexOf(
     "Aucune réponse apportée au questionnaire"
   ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Réponse : Oui"
+  ) !== -1);
 }
 
 function test_HQ007_clubReceivesAdministrativeIdentityAndFormalityOnly() {
   var fixture = createHQ007Fixture_();
   fixture.service.notify(
-    createHQ007Submission_("NO_MEDICAL_CERTIFICATE_REQUIRED")
+    createHQ007Submission_("NO_MEDICAL_CERTIFICATE_REQUIRED"),
+    createHQ007AnswerSummary_("Non")
   );
   var clubMessage = fixture.messages[1];
   var serialized = JSON.stringify(clubMessage);
@@ -54,18 +66,28 @@ function test_HQ007_clubReceivesAdministrativeIdentityAndFormalityOnly() {
   assertTrue_(serialized.indexOf("parent@example.org") === -1);
   assertTrue_(serialized.indexOf("NO_MEDICAL_CERTIFICATE_REQUIRED") === -1);
   assertTrue_(serialized.indexOf("drive-file") === -1);
+  assertTrue_(serialized.indexOf("douleur inhabituelle") === -1);
+  assertTrue_(serialized.indexOf("Réponse :") === -1);
 }
 
 function test_HQ007_persistsEachSuccessfulDelivery() {
   var fixture = createHQ007Fixture_();
   var completed = fixture.service.notify(
-    createHQ007Submission_("MEDICAL_CERTIFICATE_REQUIRED")
+    createHQ007Submission_("MEDICAL_CERTIFICATE_REQUIRED"),
+    createHQ007AnswerSummary_("Oui")
   );
   var stored = fixture.repository.findSubmissionById(completed.id);
 
   assertTrue_(stored.respondentEmailSentAt instanceof Date);
   assertTrue_(stored.clubEmailSentAt instanceof Date);
   assertEquals_("COMPLETED", stored.status);
+  assertTrue_(JSON.stringify(stored).indexOf(
+    "douleur inhabituelle"
+  ) === -1);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    stored,
+    "answerSummary"
+  ));
 }
 
 function test_HQ007_retrySkipsAlreadySentRespondentEmail() {
@@ -75,7 +97,10 @@ function test_HQ007_retrySkipsAlreadySentRespondentEmail() {
   );
 
   assertThrows_(function () {
-    fixture.service.notify(submission);
+    fixture.service.notify(
+      submission,
+      createHQ007AnswerSummary_("Oui")
+    );
   }, "HEALTH_EMAIL_TEST_FAILURE");
 
   var stored = fixture.repository.findSubmissionById(submission.id);
@@ -197,4 +222,17 @@ function createHQ007Submission_(result) {
       ? "https://drive.example/file-1"
       : null
   });
+}
+
+function createHQ007AnswerSummary_(firstAnswer) {
+  return [
+    {
+      question: "Avez-vous ressenti une douleur inhabituelle ?",
+      answer: firstAnswer
+    },
+    {
+      question: "Avez-vous eu un malaise ?",
+      answer: "Non"
+    }
+  ];
 }

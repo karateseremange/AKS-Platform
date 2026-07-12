@@ -8,6 +8,7 @@
 - Persistance indépendante des deux horodatages d’envoi.
 - Ajout de 7 tests automatisés HQ-007.
 - Formalisation des messages adressés au représentant légal et ajout du rappel de confidentialité.
+- Envoi éphémère du récapitulatif des questions et réponses uniquement au représentant légal, sans persistance.
 
 ## HQ-006 — 2026-07-12
 - Génération de l’attestation PDF officielle FFKDA.

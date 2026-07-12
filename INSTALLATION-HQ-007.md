@@ -8,6 +8,6 @@
 6. Réexécuter `AKS_runHQ006Tests()` : 4 tests doivent réussir.
 7. Réexécuter `AKS_runHQ0052Sprint43Tests()` pour vérifier le workflow antérieur.
 8. Redéployer la Web App avec une nouvelle version.
-9. Soumettre un questionnaire entièrement négatif : vérifier le PDF joint au représentant et, côté club, l’identité du licencié, sa date de naissance, la référence et l’absence de certificat requis.
-10. Soumettre un questionnaire comportant au moins une réponse positive : vérifier les consignes sans PDF et, côté club, la mention « Certificat médical requis » sans pièce jointe.
+9. Soumettre un questionnaire entièrement négatif : vérifier le PDF et le récapitulatif détaillé uniquement dans le message du représentant ; côté club, vérifier l’identité du licencié, sa date de naissance, la référence et l’absence de certificat requis.
+10. Soumettre un questionnaire comportant au moins une réponse positive : vérifier les consignes et le récapitulatif détaillé du représentant sans PDF ; côté club, vérifier la mention « Certificat médical requis » sans réponses détaillées ni pièce jointe.
 11. Dans `HQ_Submissions`, vérifier `respondentEmailSentAt`, `clubEmailSentAt` et le statut `COMPLETED`.
