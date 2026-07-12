@@ -11,10 +11,11 @@ AKS.Modules.HealthQuestionnaire =
  *
  * @param {Object} repository
  * @param {Object} settings
+ * @param {Object=} attestationService
  * @returns {Object}
  */
 AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
-  function (repository, settings) {
+  function (repository, settings, attestationService) {
     AKS.Modules.HealthQuestionnaire.RepositoryContract.validate(repository);
 
     if (!settings || typeof settings.getActiveCampaignId !== "function") {
@@ -486,6 +487,14 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireWebController =
       });
 
       repository.saveSubmission(submission);
+
+      if (
+        submission.result === "NO_MEDICAL_CERTIFICATE_REQUIRED" &&
+        attestationService
+      ) {
+        submission = attestationService.generateForSubmission(submission);
+      }
+
       return AKS.Core.Result.success(createConfirmationDto_(submission));
     }
 
