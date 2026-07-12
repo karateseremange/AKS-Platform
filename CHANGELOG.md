@@ -1,6 +1,6 @@
 # Changelog
 
-## HQ-007 — Notifications par e-mail
+## HQ-007 — Notifications par e-mail — 2026-07-13
 
 - Ajout des notifications conditionnelles du représentant légal.
 - Envoi du PDF FFKDA uniquement lorsqu’aucun certificat médical n’est requis.

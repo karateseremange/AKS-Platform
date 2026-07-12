@@ -2,7 +2,7 @@
 
 ## Statut
 
-Livrable candidat à la validation Apps Script.
+Validé dans Apps Script le 13 juillet 2026.
 
 ## Règles
 
@@ -35,3 +35,14 @@ La passerelle utilise `GmailApp.sendEmail`. L’adresse du club doit être décl
 ## Validation
 
 Exécuter `AKS_runHQ007Tests()` puis les suites HQ-005.2 Sprint 4.3 et HQ-006. Effectuer ensuite deux soumissions réelles, une pour chaque décision administrative, et contrôler destinataires, contenus, pièces jointes et horodatages.
+
+Validation réalisée :
+
+- 7 tests automatisés HQ-007 réussis ;
+- 4 tests de non-régression HQ-006 réussis ;
+- 7 tests de non-régression HQ-005.2 Sprint 4.3 réussis ;
+- scénario sans certificat médical validé avec attestation PDF et récapitulatif détaillé côté représentant ;
+- scénario avec certificat médical validé sans PDF et avec récapitulatif détaillé côté représentant ;
+- notification administrative du club validée dans les deux scénarios ;
+- absence des réponses détaillées dans le message du club et les données persistées confirmée ;
+- expédition réelle depuis `contact@karate-seremange.fr` sous le nom `Association Karaté Serémange` validée.
