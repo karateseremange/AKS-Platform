@@ -73,30 +73,52 @@ AKS.Modules.HealthQuestionnaire.HealthQuestionnaireNotificationService =
       if (submission.result === "NO_MEDICAL_CERTIFICATE_REQUIRED") {
         common.subject = "Questionnaire santé — attestation " + submission.id;
         common.textBody =
-          "Votre questionnaire santé a bien été enregistré pour " +
-          submission.firstName + " " + submission.lastName + ".\n\n" +
-          "Aucun certificat médical n'est requis. L'attestation FFKDA est jointe à ce message.\n\n" +
-          "Référence : " + submission.id;
+          "Madame, Monsieur,\n\n" +
+          "Nous vous confirmons l'enregistrement du questionnaire santé concernant :\n\n" +
+          submission.firstName + " " + submission.lastName + "\n\n" +
+          "Au regard de la déclaration effectuée, aucun certificat médical n'est requis.\n\n" +
+          "Vous trouverez en pièce jointe l'attestation FFKDA préremplie. " +
+          "Nous vous invitons à la dater, à la signer et à la transmettre à " +
+          "l'Association Karaté Serémange afin de finaliser le dossier d'inscription.\n\n" +
+          "Aucune réponse apportée au questionnaire n'a été enregistrée ni transmise au club.\n\n" +
+          "Référence du dossier : " + submission.id + "\n\n" +
+          "Cordialement,\n\nAssociation Karaté Serémange\n" + clubEmail;
         common.htmlBody =
-          "<p>Votre questionnaire santé a bien été enregistré pour <strong>" +
-          minorName + "</strong>.</p>" +
-          "<p>Aucun certificat médical n’est requis. L’attestation FFKDA est jointe à ce message.</p>" +
-          "<p>Référence : <strong>" + reference + "</strong></p>";
+          "<p>Madame, Monsieur,</p>" +
+          "<p>Nous vous confirmons l’enregistrement du questionnaire santé concernant :</p>" +
+          "<p><strong>" + minorName + "</strong></p>" +
+          "<p>Au regard de la déclaration effectuée, aucun certificat médical n’est requis.</p>" +
+          "<p>Vous trouverez en pièce jointe l’attestation FFKDA préremplie. " +
+          "Nous vous invitons à la dater, à la signer et à la transmettre à " +
+          "l’Association Karaté Serémange afin de finaliser le dossier d’inscription.</p>" +
+          "<p>Aucune réponse apportée au questionnaire n’a été enregistrée ni transmise au club.</p>" +
+          "<p>Référence du dossier : <strong>" + reference + "</strong></p>" +
+          "<p>Cordialement,</p><p>Association Karaté Serémange<br>" +
+          escapeHtml_(clubEmail) + "</p>";
         common.attachmentFileId = submission.attestationFileId;
         return common;
       }
 
       common.subject = "Questionnaire santé — certificat médical requis";
       common.textBody =
-        "Votre questionnaire santé a bien été enregistré pour " +
-        submission.firstName + " " + submission.lastName + ".\n\n" +
-        "Un certificat médical doit être remis au club avant la pratique. Aucun document n'est joint à ce message.\n\n" +
-        "Référence : " + submission.id;
+        "Madame, Monsieur,\n\n" +
+        "Nous vous confirmons l'enregistrement du questionnaire santé concernant :\n\n" +
+        submission.firstName + " " + submission.lastName + "\n\n" +
+        "Au regard de la déclaration effectuée, un certificat médical devra être " +
+        "transmis à l'Association Karaté Serémange afin de finaliser le dossier d'inscription.\n\n" +
+        "Aucune réponse apportée au questionnaire n'a été enregistrée ni transmise au club.\n\n" +
+        "Référence du dossier : " + submission.id + "\n\n" +
+        "Cordialement,\n\nAssociation Karaté Serémange\n" + clubEmail;
       common.htmlBody =
-        "<p>Votre questionnaire santé a bien été enregistré pour <strong>" +
-        minorName + "</strong>.</p>" +
-        "<p>Un certificat médical doit être remis au club avant la pratique. Aucun document n’est joint à ce message.</p>" +
-        "<p>Référence : <strong>" + reference + "</strong></p>";
+        "<p>Madame, Monsieur,</p>" +
+        "<p>Nous vous confirmons l’enregistrement du questionnaire santé concernant :</p>" +
+        "<p><strong>" + minorName + "</strong></p>" +
+        "<p>Au regard de la déclaration effectuée, un certificat médical devra être " +
+        "transmis à l’Association Karaté Serémange afin de finaliser le dossier d’inscription.</p>" +
+        "<p>Aucune réponse apportée au questionnaire n’a été enregistrée ni transmise au club.</p>" +
+        "<p>Référence du dossier : <strong>" + reference + "</strong></p>" +
+        "<p>Cordialement,</p><p>Association Karaté Serémange<br>" +
+        escapeHtml_(clubEmail) + "</p>";
       return common;
     }
 

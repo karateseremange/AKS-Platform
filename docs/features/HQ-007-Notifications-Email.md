@@ -14,6 +14,8 @@ Livrable candidat à la validation Apps Script.
 - le club ne reçoit ni coordonnées du représentant légal, ni réponses détaillées, ni PDF, ni lien Drive ;
 - aucune réponse détaillée ne franchit la frontière du service de notification.
 
+Les messages adressés au représentant légal utilisent une formulation institutionnelle, rappellent la confidentialité des réponses et précisent la formalité nécessaire pour finaliser le dossier d’inscription.
+
 ## Workflow
 
 1. la soumission administrative est enregistrée ;

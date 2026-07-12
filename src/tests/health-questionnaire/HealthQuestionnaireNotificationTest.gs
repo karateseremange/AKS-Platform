@@ -7,6 +7,15 @@ function test_HQ007_eligibleRespondentReceivesPdfAndClubDoesNot() {
   assertEquals_(2, fixture.messages.length);
   assertEquals_("parent@example.org", fixture.messages[0].to);
   assertEquals_("drive-file-1", fixture.messages[0].attachmentFileId);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Madame, Monsieur"
+  ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "à la dater, à la signer et à la transmettre"
+  ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Aucune réponse apportée au questionnaire"
+  ) !== -1);
   assertEquals_("contact@karate-seremange.fr", fixture.messages[1].to);
   assertTrue_(!fixture.messages[1].attachmentFileId);
   assertEquals_("COMPLETED", completed.status);
@@ -22,7 +31,10 @@ function test_HQ007_certificateRequiredHasNoAttachment() {
   assertTrue_(!fixture.messages[0].attachmentFileId);
   assertTrue_(!fixture.messages[1].attachmentFileId);
   assertTrue_(fixture.messages[0].textBody.indexOf(
-    "certificat médical doit être remis"
+    "un certificat médical devra être transmis"
+  ) !== -1);
+  assertTrue_(fixture.messages[0].textBody.indexOf(
+    "Aucune réponse apportée au questionnaire"
   ) !== -1);
 }
 

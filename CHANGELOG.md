@@ -7,6 +7,7 @@
 - Ajout de la notification administrative du club avec identité du licencié, date de naissance, référence et formalité attendue.
 - Persistance indépendante des deux horodatages d’envoi.
 - Ajout de 7 tests automatisés HQ-007.
+- Formalisation des messages adressés au représentant légal et ajout du rappel de confidentialité.
 
 ## HQ-006 — 2026-07-12
 - Génération de l’attestation PDF officielle FFKDA.
