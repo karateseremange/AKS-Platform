@@ -1,5 +1,13 @@
 # Changelog
 
+## HQ-008 — Saisie mobile de la date de naissance
+
+- Remplacement du calendrier natif par deux champs numériques jour/année et une liste des mois.
+- Conservation du format ISO transmis au serveur.
+- Validation des dates impossibles et maintien du calcul de l’âge.
+- Ajout d’un rappel de vérification des courriers indésirables sur la page finale.
+- Ajout de 3 tests automatisés HQ-008.
+
 ## HQ-007 — Notifications par e-mail — 2026-07-13
 
 - Ajout des notifications conditionnelles du représentant légal.
