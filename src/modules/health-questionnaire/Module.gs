@@ -6,7 +6,7 @@ AKS.Modules.HealthQuestionnaire =
 AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
   id: "health-questionnaire",
   name: "Questionnaire santé",
-  version: "0.7.0",
+  version: "0.9.0",
   status: "active",
 
   getDescriptor: function () {
