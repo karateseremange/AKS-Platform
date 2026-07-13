@@ -152,6 +152,22 @@
       return beforeBirthday ? age - 1 : age;
     }
 
+    function padNumber(value) {
+      return 2 > String(value).length ? "0" + value : String(value);
+    }
+
+    function getBirthDateValue() {
+      var dayField = document.getElementById("birthDateDay");
+      var monthField = document.getElementById("birthDateMonth");
+      var yearField = document.getElementById("birthDateYear");
+
+      return dayField && monthField && yearField &&
+        dayField.value && monthField.value && yearField.value
+        ? yearField.value + "-" + monthField.value + "-" +
+          padNumber(dayField.value)
+        : "";
+    }
+
     function validateTextField(fieldName, emptyMessage, shortMessage, showState) {
       var field = document.getElementById(fieldName);
       var value = field ? field.value.trim() : "";
@@ -173,9 +189,8 @@
     }
 
     function validateBirthDate(showState) {
-      var field = document.getElementById("birthDate");
       var ageElement = document.getElementById("birthDate-age");
-      var value = field ? field.value : "";
+      var value = getBirthDateValue();
       var age = calculateAge(value);
       var message = "";
       var valid = true;
@@ -247,11 +262,10 @@
 
       var firstNameField = document.getElementById("firstName");
       var lastNameField = document.getElementById("lastName");
-      var birthDateField = document.getElementById("birthDate");
       var selectedSex = identityStep.querySelector('input[name="sex"]:checked');
       var firstName = firstNameField ? firstNameField.value.trim() : "";
       var lastName = lastNameField ? lastNameField.value.trim() : "";
-      var age = calculateAge(birthDateField ? birthDateField.value : "");
+      var age = calculateAge(getBirthDateValue());
 
       identitySummaryName.textContent = (firstName + " " + lastName).trim();
       identitySummarySex.textContent = selectedSex
@@ -464,7 +478,7 @@
         email: document.getElementById("email").value.trim(),
         lastName: document.getElementById("lastName").value.trim(),
         firstName: document.getElementById("firstName").value.trim(),
-        birthDate: document.getElementById("birthDate").value,
+        birthDate: getBirthDateValue(),
         sex: selectedSex ? selectedSex.value : "",
         legalRepresentativeLastName:
           document.getElementById("legalRepresentativeLastName").value.trim(),
@@ -568,6 +582,9 @@
         return;
       }
       touched[field.name] = true;
+      if (/^birthDate(Day|Month|Year)$/.test(field.name)) {
+        touched.birthDate = true;
+      }
       if (field.name === "sex") {
         touched.sex = true;
       }
@@ -636,12 +653,33 @@
     }
 
     identityStep.addEventListener("input", function (event) {
+      if (
+        event.target &&
+        (event.target.id === "birthDateDay" ||
+          event.target.id === "birthDateYear")
+      ) {
+        event.target.value = event.target.value.replace(/\D/g, "");
+      }
+      if (
+        event.target &&
+        event.target.id === "birthDateDay" &&
+        event.target.value.length === 2
+      ) {
+        document.getElementById("birthDateMonth").focus();
+      }
       clearValidationSummary();
       validateIdentity(false);
     });
 
     identityStep.addEventListener("change", function (event) {
       markTouched(event.target);
+      if (
+        event.target &&
+        event.target.id === "birthDateMonth" &&
+        event.target.value
+      ) {
+        document.getElementById("birthDateYear").focus();
+      }
       clearValidationSummary();
       validateIdentity(false);
     });

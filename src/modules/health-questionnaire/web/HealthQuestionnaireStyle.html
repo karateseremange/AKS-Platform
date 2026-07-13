@@ -148,7 +148,7 @@ legend {
 
 input[type="text"],
 input[type="email"],
-input[type="date"] {
+select {
   width: 100%;
   min-height: 48px;
   padding: 11px 13px;
@@ -160,12 +160,26 @@ input[type="date"] {
 }
 
 input:focus,
+select:focus,
 button:focus-visible {
   outline: 3px solid rgba(42, 75, 155, .16);
   outline-offset: 2px;
 }
 
-input:focus { border-color: var(--aks-blue); }
+input:focus,
+select:focus { border-color: var(--aks-blue); }
+
+.birth-date-fields {
+  display: grid;
+  grid-template-columns: minmax(72px, .75fr) minmax(120px, 1.35fr) minmax(92px, 1fr);
+  gap: 10px;
+}
+
+.birth-date-fields label {
+  margin-bottom: 5px;
+  color: #475467;
+  font-size: 13px;
+}
 
 fieldset {
   margin: 0;
@@ -389,19 +403,20 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .age-display { color: var(--aks-blue); font-weight: 700; }
 
 .field.is-invalid input,
+.field.is-invalid select,
 .field.is-invalid .choice {
   border-color: var(--aks-danger);
 }
 
 .field.is-valid input[type="text"],
 .field.is-valid input[type="email"],
-.field.is-valid input[type="date"] {
+.field.is-valid select {
   border-color: var(--aks-blue);
 }
 
 .field.is-valid input[type="text"],
 .field.is-valid input[type="email"],
-.field.is-valid input[type="date"] {
+.field.is-valid select {
   background-image: linear-gradient(transparent, transparent);
 }
 
@@ -413,6 +428,10 @@ button[disabled] {
 }
 
 @media (max-width: 620px) {
+  .birth-date-fields {
+    grid-template-columns: minmax(66px, .7fr) minmax(112px, 1.3fr) minmax(86px, 1fr);
+    gap: 8px;
+  }
   .stepper-label { display: none; }
   .stepper-item { justify-content: center; }
   .stepper-item::after {

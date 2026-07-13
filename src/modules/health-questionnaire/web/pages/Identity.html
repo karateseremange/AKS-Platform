@@ -32,13 +32,44 @@
              minlength="2" required aria-describedby="firstName-error">
       <p id="firstName-error" class="field-message" aria-live="polite"></p>
     </div>
-    <div class="field" data-field="birthDate">
-      <label for="birthDate">Date de naissance</label>
-      <input id="birthDate" name="birthDate" type="date" required
-             aria-describedby="birthDate-age birthDate-error">
+    <fieldset class="field" data-field="birthDate"
+              aria-describedby="birthDate-age birthDate-error">
+      <legend>Date de naissance</legend>
+      <div class="birth-date-fields">
+        <div>
+          <label for="birthDateDay">Jour</label>
+          <input id="birthDateDay" name="birthDateDay" type="text"
+                 inputmode="numeric" autocomplete="bday-day"
+                 pattern="[0-9]*" maxlength="2" placeholder="JJ" required>
+        </div>
+        <div>
+          <label for="birthDateMonth">Mois</label>
+          <select id="birthDateMonth" name="birthDateMonth" required>
+            <option value="">Mois</option>
+            <option value="01">Janvier</option>
+            <option value="02">Février</option>
+            <option value="03">Mars</option>
+            <option value="04">Avril</option>
+            <option value="05">Mai</option>
+            <option value="06">Juin</option>
+            <option value="07">Juillet</option>
+            <option value="08">Août</option>
+            <option value="09">Septembre</option>
+            <option value="10">Octobre</option>
+            <option value="11">Novembre</option>
+            <option value="12">Décembre</option>
+          </select>
+        </div>
+        <div>
+          <label for="birthDateYear">Année</label>
+          <input id="birthDateYear" name="birthDateYear" type="text"
+                 inputmode="numeric" autocomplete="bday-year"
+                 pattern="[0-9]*" maxlength="4" placeholder="AAAA" required>
+        </div>
+      </div>
       <p id="birthDate-age" class="age-display" aria-live="polite"></p>
       <p id="birthDate-error" class="field-message" aria-live="polite"></p>
-    </div>
+    </fieldset>
     <fieldset class="field" data-field="sex" aria-describedby="sex-error">
       <legend>Sexe</legend>
       <div class="choice-row">
