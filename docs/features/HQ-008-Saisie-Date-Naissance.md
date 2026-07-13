@@ -2,7 +2,7 @@
 
 ## Statut
 
-Livrable candidat à la validation Apps Script.
+Validé dans Apps Script le 13 juillet 2026.
 
 ## Contexte
 
@@ -28,3 +28,13 @@ Le changement est limité à la couche Web. Le domaine, `Submission`, les reposi
 ## Validation
 
 Exécuter `AKS_runHQ008Tests()`, puis les suites HQ-005.2 Sprint 2 et HQ-007. Valider visuellement la saisie sur Android, iOS et ordinateur.
+
+Validation réalisée :
+
+- 3/3 tests HQ-008 réussis ;
+- 5/5 tests de non-régression HQ-005.2 Sprint 2 réussis ;
+- 7/7 tests de non-régression HQ-007 réussis ;
+- saisie numérique jour et année validée sur Android et ordinateur ;
+- sélection du mois, calcul de l’âge et soumission complète validés ;
+- message final relatif à l’e-mail et aux courriers indésirables validé ;
+- compatibilité technique iOS assurée par les contrôles HTML natifs, à confirmer lors d’un prochain test sur appareil.

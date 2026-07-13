@@ -14,8 +14,10 @@
 
 Aucun changement n’est apporté au domaine, à `Submission`, aux repositories, à Google Sheets, au PDF ou aux notifications.
 
-## Validation attendue
+## Validation
 
-- 3 tests HQ-008 ;
-- non-régression HQ-005.2 Sprint 2 et HQ-007 ;
-- validation visuelle sur Android, iOS et ordinateur.
+- 3/3 tests HQ-008 réussis ;
+- 5/5 tests HQ-005.2 Sprint 2 réussis ;
+- 7/7 tests HQ-007 réussis ;
+- parcours complet validé sur Android et ordinateur ;
+- compatibilité iOS à confirmer sur appareil.

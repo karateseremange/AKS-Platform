@@ -1,6 +1,6 @@
 # Changelog
 
-## HQ-008 — Saisie mobile de la date de naissance
+## HQ-008 — Saisie mobile de la date de naissance — 2026-07-13
 
 - Remplacement du calendrier natif par deux champs numériques jour/année et une liste des mois.
 - Conservation du format ISO transmis au serveur.
