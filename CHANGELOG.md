@@ -1,5 +1,14 @@
 # Changelog
 
+## HQ-009.2 — Interface WordPress — 2026-07-13
+
+- Ajout du shortcode `[aks_health_questionnaire]`.
+- Ajout du parcours responsive complet sur le domaine du club.
+- Conservation des garanties de date de naissance HQ-008.
+- Ajout de la limitation technique des appels et de 14 contrôles automatisés.
+- Ajout de la validation progressive et des messages précis pour chaque champ.
+- Validation réelle des deux formalités, du mode visiteur et de la page publique.
+
 ## HQ-009.1 — Connecteur WordPress sécurisé — 2026-07-13
 
 - Ajout d'une API Apps Script signée HMAC-SHA256.

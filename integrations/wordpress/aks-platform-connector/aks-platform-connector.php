@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AKS Platform Connector
  * Description: Passerelle sécurisée entre WordPress et AKS Platform.
- * Version: 0.9.1
+ * Version: 0.10.1
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * Author: Association Karaté Serémange
@@ -21,6 +21,33 @@ final class AKS_Platform_Connector
     public static function boot(): void
     {
         add_action('rest_api_init', [self::class, 'register_routes']);
+        add_shortcode('aks_health_questionnaire', [self::class, 'render_shortcode']);
+    }
+
+    public static function render_shortcode(): string
+    {
+        $base_url = plugin_dir_url(__FILE__);
+        wp_enqueue_style(
+            'aks-platform-questionnaire',
+            $base_url . 'assets/questionnaire.css',
+            [],
+            '0.10.1'
+        );
+        wp_enqueue_script(
+            'aks-platform-questionnaire',
+            $base_url . 'assets/questionnaire.js',
+            [],
+            '0.10.1',
+            true
+        );
+        wp_localize_script('aks-platform-questionnaire', 'AKSQuestionnaire', [
+            'restUrl' => esc_url_raw(rest_url(self::REST_NAMESPACE . '/')),
+            'nonce' => wp_create_nonce('wp_rest'),
+        ]);
+
+        return '<div class="aks-hq" data-aks-questionnaire>' .
+            '<div class="aks-hq__loading" role="status">' .
+            'Chargement du questionnaire…</div></div>';
     }
 
     public static function register_routes(): void
@@ -56,6 +83,27 @@ final class AKS_Platform_Connector
                 ['status' => 403]
             );
         }
+        $route = $request->get_route();
+        $limit = str_ends_with($route, '/submit') ? 10 : 60;
+        $window = (int) floor(time() / 300);
+        $client = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $secret = defined('AKS_PLATFORM_CONNECTOR_SECRET')
+            ? (string) AKS_PLATFORM_CONNECTOR_SECRET
+            : wp_salt('nonce');
+        $rate_key = 'aks_rate_' . hash_hmac(
+            'sha256',
+            $client . '|' . $route . '|' . $window,
+            $secret
+        );
+        $count = (int) get_transient($rate_key);
+        if ($count >= $limit) {
+            return new WP_Error(
+                'aks_rate_limit_exceeded',
+                'Trop de tentatives. Veuillez patienter quelques minutes.',
+                ['status' => 429]
+            );
+        }
+        set_transient($rate_key, $count + 1, 310);
         return true;
     }
 
