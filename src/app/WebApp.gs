@@ -33,6 +33,21 @@ function doGet(event) {
 }
 
 /**
+ * Signed server-to-server endpoint used by the WordPress connector.
+ * Authentication is performed before any business payload is parsed.
+ *
+ * @param {Object=} event
+ * @returns {GoogleAppsScript.Content.TextOutput}
+ */
+function doPost(event) {
+  var response = AKS_handleHealthQuestionnaireApiRequest_(event || {});
+
+  return ContentService
+    .createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
  * Evaluates the public shell with the supplied presentation model.
  *
  * @param {Object} viewModel

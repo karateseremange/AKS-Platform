@@ -1,5 +1,14 @@
 # Changelog
 
+## HQ-009.1 — Connecteur WordPress sécurisé — 2026-07-13
+
+- Ajout d'une API Apps Script signée HMAC-SHA256.
+- Ajout des contrôles d'expiration, de rejeu et de taille des requêtes.
+- Réutilisation du contrôleur et du workflow de soumission existants.
+- Ajout de l'extension WordPress sans stockage des réponses.
+- Compatibilité avec la redirection de restitution ContentService Apps Script.
+- Ajout de 5 tests automatisés HQ-009.1.
+
 ## HQ-008 — Saisie mobile de la date de naissance — 2026-07-13
 
 - Remplacement du calendrier natif par deux champs numériques jour/année et une liste des mois.
