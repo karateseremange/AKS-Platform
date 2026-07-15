@@ -2,7 +2,7 @@
 Contributors: karateseremange
 Requires at least: 6.6
 Requires PHP: 8.1
-Stable tag: 0.10.1
+Stable tag: 0.11.0
 License: GPLv2 or later
 
 Passerelle serveur à serveur sécurisée pour AKS Platform.
@@ -16,8 +16,15 @@ La configuration est fournie par les constantes AKS_PLATFORM_API_URL et
 AKS_PLATFORM_CONNECTOR_SECRET dans wp-config.php.
 
 Le shortcode `[aks_health_questionnaire]` affiche le parcours public complet.
+Le shortcode `[aks_health_questionnaire_page]` ajoute une page d'entrée
+professionnelle, les consignes, les garanties de confidentialité et le parcours.
 
 == Changelog ==
+
+= 0.11.0 =
+* Ajout de la page professionnelle complète du questionnaire.
+* Ajout des informations de préparation, de confidentialité et d'assistance.
+* Conservation du shortcode historique et du contrat sécurisé existant.
 
 = 0.10.1 =
 * Validation progressive et messages précis sur l'étape d'identité.

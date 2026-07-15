@@ -1,5 +1,13 @@
 # Changelog
 
+## HQ-010 — Intégration WordPress professionnelle — 2026-07-15
+
+- Ajout du shortcode `[aks_health_questionnaire_page]` pour une page publique complète.
+- Ajout d'une introduction, des étapes de préparation et du rappel de confidentialité.
+- Ajout d'un accès direct au formulaire et des coordonnées d'assistance du club.
+- Conservation du shortcode HQ-009 et de l'ensemble du contrat sécurisé existant.
+- Ajout des contrôles de structure, d'accessibilité et d'affichage mobile.
+
 ## HQ-009.2 — Interface WordPress — 2026-07-13
 
 - Ajout du shortcode `[aks_health_questionnaire]`.
