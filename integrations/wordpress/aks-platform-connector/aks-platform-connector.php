@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AKS Platform Connector
  * Description: Passerelle sécurisée entre WordPress et AKS Platform.
- * Version: 0.10.1
+ * Version: 0.11.0
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * Author: Association Karaté Serémange
@@ -22,22 +22,67 @@ final class AKS_Platform_Connector
     {
         add_action('rest_api_init', [self::class, 'register_routes']);
         add_shortcode('aks_health_questionnaire', [self::class, 'render_shortcode']);
+        add_shortcode(
+            'aks_health_questionnaire_page',
+            [self::class, 'render_professional_page_shortcode']
+        );
     }
 
     public static function render_shortcode(): string
+    {
+        self::enqueue_questionnaire_assets();
+
+        return '<div id="aks-questionnaire" class="aks-hq" data-aks-questionnaire>' .
+            '<div class="aks-hq__loading" role="status" aria-live="polite">' .
+            'Chargement du questionnaire…</div></div>';
+    }
+
+    public static function render_professional_page_shortcode(): string
+    {
+        return '<div class="aks-entry">' .
+            '<header class="aks-entry__hero" aria-labelledby="aks-entry-title">' .
+            '<p class="aks-entry__eyebrow">Association Karaté Serémange</p>' .
+            '<h1 id="aks-entry-title">Questionnaire de santé du licencié mineur</h1>' .
+            '<p class="aks-entry__lead">Effectuez cette démarche en ligne en quelques minutes. ' .
+            'Le résultat vous indiquera immédiatement si un certificat médical est nécessaire.</p>' .
+            '<a class="aks-entry__start" href="#aks-questionnaire">Commencer le questionnaire</a>' .
+            '</header>' .
+            '<section class="aks-entry__section" aria-labelledby="aks-entry-steps">' .
+            '<h2 id="aks-entry-steps">Avant de commencer</h2>' .
+            '<div class="aks-entry__cards">' .
+            '<article><span aria-hidden="true">1</span><h3>Préparez les informations</h3>' .
+            '<p>Identité du mineur et adresse e-mail de son représentant légal.</p></article>' .
+            '<article><span aria-hidden="true">2</span><h3>Répondez ensemble</h3>' .
+            '<p>Le questionnaire doit être complété conjointement avec l’enfant.</p></article>' .
+            '<article><span aria-hidden="true">3</span><h3>Recevez le résultat</h3>' .
+            '<p>Un récapitulatif est envoyé par e-mail. Pensez à vérifier les courriers indésirables.</p></article>' .
+            '</div></section>' .
+            '<aside class="aks-entry__privacy" aria-labelledby="aks-entry-privacy">' .
+            '<div class="aks-entry__privacy-icon" aria-hidden="true">✓</div><div>' .
+            '<h2 id="aks-entry-privacy">Vos réponses restent confidentielles</h2>' .
+            '<p>Le club ne reçoit jamais les réponses détaillées au questionnaire. ' .
+            'Elles ne sont pas conservées. Seuls l’identité du licencié, la référence du dossier ' .
+            'et la formalité attendue sont communiquées au club.</p></div></aside>' .
+            self::render_shortcode() .
+            '<p class="aks-entry__support">En cas de difficulté technique, contactez ' .
+            '<a href="mailto:contact@karate-seremange.fr">contact@karate-seremange.fr</a>.</p>' .
+            '</div>';
+    }
+
+    private static function enqueue_questionnaire_assets(): void
     {
         $base_url = plugin_dir_url(__FILE__);
         wp_enqueue_style(
             'aks-platform-questionnaire',
             $base_url . 'assets/questionnaire.css',
             [],
-            '0.10.1'
+            '0.11.0'
         );
         wp_enqueue_script(
             'aks-platform-questionnaire',
             $base_url . 'assets/questionnaire.js',
             [],
-            '0.10.1',
+            '0.11.0',
             true
         );
         wp_localize_script('aks-platform-questionnaire', 'AKSQuestionnaire', [
@@ -45,9 +90,6 @@ final class AKS_Platform_Connector
             'nonce' => wp_create_nonce('wp_rest'),
         ]);
 
-        return '<div class="aks-hq" data-aks-questionnaire>' .
-            '<div class="aks-hq__loading" role="status">' .
-            'Chargement du questionnaire…</div></div>';
     }
 
     public static function register_routes(): void
