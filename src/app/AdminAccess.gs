@@ -12,33 +12,19 @@ AKS.Admin.Access = (function () {
     return String(email || "").trim().toLowerCase();
   }
 
-  function getConfiguredEmails_() {
-    if (
-      typeof CONFIG === "undefined" ||
-      !CONFIG ||
-      !CONFIG.ADMIN ||
-      !Array.isArray(CONFIG.ADMIN.AUTHORIZED_EMAILS) ||
-      CONFIG.ADMIN.AUTHORIZED_EMAILS.length === 0
-    ) {
-      return [];
-    }
-
-    return CONFIG.ADMIN.AUTHORIZED_EMAILS
+  function normalizeAuthorizedEmails_(authorizedEmails) {
+    return (Array.isArray(authorizedEmails) ? authorizedEmails : [])
       .map(normalizeEmail_)
-      .filter(function (email) {
-        return email.length > 0;
+      .filter(function (configuredEmail) {
+        return configuredEmail.length > 0;
       });
   }
 
   function isAuthorizedEmail(email, authorizedEmails) {
     var normalizedEmail = normalizeEmail_(email);
     var configuredEmails = arguments.length > 1
-      ? (Array.isArray(authorizedEmails) ? authorizedEmails : [])
-          .map(normalizeEmail_)
-          .filter(function (configuredEmail) {
-            return configuredEmail.length > 0;
-          })
-      : getConfiguredEmails_();
+      ? normalizeAuthorizedEmails_(authorizedEmails)
+      : AKS.Config.getAuthorizedAdminEmails();
 
     return normalizedEmail.length > 0 &&
       configuredEmails.indexOf(normalizedEmail) !== -1;
