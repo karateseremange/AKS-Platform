@@ -1,5 +1,14 @@
 # Changelog
 
+## ADMIN-001 — Tableau de bord d’administration — 2026-07-19
+
+- Ajout du premier incrément du Dashboard administratif.
+- Ajout du contrôle d’autorisation Google côté serveur.
+- Affichage de la version et du nom de code depuis `AKS.Version`.
+- Ajout de la carte « Actions rapides » avec état vide explicite.
+- Ajout du routage `?app=admin` sans modification du comportement public par défaut.
+- Ajout de 4 tests automatisés ADMIN-001.
+
 ## HQ-010 — Intégration WordPress professionnelle — 2026-07-15
 
 - Ajout du shortcode `[aks_health_questionnaire_page]` pour une page publique complète.
