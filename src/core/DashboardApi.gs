@@ -139,10 +139,19 @@ function AKS_createDashboardApi_(
   });
 }
 
-AKS.Admin.Dashboard = AKS_createDashboardApi_(
-  AKS.Admin.Access,
-  AKS.Version,
-  AKS.Config,
-  AKS.Logger
-);
+/*
+ * Dependencies are resolved when the public method is called rather than at
+ * script load time. This prevents Apps Script file evaluation order from
+ * capturing undefined APIs permanently.
+ */
+AKS.Admin.Dashboard = Object.freeze({
+  getDashboard: function () {
+    return AKS_createDashboardApi_(
+      AKS.Admin.Access,
+      AKS.Version,
+      AKS.Config,
+      AKS.Logger
+    ).getDashboard();
+  }
+});
 AKS.Admin.getDashboard = AKS.Admin.Dashboard.getDashboard;
