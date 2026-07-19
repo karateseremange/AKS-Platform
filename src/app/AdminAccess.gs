@@ -9,7 +9,7 @@ AKS.Admin = AKS.Admin || {};
  */
 AKS.Admin.Access = (function () {
   var AUTHORIZED_EMAILS = Object.freeze([
-    "karate.seremange@gmail.com"
+    "karate-seremange@gmail.com"
   ]);
 
   function normalizeEmail_(email) {
