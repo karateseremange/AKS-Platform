@@ -44,7 +44,7 @@ ne constitue jamais la source de décision d’autorisation.
 
 Les essais réalisés le 19 juillet 2026 ont confirmé les comportements suivants :
 
-- le compte autorisé `karate.seremange@gmail.com` est identifié dans `doGet()`
+- le compte autorisé `karate-seremange@gmail.com` est identifié dans `doGet()`
   et dans l’appel serveur, puis accepté ;
 - le compte connecté non autorisé `aserridj@gmail.com` est identifié dans les
   deux contextes, puis refusé avec le code `ADMIN001_ACCESS_DENIED` ;
