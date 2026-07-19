@@ -3,8 +3,8 @@
  */
 function AKS_testAdminDashboard_authorizesConfiguredAdministrator() {
   assertTrue_(
-    AKS.Admin.Access.isAuthorizedEmail("karate-seremange@gmail.com"),
-    "The configured administrator must be authorized."
+    AKS.Admin.Access.isAuthorizedEmail("  KARATE.SEREMANGE@GMAIL.COM  "),
+    "The configured administrator must be authorized after normalization."
   );
 }
 
@@ -14,22 +14,34 @@ function AKS_testAdminDashboard_rejectsUnknownAdministrator() {
   }, "ADMIN001_ACCESS_DENIED");
 }
 
+function AKS_testAdminDashboard_rejectsEmptyAuthorizationList() {
+  assertThrows_(function () {
+    AKS.Admin.Access.assertAuthorized("karate.seremange@gmail.com", []);
+  }, "ADMIN001_ACCESS_DENIED");
+}
+
+function AKS_testAdminDashboard_rejectsInvalidAuthorizationConfiguration() {
+  assertThrows_(function () {
+    AKS.Admin.Access.assertAuthorized("karate.seremange@gmail.com", null);
+  }, "ADMIN001_ACCESS_DENIED");
+}
+
 function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   var releaseInfo = AKS.Version.getReleaseInfo();
   var viewModel = AKS.Admin.Dashboard.buildViewModelForAuthorizedUser(
-    "karate-seremange@gmail.com"
+    "karate.seremange@gmail.com"
   );
 
   assertEquals_("AKS Platform", viewModel.platform.name);
   assertEquals_(releaseInfo.version, viewModel.platform.version);
   assertEquals_(releaseInfo.codename, viewModel.platform.codename);
-  assertEquals_("karate-seremange@gmail.com", viewModel.administrator.email);
+  assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
   assertEquals_(0, viewModel.actions.length);
 }
 
 function AKS_testAdminDashboard_keepsReleaseDataImmutable() {
   var viewModel = AKS.Admin.Dashboard.buildViewModelForAuthorizedUser(
-    "karate-seremange@gmail.com"
+    "karate.seremange@gmail.com"
   );
 
   assertTrue_(Object.isFrozen(viewModel), "The view model must be immutable.");
