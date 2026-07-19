@@ -140,11 +140,12 @@ function AKS_createDashboardApi_(
 }
 
 /*
- * Dependencies are resolved when the public method is called rather than at
- * script load time. This prevents Apps Script file evaluation order from
- * capturing undefined APIs permanently.
+ * DASHBOARD-001 uses a dedicated namespace because AKS.Admin.Dashboard already
+ * belongs to ADMIN-001 and exposes the declarative administration view model.
+ * Dependencies are resolved at call time to avoid Apps Script load-order
+ * issues.
  */
-AKS.Admin.Dashboard = Object.freeze({
+AKS.Admin.DashboardModel = Object.freeze({
   getDashboard: function () {
     return AKS_createDashboardApi_(
       AKS.Admin.Access,
@@ -154,4 +155,4 @@ AKS.Admin.Dashboard = Object.freeze({
     ).getDashboard();
   }
 });
-AKS.Admin.getDashboard = AKS.Admin.Dashboard.getDashboard;
+AKS.Admin.getDashboard = AKS.Admin.DashboardModel.getDashboard;
