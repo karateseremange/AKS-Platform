@@ -6,7 +6,7 @@ const CONFIG = Object.freeze({
    * Any change requires a code review and a new Apps Script deployment.
    */
   ADMIN: Object.freeze({
-    AUTHORIZED_EMAILS: Object.freeze([
+    AUTHORIZED_ADMIN_EMAILS: Object.freeze([
       "karate.seremange@gmail.com"
     ])
   })
