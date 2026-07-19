@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAdminDashboardFile_("ui/admin/DashboardStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-admin-shell">
+      <header class="aks-admin-header">
+        <div>
+          <p class="aks-admin-eyebrow">Association Karaté Serémange</p>
+          <h1>Administration AKS Platform</h1>
+          <p class="aks-admin-subtitle">Page d’accueil de l’espace d’administration</p>
+        </div>
+        <div class="aks-admin-user" aria-label="Administrateur connecté">
+          <?= viewModel.administrator.email ?>
+        </div>
+      </header>
+
+      <section class="aks-admin-grid" aria-label="Tableau de bord administratif">
+        <article class="aks-admin-card" aria-labelledby="platform-card-title">
+          <div class="aks-admin-card__header">
+            <p class="aks-admin-card__kicker">Plateforme</p>
+            <h2 id="platform-card-title">Informations plateforme</h2>
+          </div>
+          <dl class="aks-admin-data-list">
+            <div>
+              <dt>Nom</dt>
+              <dd><?= viewModel.platform.name ?></dd>
+            </div>
+            <div>
+              <dt>Version</dt>
+              <dd><strong><?= viewModel.platform.version ?></strong></dd>
+            </div>
+            <div>
+              <dt>Nom de code</dt>
+              <dd><?= viewModel.platform.codename ?></dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="aks-admin-card" aria-labelledby="actions-card-title">
+          <div class="aks-admin-card__header">
+            <p class="aks-admin-card__kicker">Navigation</p>
+            <h2 id="actions-card-title">Actions rapides</h2>
+          </div>
+
+          <? if (viewModel.actions.length === 0) { ?>
+            <p class="aks-admin-empty-state">
+              Aucune autre fonctionnalité administrative n’est disponible dans ce premier incrément.
+            </p>
+          <? } else { ?>
+            <nav class="aks-admin-actions" aria-label="Actions rapides">
+              <? viewModel.actions.forEach(function (action) { ?>
+                <a class="aks-admin-action" href="<?= action.url ?>">
+                  <?= action.label ?>
+                </a>
+              <? }); ?>
+            </nav>
+          <? } ?>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
