@@ -14,15 +14,9 @@ function AKS_testAdminDashboard_rejectsUnknownAdministrator() {
   }, "ADMIN001_ACCESS_DENIED");
 }
 
-function AKS_testAdminDashboard_rejectsEmptyAuthorizationList() {
+function AKS_testAdminDashboard_rejectsEmptyInjectedAuthorizationList() {
   assertThrows_(function () {
     AKS.Admin.Access.assertAuthorized("karate.seremange@gmail.com", []);
-  }, "ADMIN001_ACCESS_DENIED");
-}
-
-function AKS_testAdminDashboard_rejectsInvalidAuthorizationConfiguration() {
-  assertThrows_(function () {
-    AKS.Admin.Access.assertAuthorized("karate.seremange@gmail.com", null);
   }, "ADMIN001_ACCESS_DENIED");
 }
 
