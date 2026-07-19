@@ -1,13 +1,21 @@
 /**
- * Public Web App entry point for the health questionnaire.
+ * Public Web App entry point for the health questionnaire and routed
+ * administrative Dashboard.
  *
- * HQ-005.2 Sprint 1 only renders the public flow. No submission endpoint is
- * exposed yet.
+ * The public deployment continues to render the questionnaire by default.
+ * The administrative deployment uses the query parameter `app=admin` and
+ * applies server-side Google account authorization before rendering data.
  *
  * @param {Object=} event
  * @returns {GoogleAppsScript.HTML.HtmlOutput}
  */
 function doGet(event) {
+  event = event || {};
+
+  if (event.parameter && event.parameter.app === "admin") {
+    return AKS.Admin.Dashboard.render();
+  }
+
   var installResult = AKS.Core.Application.install();
 
   if (!installResult.ok) {
@@ -20,7 +28,7 @@ function doGet(event) {
   var controller = AKS.Core.Container.resolve(
     "healthQuestionnaire.webController"
   );
-  var viewResult = controller.getPublicViewModel(event || {});
+  var viewResult = controller.getPublicViewModel(event);
 
   if (!viewResult.ok) {
     return AKS_renderHealthQuestionnaireWebError_(
@@ -129,7 +137,6 @@ function AKS_prepareHealthQuestionnaireDeclaration(answers) {
     .resolve("healthQuestionnaire.webController")
     .prepareDeclaration(answers || {});
 }
-
 
 /**
  * Persists the administrative outcome of the public questionnaire.
