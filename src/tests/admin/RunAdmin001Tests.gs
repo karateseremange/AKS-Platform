@@ -7,6 +7,8 @@ function AKS_runAdmin001Tests() {
   var tests = [
     AKS_testAdminDashboard_authorizesConfiguredAdministrator,
     AKS_testAdminDashboard_rejectsUnknownAdministrator,
+    AKS_testAdminDashboard_rejectsEmptyAuthorizationList,
+    AKS_testAdminDashboard_rejectsInvalidAuthorizationConfiguration,
     AKS_testAdminDashboard_buildsDeclarativeViewModel,
     AKS_testAdminDashboard_keepsReleaseDataImmutable
   ];
