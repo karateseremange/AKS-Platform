@@ -64,12 +64,12 @@ function AKS_testDashboard001ApiExists_() {
     "AKS.Admin.getDashboard doit être une fonction."
   );
   AKS_assertDashboard001_(
-    AKS.Admin.Dashboard && typeof AKS.Admin.Dashboard === "object",
-    "AKS.Admin.Dashboard doit exister."
+    AKS.Admin.DashboardModel && typeof AKS.Admin.DashboardModel === "object",
+    "AKS.Admin.DashboardModel doit exister."
   );
   AKS_assertDashboard001_(
-    Object.isFrozen(AKS.Admin.Dashboard),
-    "L'API publique AKS.Admin.Dashboard doit être figée."
+    Object.isFrozen(AKS.Admin.DashboardModel),
+    "L'API publique AKS.Admin.DashboardModel doit être figée."
   );
 }
 
@@ -224,7 +224,7 @@ function AKS_testDashboard001ModelIsDeeplyImmutable_() {
   AKS_assertDashboard001_(Object.isFrozen(model), "Le modèle racine doit être figé.");
   AKS_assertDashboard001_(Object.isFrozen(model.application), "application doit être figé.");
   AKS_assertDashboard001_(Object.isFrozen(model.version), "version doit être figé.");
-  AKS_assertDashboard001_(Object.isFrozen(model.configuration), "configuration doit être figé.");
+  AKS_assertDashboard001_(Object.isFrozen(model.configuration), "configuration doit être figée.");
   AKS_assertDashboard001_(Object.isFrozen(model.logger), "logger doit être figé.");
   AKS_assertDashboard001_(Object.isFrozen(model.status), "status doit être figé.");
   AKS_assertDashboard001_(Object.isFrozen(model.status.components), "status.components doit être figé.");
