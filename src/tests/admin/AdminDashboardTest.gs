@@ -28,9 +28,21 @@ function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
 
   assertEquals_("AKS Platform", viewModel.platform.name);
   assertEquals_(releaseInfo.version, viewModel.platform.version);
-  assertEquals_(releaseInfo.codename, viewModel.platform.codename);
+  assertEquals_(releaseInfo.releaseName, viewModel.platform.releaseName);
   assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
   assertEquals_(0, viewModel.actions.length);
+}
+
+function AKS_testAdminDashboard_doesNotExposeLegacyCodenameProperty() {
+  var viewModel = AKS.Admin.Dashboard.buildViewModelForAuthorizedUser(
+    "karate.seremange@gmail.com"
+  );
+
+  assertEquals_(undefined, viewModel.platform.codename);
+  assertTrue_(
+    typeof viewModel.platform.releaseName === "string" && viewModel.platform.releaseName.length > 0,
+    "The Dashboard must expose the releaseName supplied by VERSION-001."
+  );
 }
 
 function AKS_testAdminDashboard_keepsReleaseDataImmutable() {

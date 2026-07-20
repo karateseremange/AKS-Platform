@@ -15,7 +15,7 @@ AKS.Admin.Dashboard = (function () {
       platform: Object.freeze({
         name: "AKS Platform",
         version: releaseInfo.version,
-        codename: releaseInfo.codename
+        releaseName: releaseInfo.releaseName
       }),
       administrator: Object.freeze({
         email: authorizedEmail
