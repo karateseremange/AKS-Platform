@@ -95,14 +95,12 @@ function AKS_testDashboard001BuildsNominalModel_() {
     "L'API Logger doit être déclarée disponible."
   );
   AKS_assertDashboard001_(
-    model.status.healthy === true,
-    "Le modèle nominal doit être déclaré sain."
+    model.zones.summary.length === 3,
+    "Les trois cartes de synthèse nominales doivent être disponibles."
   );
   AKS_assertDashboard001_(
-    model.status.components.version === true &&
-      model.status.components.configuration === true &&
-      model.status.components.logger === true,
-    "Tous les composants nominaux doivent être disponibles."
+    !Object.prototype.hasOwnProperty.call(model, "status"),
+    "Le modèle ne doit pas déduire un état global."
   );
 }
 
@@ -155,8 +153,13 @@ function AKS_testDashboard001ReturnsPartialModelWithoutVersion_() {
   var model = dashboardApi.getDashboard();
 
   AKS_assertDashboard001_(model.version === null, "La version indisponible doit être représentée par null.");
-  AKS_assertDashboard001_(model.status.components.version === false, "Le composant version doit être indisponible.");
-  AKS_assertDashboard001_(model.status.healthy === false, "Le modèle dégradé ne doit pas être déclaré sain.");
+  AKS_assertDashboard001_(
+    model.widgets.some(function (widget) {
+      return widget.widgetId === "core.version" &&
+        widget.state === "unavailable";
+    }),
+    "La carte version doit porter son propre état indisponible."
+  );
 }
 
 function AKS_testDashboard001ReturnsPartialModelWithoutConfiguration_() {
@@ -185,8 +188,13 @@ function AKS_testDashboard001ReturnsPartialModelWithoutConfiguration_() {
   var model = dashboardApi.getDashboard();
 
   AKS_assertDashboard001_(model.configuration === null, "La configuration indisponible doit être représentée par null.");
-  AKS_assertDashboard001_(model.status.components.configuration === false, "Le composant configuration doit être indisponible.");
-  AKS_assertDashboard001_(model.status.healthy === false, "Le modèle dégradé ne doit pas être déclaré sain.");
+  AKS_assertDashboard001_(
+    model.widgets.some(function (widget) {
+      return widget.widgetId === "core.configuration" &&
+        widget.state === "unavailable";
+    }),
+    "La carte configuration doit porter son propre état indisponible."
+  );
 }
 
 function AKS_testDashboard001DetectsIncompleteLoggerApi_() {
@@ -214,8 +222,13 @@ function AKS_testDashboard001DetectsIncompleteLoggerApi_() {
   var model = dashboardApi.getDashboard();
 
   AKS_assertDashboard001_(model.logger.apiAvailable === false, "Une API Logger incomplète doit être déclarée indisponible.");
-  AKS_assertDashboard001_(model.status.components.logger === false, "Le composant Logger doit être indisponible.");
-  AKS_assertDashboard001_(model.status.healthy === false, "Le modèle dégradé ne doit pas être déclaré sain.");
+  AKS_assertDashboard001_(
+    model.widgets.some(function (widget) {
+      return widget.widgetId === "core.logger" &&
+        widget.state === "unavailable";
+    }),
+    "La carte Logger doit porter son propre état indisponible."
+  );
 }
 
 function AKS_testDashboard001ModelIsDeeplyImmutable_() {
@@ -226,12 +239,12 @@ function AKS_testDashboard001ModelIsDeeplyImmutable_() {
   AKS_assertDashboard001_(Object.isFrozen(model.version), "version doit être figé.");
   AKS_assertDashboard001_(Object.isFrozen(model.configuration), "configuration doit être figée.");
   AKS_assertDashboard001_(Object.isFrozen(model.logger), "logger doit être figé.");
-  AKS_assertDashboard001_(Object.isFrozen(model.status), "status doit être figé.");
-  AKS_assertDashboard001_(Object.isFrozen(model.status.components), "status.components doit être figé.");
+  AKS_assertDashboard001_(Object.isFrozen(model.zones), "zones doit être figé.");
+  AKS_assertDashboard001_(Object.isFrozen(model.zones.summary), "zones.summary doit être figé.");
 
-  model.status.components.version = false;
+  model.zones.summary.length = 0;
   AKS_assertDashboard001_(
-    model.status.components.version === true,
+    model.zones.summary.length === 3,
     "Une tentative de modification profonde ne doit pas altérer le modèle."
   );
 }
@@ -246,8 +259,8 @@ function AKS_testDashboard001ReturnsDefensiveCopies_() {
   AKS_assertDashboard001_(firstModel.version !== secondModel.version, "version ne doit pas être partagé.");
   AKS_assertDashboard001_(firstModel.configuration !== secondModel.configuration, "configuration ne doit pas être partagée.");
   AKS_assertDashboard001_(firstModel.logger !== secondModel.logger, "logger ne doit pas être partagé.");
-  AKS_assertDashboard001_(firstModel.status !== secondModel.status, "status ne doit pas être partagé.");
-  AKS_assertDashboard001_(firstModel.status.components !== secondModel.status.components, "status.components ne doit pas être partagé.");
+  AKS_assertDashboard001_(firstModel.zones !== secondModel.zones, "zones ne doit pas être partagé.");
+  AKS_assertDashboard001_(firstModel.zones.summary !== secondModel.zones.summary, "zones.summary ne doit pas être partagé.");
   AKS_assertDashboard001_(
     JSON.stringify(firstModel) === JSON.stringify(secondModel),
     "Les copies successives doivent contenir les mêmes données."
