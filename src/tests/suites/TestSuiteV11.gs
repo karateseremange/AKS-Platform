@@ -3,7 +3,7 @@ var AKS = AKS || {};
 /**
  * Centralized AKS Platform V1.1 validation suite.
  *
- * Runs the verified VERSION-001, ADMIN-001 and DASHBOARD-001 tests and emits
+ * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001 and ADMIN-004 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -31,7 +31,18 @@ function AKS_runValidationSuiteV11() {
     { name: "DASHBOARD-001 / degraded configuration", test: AKS_testDashboard001ReturnsPartialModelWithoutConfiguration_ },
     { name: "DASHBOARD-001 / incomplete logger", test: AKS_testDashboard001DetectsIncompleteLoggerApi_ },
     { name: "DASHBOARD-001 / deep immutability", test: AKS_testDashboard001ModelIsDeeplyImmutable_ },
-    { name: "DASHBOARD-001 / defensive copies", test: AKS_testDashboard001ReturnsDefensiveCopies_ }
+    { name: "DASHBOARD-001 / defensive copies", test: AKS_testDashboard001ReturnsDefensiveCopies_ },
+
+    { name: "ADMIN-004 / public contracts", test: AKS_testAdmin004PublicContractsExist_ },
+    { name: "ADMIN-004 / valid provider", test: AKS_testAdmin004RegistersValidProvider_ },
+    { name: "ADMIN-004 / duplicate provider", test: AKS_testAdmin004RejectsDuplicateProvider_ },
+    { name: "ADMIN-004 / unsupported contract", test: AKS_testAdmin004RejectsUnsupportedContract_ },
+    { name: "ADMIN-004 / disabled provider", test: AKS_testAdmin004ExcludesDisabledProvider_ },
+    { name: "ADMIN-004 / executable content", test: AKS_testAdmin004RejectsExecutableWidgetContent_ },
+    { name: "ADMIN-004 / empty state", test: AKS_testAdmin004AcceptsEmptyWidget_ },
+    { name: "ADMIN-004 / unavailable state", test: AKS_testAdmin004AcceptsUnavailableWidget_ },
+    { name: "ADMIN-004 / provider isolation", test: AKS_testAdmin004IsolatesProviderFailure_ },
+    { name: "ADMIN-004 / stable order", test: AKS_testAdmin004SortsWidgetsStably_ }
   ]);
 }
 

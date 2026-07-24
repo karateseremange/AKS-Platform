@@ -18,7 +18,8 @@ function AKS_createDashboardApi_(
   adminAccessApi,
   versionApi,
   configApi,
-  loggerApi
+  loggerApi,
+  providerRegistry
 ) {
   function deepFreeze_(value) {
     if (!value || typeof value !== "object" || Object.isFrozen(value)) {
@@ -47,51 +48,6 @@ function AKS_createDashboardApi_(
     return adminAccessApi.assertCurrentUserAuthorized();
   }
 
-  function readVersion_() {
-    if (!versionApi || typeof versionApi.getReleaseInfo !== "function") {
-      return null;
-    }
-
-    try {
-      var releaseInfo = versionApi.getReleaseInfo();
-
-      if (!releaseInfo || typeof releaseInfo !== "object") {
-        return null;
-      }
-
-      return {
-        version: releaseInfo.version,
-        build: releaseInfo.build,
-        releaseName: releaseInfo.releaseName
-      };
-    } catch (error) {
-      return null;
-    }
-  }
-
-  function readConfiguration_() {
-    if (
-      !configApi ||
-      typeof configApi.getAuthorizedAdminEmails !== "function"
-    ) {
-      return null;
-    }
-
-    try {
-      var authorizedAdminEmails = configApi.getAuthorizedAdminEmails();
-
-      if (!Array.isArray(authorizedAdminEmails)) {
-        return null;
-      }
-
-      return {
-        administrators: authorizedAdminEmails.length
-      };
-    } catch (error) {
-      return null;
-    }
-  }
-
   function isLoggerApiAvailable_() {
     return Boolean(
       loggerApi &&
@@ -101,12 +57,168 @@ function AKS_createDashboardApi_(
     );
   }
 
-  function getDashboard() {
-    assertCurrentUserAuthorized_();
+  function createProvider_(providerId, label, widgetId, reader) {
+    return Object.freeze({
+      getProviderId: function () {
+        return providerId;
+      },
+      getProviderMetadata: function () {
+        return {
+          providerId: providerId,
+          moduleId: "AKS_CORE",
+          label: label,
+          contractVersion: "1.0",
+          providerVersion: "1.0.0",
+          enabled: true
+        };
+      },
+      getWidgets: function () {
+        var value = reader();
+        return [{
+          widgetId: widgetId,
+          providerId: providerId,
+          type: "information",
+          zone: "summary",
+          title: label,
+          state: value === null ? "unavailable" : "available",
+          priority: 100,
+          content: value
+        }];
+      }
+    });
+  }
 
-    var version = readVersion_();
-    var configuration = readConfiguration_();
-    var loggerApiAvailable = isLoggerApiAvailable_();
+  function createInternalRegistry_() {
+    var registry = providerRegistry ||
+      AKS_createDashboardProviderRegistry_(AKS.Core.DashboardContract);
+
+    if (providerRegistry) {
+      return registry;
+    }
+
+    registry.register(createProvider_(
+      "aks.core.version",
+      "Version",
+      "core.version",
+      function () {
+        if (!versionApi || typeof versionApi.getReleaseInfo !== "function") {
+          return null;
+        }
+        try {
+          var releaseInfo = versionApi.getReleaseInfo();
+          return releaseInfo && typeof releaseInfo === "object" ? {
+            version: releaseInfo.version,
+            build: releaseInfo.build,
+            releaseName: releaseInfo.releaseName
+          } : null;
+        } catch (error) {
+          return null;
+        }
+      }
+    ));
+    registry.register(createProvider_(
+      "aks.core.configuration",
+      "Configuration",
+      "core.configuration",
+      function () {
+        if (
+          !configApi ||
+          typeof configApi.getAuthorizedAdminEmails !== "function"
+        ) {
+          return null;
+        }
+        try {
+          var emails = configApi.getAuthorizedAdminEmails();
+          return Array.isArray(emails)
+            ? { administrators: emails.length }
+            : null;
+        } catch (error) {
+          return null;
+        }
+      }
+    ));
+    registry.register(createProvider_(
+      "aks.core.logger",
+      "Journalisation",
+      "core.logger",
+      function () {
+        return { apiAvailable: isLoggerApiAvailable_() };
+      }
+    ));
+    return registry;
+  }
+
+  function collectWidgets_(registry, context) {
+    var widgets = [];
+
+    registry.listEnabled().forEach(function (provider) {
+      var providerId = provider.getProviderId();
+      var providerWidgetIds = {};
+
+      try {
+        var suppliedWidgets = provider.getWidgets(context);
+        if (!Array.isArray(suppliedWidgets)) {
+          throw new Error("La collection de widgets est invalide.");
+        }
+
+        suppliedWidgets.forEach(function (widget) {
+          AKS.Core.DashboardContract.validateWidget(widget, providerId);
+          if (providerWidgetIds[widget.widgetId]) {
+            var duplicateError = new Error(
+              "Identifiant de widget dupliqué : " + widget.widgetId
+            );
+            duplicateError.code = "ADMIN004_DUPLICATE_IDENTIFIER";
+            throw duplicateError;
+          }
+          providerWidgetIds[widget.widgetId] = true;
+          widgets.push(widget);
+        });
+      } catch (error) {
+        if (loggerApi && typeof loggerApi.error === "function") {
+          loggerApi.error("Échec d'un DashboardProvider.", {
+            code: error.code || "ADMIN004_PROVIDER_FAILURE",
+            providerId: providerId,
+            correlationId: context.correlationId || null
+          });
+        }
+      }
+    });
+
+    return widgets.sort(function (left, right) {
+      if (left.zone !== right.zone) {
+        return left.zone < right.zone ? -1 : 1;
+      }
+      if (left.priority !== right.priority) {
+        return left.priority - right.priority;
+      }
+      return left.widgetId < right.widgetId ? -1 :
+        (left.widgetId > right.widgetId ? 1 : 0);
+    });
+  }
+
+  function findWidgetContent_(widgets, widgetId) {
+    var match = null;
+    widgets.some(function (widget) {
+      if (widget.widgetId === widgetId) {
+        match = widget.state === "available" ? widget.content : null;
+        return true;
+      }
+      return false;
+    });
+    return match;
+  }
+
+  function getDashboard() {
+    var currentUser = assertCurrentUserAuthorized_();
+    var registry = createInternalRegistry_();
+    var widgets = collectWidgets_(registry, {
+      currentUser: currentUser,
+      correlationId: null
+    });
+    var version = findWidgetContent_(widgets, "core.version");
+    var configuration = findWidgetContent_(widgets, "core.configuration");
+    var logger = findWidgetContent_(widgets, "core.logger");
+    var loggerApiAvailable = Boolean(logger && logger.apiAvailable);
     var components = {
       version: version !== null,
       configuration: configuration !== null,
@@ -122,6 +234,7 @@ function AKS_createDashboardApi_(
       logger: {
         apiAvailable: loggerApiAvailable
       },
+      widgets: widgets,
       status: {
         healthy:
           components.version &&
@@ -151,7 +264,8 @@ AKS.Admin.DashboardModel = Object.freeze({
       AKS.Admin.Access,
       AKS.Version,
       AKS.Config,
-      AKS.Logger
+      AKS.Logger,
+      null
     ).getDashboard();
   }
 });
