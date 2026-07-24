@@ -142,7 +142,9 @@ function AKS_createDashboardApi_(
       "Journalisation",
       "core.logger",
       function () {
-        return { apiAvailable: isLoggerApiAvailable_() };
+        return isLoggerApiAvailable_()
+          ? { apiAvailable: true }
+          : null;
       }
     ));
     return registry;
@@ -219,29 +221,21 @@ function AKS_createDashboardApi_(
     var configuration = findWidgetContent_(widgets, "core.configuration");
     var logger = findWidgetContent_(widgets, "core.logger");
     var loggerApiAvailable = Boolean(logger && logger.apiAvailable);
-    var components = {
-      version: version !== null,
-      configuration: configuration !== null,
-      logger: loggerApiAvailable
-    };
+    var composer = AKS_createDashboardComposer_();
+    var model = composer.compose({
+      currentUser: currentUser,
+      widgets: widgets
+    });
 
-    var model = {
-      application: {
-        name: "AKS Platform"
-      },
-      version: version,
-      configuration: configuration,
-      logger: {
-        apiAvailable: loggerApiAvailable
-      },
-      widgets: widgets,
-      status: {
-        healthy:
-          components.version &&
-          components.configuration &&
-          components.logger,
-        components: components
-      }
+    /*
+     * Transitional fields preserve the DASHBOARD-001 public reads while the
+     * interface migration is completed by ADMIN-002. ADMIN-003 deliberately
+     * exposes no derived global health state.
+     */
+    model.version = version;
+    model.configuration = configuration;
+    model.logger = {
+      apiAvailable: loggerApiAvailable
     };
 
     return deepFreeze_(model);

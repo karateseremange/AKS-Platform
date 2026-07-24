@@ -3,7 +3,8 @@ var AKS = AKS || {};
 /**
  * Centralized AKS Platform V1.1 validation suite.
  *
- * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001 and ADMIN-004 tests and emits
+ * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004 and
+ * ADMIN-003 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -42,7 +43,16 @@ function AKS_runValidationSuiteV11() {
     { name: "ADMIN-004 / empty state", test: AKS_testAdmin004AcceptsEmptyWidget_ },
     { name: "ADMIN-004 / unavailable state", test: AKS_testAdmin004AcceptsUnavailableWidget_ },
     { name: "ADMIN-004 / provider isolation", test: AKS_testAdmin004IsolatesProviderFailure_ },
-    { name: "ADMIN-004 / stable order", test: AKS_testAdmin004SortsWidgetsStably_ }
+    { name: "ADMIN-004 / stable order", test: AKS_testAdmin004SortsWidgetsStably_ },
+
+    { name: "ADMIN-003 / four zones", test: AKS_testAdmin003ExposesFourZones_ },
+    { name: "ADMIN-003 / zone composition", test: AKS_testAdmin003GroupsWidgetsByZone_ },
+    { name: "ADMIN-003 / normalized states", test: AKS_testAdmin003PreservesNormalizedStates_ },
+    { name: "ADMIN-003 / no global health", test: AKS_testAdmin003DoesNotDeriveGlobalHealth_ },
+    { name: "ADMIN-003 / freshness", test: AKS_testAdmin003PreservesFreshness_ },
+    { name: "ADMIN-003 / defensive copies", test: AKS_testAdmin003CreatesDefensiveZoneCopies_ },
+    { name: "ADMIN-003 / dashboard model", test: AKS_testAdmin003DashboardHasNoGlobalHealth_ },
+    { name: "ADMIN-003 / isolated degradation", test: AKS_testAdmin003IsolatesUnavailableCard_ }
   ]);
 }
 
