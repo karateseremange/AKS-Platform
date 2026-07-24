@@ -23,7 +23,8 @@ function AKS_testAdminDashboard_rejectsEmptyInjectedAuthorizationList() {
 function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   var releaseInfo = AKS.Version.getReleaseInfo();
   var viewModel = AKS.Admin.Dashboard.buildViewModelForAuthorizedUser(
-    "karate.seremange@gmail.com"
+    "karate.seremange@gmail.com",
+    "https://example.test/app"
   );
 
   assertEquals_("AKS Platform", viewModel.platform.name);
