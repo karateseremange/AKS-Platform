@@ -23,14 +23,24 @@ function AKS_testAdminDashboard_rejectsEmptyInjectedAuthorizationList() {
 function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   var releaseInfo = AKS.Version.getReleaseInfo();
   var viewModel = AKS.Admin.Dashboard.buildViewModelForAuthorizedUser(
-    "karate.seremange@gmail.com"
+    "karate.seremange@gmail.com",
+    "https://example.test/app"
   );
 
   assertEquals_("AKS Platform", viewModel.platform.name);
   assertEquals_(releaseInfo.version, viewModel.platform.version);
   assertEquals_(releaseInfo.releaseName, viewModel.platform.releaseName);
   assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
-  assertEquals_(0, viewModel.actions.length);
+  assertEquals_(1, viewModel.actions.length);
+  assertEquals_(
+    "module.health-questionnaire",
+    viewModel.actions[0].id
+  );
+  assertTrue_(
+    viewModel.navigation.families.length === 1 &&
+      viewModel.navigation.families[0].id === "modules",
+    "The Dashboard must expose only navigation families with real destinations."
+  );
 }
 
 function AKS_testAdminDashboard_doesNotExposeLegacyCodenameProperty() {
@@ -58,5 +68,9 @@ function AKS_testAdminDashboard_keepsReleaseDataImmutable() {
   assertTrue_(
     Object.isFrozen(viewModel.actions),
     "Quick actions must be immutable."
+  );
+  assertTrue_(
+    Object.isFrozen(viewModel.navigation),
+    "The navigation model must be immutable."
   );
 }
