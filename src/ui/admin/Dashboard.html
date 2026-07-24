@@ -17,6 +17,31 @@
         </div>
       </header>
 
+      <? if (viewModel.navigation.families.length > 0) { ?>
+        <nav class="aks-admin-navigation" aria-label="Navigation administrative principale">
+          <? viewModel.navigation.families.forEach(function (family) { ?>
+            <section class="aks-admin-navigation__group" aria-labelledby="nav-<?= family.id ?>">
+              <h2 id="nav-<?= family.id ?>"><?= family.label ?></h2>
+              <ul>
+                <? family.destinations.forEach(function (destination) { ?>
+                  <li>
+                    <a
+                      href="<?= destination.target ?>"
+                      <? if (destination.external) { ?>target="_blank" rel="noopener noreferrer"<? } ?>
+                    >
+                      <?= destination.label ?>
+                      <? if (destination.external) { ?>
+                        <span class="aks-admin-visually-hidden">(lien externe)</span>
+                      <? } ?>
+                    </a>
+                  </li>
+                <? }); ?>
+              </ul>
+            </section>
+          <? }); ?>
+        </nav>
+      <? } ?>
+
       <section class="aks-admin-grid" aria-label="Tableau de bord administratif">
         <article class="aks-admin-card" aria-labelledby="platform-card-title">
           <div class="aks-admin-card__header">
@@ -52,7 +77,7 @@
           <? } else { ?>
             <nav class="aks-admin-actions" aria-label="Actions rapides">
               <? viewModel.actions.forEach(function (action) { ?>
-                <a class="aks-admin-action" href="<?= action.url ?>">
+                <a class="aks-admin-action" href="<?= action.target ?>">
                   <?= action.label ?>
                 </a>
               <? }); ?>

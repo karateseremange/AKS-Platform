@@ -84,6 +84,60 @@
     gap: 24px;
   }
 
+  .aks-admin-navigation {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .aks-admin-navigation__group {
+    padding: 20px;
+    border: 1px solid var(--aks-border);
+    border-radius: 14px;
+    background: var(--aks-surface);
+  }
+
+  .aks-admin-navigation__group h2 {
+    margin-bottom: 14px;
+  }
+
+  .aks-admin-navigation__group ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .aks-admin-navigation__group a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .aks-admin-navigation__group a:hover,
+  .aks-admin-navigation__group a:focus-visible {
+    background: #edf2ff;
+    outline: 3px solid rgba(42, 75, 155, 0.28);
+    outline-offset: 2px;
+  }
+
+  .aks-admin-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .aks-admin-card {
     min-height: 280px;
     padding: 28px;
@@ -166,6 +220,10 @@
     }
 
     .aks-admin-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .aks-admin-navigation {
       grid-template-columns: 1fr;
     }
 

@@ -4,7 +4,7 @@ var AKS = AKS || {};
  * Centralized AKS Platform V1.1 validation suite.
  *
  * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004 and
- * ADMIN-003 tests and emits
+ * ADMIN-003 and ADMIN-002 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -52,7 +52,16 @@ function AKS_runValidationSuiteV11() {
     { name: "ADMIN-003 / freshness", test: AKS_testAdmin003PreservesFreshness_ },
     { name: "ADMIN-003 / defensive copies", test: AKS_testAdmin003CreatesDefensiveZoneCopies_ },
     { name: "ADMIN-003 / dashboard model", test: AKS_testAdmin003DashboardHasNoGlobalHealth_ },
-    { name: "ADMIN-003 / isolated degradation", test: AKS_testAdmin003IsolatesUnavailableCard_ }
+    { name: "ADMIN-003 / isolated degradation", test: AKS_testAdmin003IsolatesUnavailableCard_ },
+
+    { name: "ADMIN-002 / stable family order", test: AKS_testAdmin002KeepsStableFamilyOrder_ },
+    { name: "ADMIN-002 / unavailable destination", test: AKS_testAdmin002HidesUnavailableDestinations_ },
+    { name: "ADMIN-002 / unauthorized destination", test: AKS_testAdmin002HidesUnauthorizedDestinations_ },
+    { name: "ADMIN-002 / safe targets", test: AKS_testAdmin002RejectsUnsafeTargets_ },
+    { name: "ADMIN-002 / external link", test: AKS_testAdmin002IdentifiesExternalLinks_ },
+    { name: "ADMIN-002 / dashboard return", test: AKS_testAdmin002ExposesDashboardReturn_ },
+    { name: "ADMIN-002 / active modules", test: AKS_testAdmin002PublishesOnlyActiveModules_ },
+    { name: "ADMIN-002 / immutable model", test: AKS_testAdmin002CreatesImmutableDefensiveModel_ }
   ]);
 }
 

@@ -8,8 +8,19 @@ AKS.Admin = AKS.Admin || {};
  * from AKS.Version and passes a presentation model to the HTML view.
  */
 AKS.Admin.Dashboard = (function () {
-  function buildViewModel_(authorizedEmail) {
+  function getWebAppUrl_() {
+    try {
+      return ScriptApp.getService().getUrl() || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function buildViewModel_(authorizedEmail, baseUrl) {
     var releaseInfo = AKS.Version.getReleaseInfo();
+    var navigation = AKS.Admin.Navigation.getModel(
+      typeof baseUrl === "string" ? baseUrl : getWebAppUrl_()
+    );
 
     return Object.freeze({
       platform: Object.freeze({
@@ -20,7 +31,8 @@ AKS.Admin.Dashboard = (function () {
       administrator: Object.freeze({
         email: authorizedEmail
       }),
-      actions: Object.freeze([])
+      navigation: navigation,
+      actions: navigation.quickActions
     });
   }
 
@@ -42,8 +54,11 @@ AKS.Admin.Dashboard = (function () {
   return Object.freeze({
     getViewModel: getViewModel,
     render: render,
-    buildViewModelForAuthorizedUser: function (email) {
-      return buildViewModel_(AKS.Admin.Access.assertAuthorized(email));
+    buildViewModelForAuthorizedUser: function (email, baseUrl) {
+      return buildViewModel_(
+        AKS.Admin.Access.assertAuthorized(email),
+        baseUrl
+      );
     }
   });
 })();
