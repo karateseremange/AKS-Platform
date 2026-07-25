@@ -79,7 +79,15 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / explicit value", test: AKS_testConfig001_resolvesExplicitValue_ },
     { name: "CONFIG-001 / documented default", test: AKS_testConfig001_resolvesDocumentedDefault_ },
     { name: "CONFIG-001 / required value", test: AKS_testConfig001_rejectsMissingRequiredValue_ },
-    { name: "CONFIG-001 / service validation", test: AKS_testConfig001_rejectsInvalidExplicitValue_ }
+    { name: "CONFIG-001 / service validation", test: AKS_testConfig001_rejectsInvalidExplicitValue_ },
+    { name: "CONFIG-001 / persistent typed value", test: AKS_testConfig001_persistsTypedValue_ },
+    { name: "CONFIG-001 / validate before persistence", test: AKS_testConfig001_rejectsInvalidValueBeforePersistence_ },
+    { name: "CONFIG-001 / administrable write", test: AKS_testConfig001_rejectsNonAdministrableWrite_ },
+    { name: "CONFIG-001 / mutation actor", test: AKS_testConfig001_requiresMutationActor_ },
+    { name: "CONFIG-001 / restore default", test: AKS_testConfig001_removesExplicitValueAndRestoresDefault_ },
+    { name: "CONFIG-001 / required delete protection", test: AKS_testConfig001_protectsRequiredValueFromDeletion_ },
+    { name: "CONFIG-001 / corrupted persistence", test: AKS_testConfig001_detectsCorruptedPersistentValue_ },
+    { name: "CONFIG-001 / persistence lock release", test: AKS_testConfig001_releasesPersistenceLockAfterFailure_ }
   ]);
 }
 
