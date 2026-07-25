@@ -4,7 +4,7 @@ var AKS = AKS || {};
  * Centralized AKS Platform V1.1 validation suite.
  *
  * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004,
- * ADMIN-003, ADMIN-002, ADMIN-005 and CONFIG-001 tests and emits
+ * ADMIN-003, ADMIN-002, ADMIN-005, CONFIG-001 and LOG-001 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -95,7 +95,16 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / authenticated mutation actor", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
     { name: "CONFIG-001 / administration restores default", test: AKS_testConfig001AdminUi_restoresDefault_ },
     { name: "CONFIG-001 / administration navigation", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
-    { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ }
+    { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ },
+
+    { name: "LOG-001 / structured immutable event", test: AKS_testLog001_buildsStructuredImmutableEvent_ },
+    { name: "LOG-001 / correlation propagation", test: AKS_testLog001_propagatesValidCorrelationId_ },
+    { name: "LOG-001 / invalid correlation replacement", test: AKS_testLog001_replacesInvalidCorrelationId_ },
+    { name: "LOG-001 / masking before provider", test: AKS_testLog001_masksSensitiveDataBeforeProvider_ },
+    { name: "LOG-001 / invalid level", test: AKS_testLog001_rejectsUnknownLevel_ },
+    { name: "LOG-001 / invalid category", test: AKS_testLog001_rejectsUnknownCategory_ },
+    { name: "LOG-001 / required event type", test: AKS_testLog001_requiresStableEventType_ },
+    { name: "LOG-001 / provider failure isolation", test: AKS_testLog001_isolatesProviderFailure_ }
   ]);
 }
 
