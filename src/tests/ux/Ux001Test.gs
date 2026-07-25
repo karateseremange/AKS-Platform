@@ -85,3 +85,46 @@ function AKS_testUx001RespectsReducedMotionPreference_() {
     "Le socle UX doit respecter la préférence de réduction des animations."
   );
 }
+
+function AKS_ux001ConfigurationClientSource_() {
+  return AKS_includeAdminConfigurationFile_("ui/admin/ConfigurationClient");
+}
+
+function AKS_testUx001ConfigurationPreventsDuplicateActions_() {
+  var source = AKS_ux001ConfigurationClientSource_();
+  AKS_assertUx001_(
+    source.indexOf('form.getAttribute("data-busy") === "true"') !== -1 &&
+      source.indexOf("setBusy(form, true)") !== -1 &&
+      source.indexOf("control.disabled = busy") !== -1,
+    "Le paramétrage doit verrouiller ses contrôles et prévenir les doubles actions."
+  );
+}
+
+function AKS_testUx001ConfigurationAnnouncesPendingAction_() {
+  var source = AKS_ux001ConfigurationClientSource_();
+  AKS_assertUx001_(
+    source.indexOf('"Enregistrement en cours…"') !== -1 &&
+      source.indexOf('"Restauration en cours…"') !== -1 &&
+      source.indexOf('message.setAttribute("role"') !== -1,
+    "Le paramétrage doit annoncer les traitements en cours de manière accessible."
+  );
+}
+
+function AKS_testUx001ConfigurationRecoversAfterFailure_() {
+  var source = AKS_ux001ConfigurationClientSource_();
+  AKS_assertUx001_(
+    source.indexOf("setBusy(container, false)") !== -1 &&
+      source.indexOf(".withFailureHandler(fail(form))") !== -1,
+    "Le paramétrage doit réactiver les contrôles après un échec."
+  );
+}
+
+function AKS_testUx001ConfigurationHidesTechnicalFailureDetails_() {
+  var source = AKS_ux001ConfigurationClientSource_();
+  AKS_assertUx001_(
+    source.indexOf("error.message") === -1 &&
+      source.indexOf("Réessayez dans quelques instants.") !== -1 &&
+      source.indexOf('state === "error" ? "alert" : "status"') !== -1,
+    "Le paramétrage doit afficher un échec exploitable sans exposer de détail technique."
+  );
+}
