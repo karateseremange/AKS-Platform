@@ -84,6 +84,21 @@
     cursor: pointer;
   }
   .aks-logs-list { display: grid; gap: 16px; }
+  .aks-logs-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    color: var(--aks-muted);
+  }
+  .aks-logs-result p,
+  .aks-logs-empty p { margin: 0; }
+  .aks-logs-result a,
+  .aks-logs-empty a {
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+  }
   .aks-log-entry {
     padding: 20px;
     border: 1px solid var(--aks-border);
@@ -145,5 +160,6 @@
     .aks-logs-header { flex-direction: column; }
     .aks-logs-filters, .aks-log-entry dl { grid-template-columns: 1fr; }
     .aks-log-entry__heading { flex-direction: column; }
+    .aks-logs-result { align-items: flex-start; flex-direction: column; }
   }
 </style>

@@ -86,6 +86,15 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
     return haystack.indexOf(filters.search.toLowerCase()) !== -1;
   }
 
+  function hasActiveFilters_(filters) {
+    return Boolean(
+      filters.level ||
+      filters.category ||
+      filters.module ||
+      filters.search
+    );
+  }
+
   function present_(event) {
     return {
       eventId: event.eventId,
@@ -122,9 +131,14 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
       administrator: { email: email },
       navigation: {
         homeTarget: baseUrl_() + "?app=admin",
-        logsTarget: baseUrl_() + "?app=logs"
+        logsTarget: baseUrl_() + "?app=logs",
+        resetTarget: baseUrl_() + "?app=logs"
       },
       filters: normalized,
+      result: {
+        count: events.length,
+        filtered: hasActiveFilters_(normalized)
+      },
       options: {
         levels: LEVELS.slice(),
         categories: CATEGORIES.slice(),

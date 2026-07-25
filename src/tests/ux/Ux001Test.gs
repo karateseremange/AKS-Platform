@@ -36,9 +36,13 @@ function AKS_testUx001AdminViewsUseSharedFoundation_() {
     parameters: []
   });
   var logs = AKS_renderUx001AdminView_("ui/admin/Logs", {
-    navigation: { homeTarget: "?app=admin" },
+    navigation: {
+      homeTarget: "?app=admin",
+      resetTarget: "?app=logs"
+    },
     filters: { level: "", category: "", module: "", search: "", limit: 25 },
     options: { levels: [], categories: [], limits: [25] },
+    result: { count: 0, filtered: false },
     events: []
   });
   var marker = "--aks-primary-dark";
@@ -126,5 +130,89 @@ function AKS_testUx001ConfigurationHidesTechnicalFailureDetails_() {
       source.indexOf("Réessayez dans quelques instants.") !== -1 &&
       source.indexOf('state === "error" ? "alert" : "status"') !== -1,
     "Le paramétrage doit afficher un échec exploitable sans exposer de détail technique."
+  );
+}
+
+function AKS_createUx001LogViewModel_(filtered, events) {
+  events = events || [];
+  return {
+    navigation: {
+      homeTarget: "?app=admin",
+      resetTarget: "?app=logs"
+    },
+    filters: {
+      level: filtered ? "ERROR" : "",
+      category: "",
+      module: "",
+      search: "",
+      limit: 25
+    },
+    result: {
+      count: events.length,
+      filtered: filtered
+    },
+    options: {
+      levels: ["ERROR"],
+      categories: [],
+      limits: [25]
+    },
+    events: events
+  };
+}
+
+function AKS_testUx001LogModelDescribesFilteredResults_() {
+  var event = {
+    eventId: "evt-ux-001",
+    timestamp: "2026-07-25T18:00:00.000Z",
+    level: "ERROR",
+    category: "technical",
+    source: "AKS",
+    module: "UX",
+    eventType: "ux.test",
+    message: "Événement de recette",
+    outcome: "",
+    correlationId: "corr-ux-001",
+    reference: "",
+    durationMs: null,
+    actorJson: "",
+    contextJson: ""
+  };
+  var model = AKS_createLog001AdminFixture_({
+    events: [event]
+  }).controller.getViewModel({ level: "ERROR" });
+
+  AKS_assertUx001_(
+    model.result.count === 1 &&
+      model.result.filtered === true &&
+      model.navigation.resetTarget.indexOf("?app=logs") !== -1,
+    "La consultation doit décrire le résultat filtré et fournir une réinitialisation."
+  );
+}
+
+function AKS_testUx001LogViewAnnouncesResultCount_() {
+  var html = AKS_renderUx001AdminView_(
+    "ui/admin/Logs",
+    AKS_createUx001LogViewModel_(false, [])
+  );
+
+  AKS_assertUx001_(
+    html.indexOf('role="status"') !== -1 &&
+      html.indexOf('aria-live="polite"') !== -1 &&
+      html.indexOf("<strong>0</strong>") !== -1,
+    "Le nombre de résultats doit être annoncé sans interrompre la navigation."
+  );
+}
+
+function AKS_testUx001FilteredEmptyLogViewOffersReset_() {
+  var html = AKS_renderUx001AdminView_(
+    "ui/admin/Logs",
+    AKS_createUx001LogViewModel_(true, [])
+  );
+
+  AKS_assertUx001_(
+    html.indexOf("Aucun événement ne correspond aux critères.") !== -1 &&
+      html.indexOf("Réinitialiser les filtres") !== -1 &&
+      html.indexOf("Afficher tous les événements") !== -1,
+    "Un résultat filtré vide doit expliquer l'état et proposer une sortie immédiate."
   );
 }
