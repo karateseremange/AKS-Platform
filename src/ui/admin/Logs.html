@@ -52,8 +52,28 @@
         <button type="submit">Filtrer</button>
       </form>
 
+      <div class="aks-logs-result" role="status" aria-live="polite">
+        <p>
+          <strong><?= viewModel.result.count ?></strong>
+          événement<?= viewModel.result.count > 1 ? "s" : "" ?>
+          <?= viewModel.result.filtered ? "correspondant aux filtres" : "affiché" + (viewModel.result.count > 1 ? "s" : "") ?>
+        </p>
+        <? if (viewModel.result.filtered) { ?>
+          <a href="<?= viewModel.navigation.resetTarget ?>">Réinitialiser les filtres</a>
+        <? } ?>
+      </div>
+
       <? if (viewModel.events.length === 0) { ?>
-        <p class="aks-logs-empty">Aucun événement ne correspond aux critères.</p>
+        <div class="aks-logs-empty">
+          <p>
+            <?= viewModel.result.filtered
+              ? "Aucun événement ne correspond aux critères."
+              : "Aucun événement n’est encore journalisé." ?>
+          </p>
+          <? if (viewModel.result.filtered) { ?>
+            <a href="<?= viewModel.navigation.resetTarget ?>">Afficher tous les événements</a>
+          <? } ?>
+        </div>
       <? } else { ?>
         <section class="aks-logs-list" aria-label="Événements journalisés">
           <? viewModel.events.forEach(function (entry) { ?>
