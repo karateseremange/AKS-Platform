@@ -80,10 +80,10 @@
             <article class="aks-log-entry">
               <div class="aks-log-entry__heading">
                 <div>
-                  <span class="aks-log-level aks-log-level--<?= entry.level.toLowerCase() ?>"><?= entry.level ?></span>
+                  <span class="aks-log-level aks-log-level--<?= entry.level.toLowerCase() ?>"><?= entry.levelLabel ?></span>
                   <span class="aks-log-category"><?= entry.category ?></span>
                 </div>
-                <time datetime="<?= entry.timestamp ?>"><?= entry.timestamp ?></time>
+                <time datetime="<?= entry.timestamp ?>"><?= entry.timestampLabel ?></time>
               </div>
               <h2><?= entry.message ?></h2>
               <dl>

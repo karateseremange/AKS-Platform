@@ -18,6 +18,13 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
     "technical", "security", "administration", "functional", "integration"
   ];
   var LIMITS = [25, 50, 100];
+  var LEVEL_LABELS = {
+    DEBUG: "Diagnostic",
+    INFO: "Information",
+    WARN: "Avertissement",
+    ERROR: "Erreur",
+    CRITICAL: "Critique"
+  };
 
   function deepFreeze_(value) {
     if (!value || typeof value !== "object" || Object.isFrozen(value)) {
@@ -95,11 +102,21 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
     );
   }
 
+  function formatTimestamp_(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return String(timestamp || "");
+    }
+    return Utilities.formatDate(date, "Europe/Paris", "dd/MM/yyyy HH:mm");
+  }
+
   function present_(event) {
     return {
       eventId: event.eventId,
       timestamp: event.timestamp,
+      timestampLabel: formatTimestamp_(event.timestamp),
       level: event.level,
+      levelLabel: LEVEL_LABELS[event.level] || event.level,
       category: event.category,
       source: event.source,
       module: event.module,

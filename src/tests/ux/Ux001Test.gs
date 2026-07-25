@@ -216,3 +216,84 @@ function AKS_testUx001FilteredEmptyLogViewOffersReset_() {
     "Un résultat filtré vide doit expliquer l'état et proposer une sortie immédiate."
   );
 }
+
+function AKS_testUx001LogModelPresentsReadableEventMetadata_() {
+  var model = AKS_createLog001AdminFixture_({
+    events: [{
+      eventId: "evt-ux-readable",
+      timestamp: "2026-07-25T18:30:00.000Z",
+      level: "ERROR",
+      category: "technical",
+      source: "AKS",
+      module: "UX",
+      eventType: "ux.test",
+      message: "Événement de recette",
+      outcome: "",
+      correlationId: "corr-ux-readable",
+      reference: "",
+      durationMs: null
+    }]
+  }).controller.getViewModel({});
+
+  AKS_assertUx001_(
+    model.events[0].timestamp === "2026-07-25T18:30:00.000Z" &&
+      model.events[0].timestampLabel === "25/07/2026 20:30" &&
+      model.events[0].level === "ERROR" &&
+      model.events[0].levelLabel === "Erreur",
+    "Le modèle doit conserver les valeurs techniques et fournir des libellés compréhensibles."
+  );
+}
+
+function AKS_createUx001PresentedEvent_() {
+  return {
+    eventId: "evt-ux-presented",
+    timestamp: "2026-07-25T18:30:00.000Z",
+    timestampLabel: "25/07/2026 20:30",
+    level: "ERROR",
+    levelLabel: "Erreur",
+    category: "technical",
+    source: "AKS",
+    module: "UX",
+    eventType: "ux.test",
+    message: "Événement de recette",
+    outcome: "",
+    correlationId: "corr-ux-presented",
+    reference: "",
+    durationMs: null,
+    actorJson: "",
+    contextJson: ""
+  };
+}
+
+function AKS_testUx001LogViewUsesReadableEventMetadata_() {
+  var html = AKS_renderUx001AdminView_(
+    "ui/admin/Logs",
+    AKS_createUx001LogViewModel_(false, [AKS_createUx001PresentedEvent_()])
+  );
+
+  AKS_assertUx001_(
+    html.indexOf(">Erreur</span>") !== -1 &&
+      html.indexOf('datetime="2026-07-25T18:30:00.000Z">25/07/2026 20:30</time>') !== -1,
+    "La page Journaux doit afficher les libellés lisibles sans perdre les valeurs techniques."
+  );
+}
+
+function AKS_testUx001DashboardUsesReadableEventMetadata_() {
+  var html = AKS_renderUx001AdminView_("ui/admin/Dashboard", {
+    platform: { name: "AKS Platform", version: "test", releaseName: "test" },
+    administrator: { email: "admin@example.invalid" },
+    navigation: { families: [] },
+    actions: [],
+    recentLogs: {
+      available: true,
+      events: [AKS_createUx001PresentedEvent_()],
+      navigation: { logsTarget: "?app=logs" }
+    }
+  });
+
+  AKS_assertUx001_(
+    html.indexOf(">Erreur</span>") !== -1 &&
+      html.indexOf('datetime="2026-07-25T18:30:00.000Z">25/07/2026 20:30</time>') !== -1,
+    "Le Centre de pilotage doit reprendre la même présentation compréhensible des événements."
+  );
+}

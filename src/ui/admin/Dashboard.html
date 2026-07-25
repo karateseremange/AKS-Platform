@@ -102,9 +102,9 @@
             <ol class="aks-admin-log-list">
               <? viewModel.recentLogs.events.forEach(function (entry) { ?>
                 <li>
-                  <span class="aks-admin-log-level"><?= entry.level ?></span>
+                  <span class="aks-admin-log-level"><?= entry.levelLabel ?></span>
                   <span><?= entry.message ?></span>
-                  <time datetime="<?= entry.timestamp ?>"><?= entry.timestamp ?></time>
+                  <time datetime="<?= entry.timestamp ?>"><?= entry.timestampLabel ?></time>
                 </li>
               <? }); ?>
             </ol>

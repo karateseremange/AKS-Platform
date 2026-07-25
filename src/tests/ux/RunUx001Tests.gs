@@ -11,6 +11,9 @@ function AKS_runUx001Tests() {
     { name: "UX-001 / controlled configuration error", test: AKS_testUx001ConfigurationHidesTechnicalFailureDetails_ },
     { name: "UX-001 / filtered log result model", test: AKS_testUx001LogModelDescribesFilteredResults_ },
     { name: "UX-001 / announced log result count", test: AKS_testUx001LogViewAnnouncesResultCount_ },
-    { name: "UX-001 / filtered empty log recovery", test: AKS_testUx001FilteredEmptyLogViewOffersReset_ }
+    { name: "UX-001 / filtered empty log recovery", test: AKS_testUx001FilteredEmptyLogViewOffersReset_ },
+    { name: "UX-001 / readable log metadata model", test: AKS_testUx001LogModelPresentsReadableEventMetadata_ },
+    { name: "UX-001 / readable log event view", test: AKS_testUx001LogViewUsesReadableEventMetadata_ },
+    { name: "UX-001 / readable dashboard event view", test: AKS_testUx001DashboardUsesReadableEventMetadata_ }
   ]);
 }
