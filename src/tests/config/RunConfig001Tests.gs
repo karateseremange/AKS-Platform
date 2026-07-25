@@ -9,7 +9,15 @@ function AKS_runConfig001Tests() {
     AKS_testConfig_rejectsMissingAdministratorConfiguration,
     AKS_testConfig_rejectsEmptyAdministratorConfiguration,
     AKS_testConfig_rejectsInvalidAdministratorEmail,
-    AKS_testConfig_rejectsDuplicateAdministratorEmailsAfterNormalization
+    AKS_testConfig_rejectsDuplicateAdministratorEmailsAfterNormalization,
+    AKS_testConfig001_registersImmutableDefinition_,
+    AKS_testConfig001_rejectsDuplicateKey_,
+    AKS_testConfig001_rejectsInvalidKey_,
+    AKS_testConfig001_rejectsSecretValue_,
+    AKS_testConfig001_resolvesExplicitValue_,
+    AKS_testConfig001_resolvesDocumentedDefault_,
+    AKS_testConfig001_rejectsMissingRequiredValue_,
+    AKS_testConfig001_rejectsInvalidExplicitValue_
   ];
   var passed = 0;
   var results = [];
