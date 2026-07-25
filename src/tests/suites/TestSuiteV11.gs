@@ -111,7 +111,12 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / storage schema integrity", test: AKS_testLog001Repository_rejectsIncompatibleSchema_ },
     { name: "LOG-001 / storage lock timeout", test: AKS_testLog001Repository_rejectsUnavailableLock_ },
     { name: "LOG-001 / lock release after failure", test: AKS_testLog001Repository_releasesLockAfterFailure_ },
-    { name: "LOG-001 / core logger persistent pipeline", test: AKS_testLog001CoreLogger_delegatesToPersistentPipeline_ }
+    { name: "LOG-001 / core logger persistent pipeline", test: AKS_testLog001CoreLogger_delegatesToPersistentPipeline_ },
+    { name: "LOG-001 / retention default", test: AKS_testLog001Retention_registersNinetyDayDefault_ },
+    { name: "LOG-001 / expired rows purge", test: AKS_testLog001Retention_purgesExpiredRowsOnly_ },
+    { name: "LOG-001 / purge batch limit", test: AKS_testLog001Retention_respectsBatchLimit_ },
+    { name: "LOG-001 / invalid retention policy", test: AKS_testLog001Retention_rejectsInvalidPolicy_ },
+    { name: "LOG-001 / controlled purge trace", test: AKS_testLog001Retention_tracesControlledPurge_ }
   ]);
 }
 

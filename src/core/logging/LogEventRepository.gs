@@ -2,8 +2,7 @@
  * Creates the durable LOG-001 event repository.
  *
  * The repository stores one immutable event per row and deliberately exposes
- * only append and recent-read operations. Retention and purge are handled by
- * a later LOG-001 increment.
+ * append, recent-read and controlled purge operations.
  *
  * @param {Object=} dependencies
  * @returns {Object}
@@ -174,10 +173,53 @@ function AKS_createLogEventRepository_(dependencies) {
       .map(rowToEvent_);
   }
 
+  function purgeBefore(cutoff, maxRows) {
+    var cutoffDate = cutoff instanceof Date ? cutoff : new Date(cutoff);
+    if (isNaN(cutoffDate.getTime())) {
+      throw error_(
+        "LOG001_RETENTION_CUTOFF_INVALID",
+        "La date limite de conservation des journaux est invalide."
+      );
+    }
+    var normalizedMaxRows = Math.max(
+      1,
+      Math.min(Math.floor(Number(maxRows) || 500), 500)
+    );
+
+    return withLock_(function () {
+      var sheet = ensureSheet_();
+      var lastRow = sheet.getLastRow();
+      if (lastRow <= 1) {
+        return 0;
+      }
+
+      var timestamps = sheet
+        .getRange(2, 3, lastRow - 1, 1)
+        .getValues();
+      var rowsToDelete = [];
+      timestamps.some(function (row, index) {
+        var timestamp = new Date(row[0]);
+        if (
+          !isNaN(timestamp.getTime()) &&
+          timestamp.getTime() < cutoffDate.getTime()
+        ) {
+          rowsToDelete.push(index + 2);
+        }
+        return rowsToDelete.length >= normalizedMaxRows;
+      });
+
+      for (var index = rowsToDelete.length - 1; index >= 0; index -= 1) {
+        sheet.deleteRow(rowsToDelete[index]);
+      }
+      return rowsToDelete.length;
+    });
+  }
+
   return Object.freeze({
     ensureStorage: ensureSheet_,
     append: append,
     listRecent: listRecent,
+    purgeBefore: purgeBefore,
     getHeaders: function () { return headers.slice(); },
     getSheetName: function () { return sheetName; }
   });
