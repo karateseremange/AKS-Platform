@@ -196,7 +196,10 @@ function AKS_createLoggerApi_(providerOrService) {
   });
 }
 
+AKS.LogEventRepository = AKS_createDefaultLogEventRepository_();
+
 AKS.Logging = AKS_createLoggingService_(function (entry) {
+  AKS.LogEventRepository.append(entry);
   Logger.log(JSON.stringify(entry));
 });
 

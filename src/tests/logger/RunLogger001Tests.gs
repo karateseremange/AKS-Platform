@@ -11,7 +11,14 @@ function AKS_runLogger001Tests() {
     AKS_testLog001_rejectsUnknownLevel_,
     AKS_testLog001_rejectsUnknownCategory_,
     AKS_testLog001_requiresStableEventType_,
-    AKS_testLog001_isolatesProviderFailure_
+    AKS_testLog001_isolatesProviderFailure_,
+    AKS_testLog001Repository_createsDedicatedStorage_,
+    AKS_testLog001Repository_persistsCompleteEvent_,
+    AKS_testLog001Repository_readsNewestEventsFirst_,
+    AKS_testLog001Repository_rejectsIncompatibleSchema_,
+    AKS_testLog001Repository_rejectsUnavailableLock_,
+    AKS_testLog001Repository_releasesLockAfterFailure_,
+    AKS_testLog001CoreLogger_delegatesToPersistentPipeline_
   ];
   var passed = 0;
   var results = [];

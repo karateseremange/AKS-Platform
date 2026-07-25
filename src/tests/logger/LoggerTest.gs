@@ -198,3 +198,167 @@ function AKS_testLog001_isolatesProviderFailure_() {
   assertEquals_(false, result.ok);
   assertEquals_("LOG001_PROVIDER_FAILURE", result.errorCode);
 }
+
+function AKS_createLog001RepositoryFixture_(options) {
+  options = options || {};
+  var rows = options.rows || [];
+  var lockReleased = false;
+  var sheet = {
+    getLastColumn: function () {
+      return rows.length ? rows[0].length : 0;
+    },
+    getLastRow: function () { return rows.length; },
+    getRange: function (row, column, rowCount, columnCount) {
+      return {
+        setValues: function (values) {
+          rows[row - 1] = values[0].slice();
+        },
+        getValues: function () {
+          return rows.slice(row - 1, row - 1 + rowCount).map(function (value) {
+            return value.slice(column - 1, column - 1 + columnCount);
+          });
+        }
+      };
+    },
+    setFrozenRows: function () {},
+    appendRow: function (row) {
+      if (options.failOnAppend) {
+        throw new Error("Écriture impossible");
+      }
+      rows.push(row.slice());
+    }
+  };
+  var spreadsheet = {
+    getSheetByName: function () {
+      return rows.length ? sheet : null;
+    },
+    insertSheet: function () { return sheet; }
+  };
+  var repository = AKS_createLogEventRepository_({
+    getSpreadsheet: function () { return spreadsheet; },
+    lock: {
+      tryLock: function () {
+        return options.lockAvailable !== false;
+      },
+      releaseLock: function () { lockReleased = true; }
+    }
+  });
+  return {
+    repository: repository,
+    rows: rows,
+    wasLockReleased: function () { return lockReleased; }
+  };
+}
+
+function AKS_createLog001PersistedEvent_() {
+  return Object.freeze({
+    schemaVersion: "1.0",
+    eventId: "evt-persist-001",
+    timestamp: "2026-07-25T15:00:00.000Z",
+    environment: "test",
+    correlationId: "corr-persist-001",
+    level: "WARN",
+    category: "administration",
+    source: "AKS.Configuration",
+    module: "core",
+    eventType: "configuration.updated",
+    message: "Paramètre modifié.",
+    outcome: "success",
+    actor: Object.freeze({ type: "administrator", id: "admin@example.com" }),
+    reference: "platform.activeSeason",
+    durationMs: 12,
+    context: Object.freeze({ previousSource: "default" })
+  });
+}
+
+function AKS_testLog001Repository_createsDedicatedStorage_() {
+  var fixture = AKS_createLog001RepositoryFixture_();
+  fixture.repository.ensureStorage();
+
+  assertEquals_("AKS_Logs", fixture.repository.getSheetName());
+  assertEquals_(16, fixture.rows[0].length);
+  assertEquals_("schemaVersion", fixture.rows[0][0]);
+  assertEquals_("contextJson", fixture.rows[0][15]);
+}
+
+function AKS_testLog001Repository_persistsCompleteEvent_() {
+  var fixture = AKS_createLog001RepositoryFixture_();
+  var event = AKS_createLog001PersistedEvent_();
+  var eventId = fixture.repository.append(event);
+
+  assertEquals_("evt-persist-001", eventId);
+  assertEquals_(2, fixture.rows.length);
+  assertEquals_("configuration.updated", fixture.rows[1][9]);
+  assertEquals_(
+    "admin@example.com",
+    JSON.parse(fixture.rows[1][12]).id
+  );
+  assertEquals_("default", JSON.parse(fixture.rows[1][15]).previousSource);
+}
+
+function AKS_testLog001Repository_readsNewestEventsFirst_() {
+  var fixture = AKS_createLog001RepositoryFixture_();
+  var first = AKS_createLog001PersistedEvent_();
+  var second = {};
+  Object.keys(first).forEach(function (key) { second[key] = first[key]; });
+  second.eventId = "evt-persist-002";
+
+  fixture.repository.append(first);
+  fixture.repository.append(second);
+  var events = fixture.repository.listRecent(2);
+
+  assertEquals_(2, events.length);
+  assertEquals_("evt-persist-002", events[0].eventId);
+  assertEquals_("evt-persist-001", events[1].eventId);
+  assertEquals_("default", events[0].context.previousSource);
+}
+
+function AKS_testLog001Repository_rejectsIncompatibleSchema_() {
+  var fixture = AKS_createLog001RepositoryFixture_({
+    rows: [["wrong", "schema"]]
+  });
+  assertThrows_(function () {
+    fixture.repository.ensureStorage();
+  }, "LOG001_STORAGE_SCHEMA_INVALID");
+}
+
+function AKS_testLog001Repository_rejectsUnavailableLock_() {
+  var fixture = AKS_createLog001RepositoryFixture_({
+    lockAvailable: false
+  });
+  assertThrows_(function () {
+    fixture.repository.append(AKS_createLog001PersistedEvent_());
+  }, "LOG001_STORAGE_LOCK_TIMEOUT");
+}
+
+function AKS_testLog001Repository_releasesLockAfterFailure_() {
+  var fixture = AKS_createLog001RepositoryFixture_({
+    failOnAppend: true
+  });
+  try {
+    fixture.repository.append(AKS_createLog001PersistedEvent_());
+  } catch (expected) {}
+
+  assertEquals_(true, fixture.wasLockReleased());
+}
+
+function AKS_testLog001CoreLogger_delegatesToPersistentPipeline_() {
+  var events = [];
+  var logger = AKS_createCoreLoggerApi_({
+    emit: function (event) {
+      events.push(event);
+      return { ok: true };
+    }
+  });
+
+  logger.info("Traitement démarré.", {
+    module: "health-questionnaire",
+    eventType: "questionnaire.started",
+    correlationId: "corr-core-001"
+  });
+
+  assertEquals_(1, events.length);
+  assertEquals_("AKS.Core", events[0].source);
+  assertEquals_("questionnaire.started", events[0].eventType);
+  assertEquals_("corr-core-001", events[0].correlationId);
+}
