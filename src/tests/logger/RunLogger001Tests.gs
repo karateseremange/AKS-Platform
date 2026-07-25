@@ -18,7 +18,12 @@ function AKS_runLogger001Tests() {
     AKS_testLog001Repository_rejectsIncompatibleSchema_,
     AKS_testLog001Repository_rejectsUnavailableLock_,
     AKS_testLog001Repository_releasesLockAfterFailure_,
-    AKS_testLog001CoreLogger_delegatesToPersistentPipeline_
+    AKS_testLog001CoreLogger_delegatesToPersistentPipeline_,
+    AKS_testLog001Retention_registersNinetyDayDefault_,
+    AKS_testLog001Retention_purgesExpiredRowsOnly_,
+    AKS_testLog001Retention_respectsBatchLimit_,
+    AKS_testLog001Retention_rejectsInvalidPolicy_,
+    AKS_testLog001Retention_tracesControlledPurge_
   ];
   var passed = 0;
   var results = [];

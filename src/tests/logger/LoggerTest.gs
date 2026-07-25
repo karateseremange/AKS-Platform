@@ -226,6 +226,9 @@ function AKS_createLog001RepositoryFixture_(options) {
         throw new Error("Écriture impossible");
       }
       rows.push(row.slice());
+    },
+    deleteRow: function (row) {
+      rows.splice(row - 1, 1);
     }
   };
   var spreadsheet = {
@@ -361,4 +364,109 @@ function AKS_testLog001CoreLogger_delegatesToPersistentPipeline_() {
   assertEquals_("AKS.Core", events[0].source);
   assertEquals_("questionnaire.started", events[0].eventType);
   assertEquals_("corr-core-001", events[0].correlationId);
+}
+
+function AKS_testLog001Retention_registersNinetyDayDefault_() {
+  var registry = AKS_createPlatformParameterRegistry_();
+  var service = AKS_createConfigurationService_(registry, {
+    has: function () { return false; },
+    get: function () { return null; }
+  });
+
+  var result = service.resolve("logging.retentionDays");
+
+  assertEquals_(90, result.value);
+  assertEquals_("default", result.source);
+}
+
+function AKS_createLog001StoredRow_(eventId, timestamp) {
+  return [
+    "1.0", eventId, timestamp, "test", "corr-" + eventId, "INFO",
+    "technical", "AKS.Core", "core", "test.event", "Test.", "success",
+    "", "", "", "{}"
+  ];
+}
+
+function AKS_testLog001Retention_purgesExpiredRowsOnly_() {
+  var fixture = AKS_createLog001RepositoryFixture_({
+    rows: [
+      AKS_createLogEventRepository_({
+        getSpreadsheet: function () {}
+      }).getHeaders(),
+      AKS_createLog001StoredRow_("old", "2026-01-01T00:00:00.000Z"),
+      AKS_createLog001StoredRow_("recent", "2026-07-20T00:00:00.000Z")
+    ]
+  });
+
+  var deleted = fixture.repository.purgeBefore(
+    new Date("2026-04-26T00:00:00.000Z"),
+    500
+  );
+
+  assertEquals_(1, deleted);
+  assertEquals_(2, fixture.rows.length);
+  assertEquals_("schemaVersion", fixture.rows[0][0]);
+  assertEquals_("recent", fixture.rows[1][1]);
+}
+
+function AKS_testLog001Retention_respectsBatchLimit_() {
+  var fixture = AKS_createLog001RepositoryFixture_({
+    rows: [
+      AKS_createLogEventRepository_({
+        getSpreadsheet: function () {}
+      }).getHeaders(),
+      AKS_createLog001StoredRow_("old-1", "2026-01-01T00:00:00.000Z"),
+      AKS_createLog001StoredRow_("old-2", "2026-01-02T00:00:00.000Z")
+    ]
+  });
+
+  var deleted = fixture.repository.purgeBefore(
+    new Date("2026-04-26T00:00:00.000Z"),
+    1
+  );
+
+  assertEquals_(1, deleted);
+  assertEquals_(2, fixture.rows.length);
+}
+
+function AKS_testLog001Retention_rejectsInvalidPolicy_() {
+  var service = AKS_createLogRetentionService_(
+    { purgeBefore: function () { throw new Error("Ne doit pas être appelé"); } },
+    { resolve: function () { return { value: 0 }; } },
+    { emit: function () {} },
+    { clock: function () { return new Date("2026-07-25T12:00:00.000Z"); } }
+  );
+
+  assertThrows_(function () {
+    service.purge();
+  }, "LOG001_RETENTION_DAYS_INVALID");
+}
+
+function AKS_testLog001Retention_tracesControlledPurge_() {
+  var events = [];
+  var service = AKS_createLogRetentionService_(
+    {
+      purgeBefore: function (cutoff, batchSize) {
+        assertEquals_("2026-04-26T12:00:00.000Z", cutoff.toISOString());
+        assertEquals_(500, batchSize);
+        return 3;
+      }
+    },
+    { resolve: function () { return { value: 90 }; } },
+    { emit: function (event) { events.push(event); } },
+    { clock: function () { return new Date("2026-07-25T12:00:00.000Z"); } }
+  );
+
+  var report = service.purge({
+    actor: "system@karate-seremange.fr",
+    actorType: "service",
+    correlationId: "corr-purge-001"
+  });
+
+  assertEquals_(3, report.deletedRows);
+  assertTrue_(Object.isFrozen(report));
+  assertEquals_(1, events.length);
+  assertEquals_("logging.retention.purge.completed", events[0].eventType);
+  assertEquals_(3, events[0].context.deletedRows);
+  assertEquals_("corr-purge-001", events[0].correlationId);
 }

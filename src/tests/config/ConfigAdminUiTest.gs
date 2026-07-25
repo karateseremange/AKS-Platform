@@ -42,7 +42,13 @@ function AKS_testConfig001AdminUi_buildsAuthorizedViewModel_() {
     "https://example.test/app?app=config",
     model.navigation.configurationTarget
   );
-  assertEquals_(4, model.parameters.length);
+  assertEquals_(5, model.parameters.length);
+  var retention = model.parameters.filter(function (parameter) {
+    return parameter.key === "logging.retentionDays";
+  })[0];
+  assertEquals_(90, retention.value);
+  assertEquals_("integer", retention.type);
+  assertEquals_(true, retention.administrable);
   assertTrue_(Object.isFrozen(model));
   assertTrue_(Object.isFrozen(model.parameters));
 }

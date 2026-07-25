@@ -192,6 +192,16 @@ function AKS_createPlatformParameterRegistry_() {
       required: true,
       administrable: false,
       defaultValue: "fr"
+    },
+    {
+      key: "logging.retentionDays",
+      label: "Conservation des journaux",
+      description: "Durée de conservation active des journaux ordinaires, en jours.",
+      type: "integer",
+      scope: "platform",
+      required: true,
+      administrable: true,
+      defaultValue: 90
     }
   ].forEach(registry.register);
 
