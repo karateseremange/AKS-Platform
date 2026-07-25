@@ -104,7 +104,14 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / invalid level", test: AKS_testLog001_rejectsUnknownLevel_ },
     { name: "LOG-001 / invalid category", test: AKS_testLog001_rejectsUnknownCategory_ },
     { name: "LOG-001 / required event type", test: AKS_testLog001_requiresStableEventType_ },
-    { name: "LOG-001 / provider failure isolation", test: AKS_testLog001_isolatesProviderFailure_ }
+    { name: "LOG-001 / provider failure isolation", test: AKS_testLog001_isolatesProviderFailure_ },
+    { name: "LOG-001 / dedicated persistent storage", test: AKS_testLog001Repository_createsDedicatedStorage_ },
+    { name: "LOG-001 / complete event persistence", test: AKS_testLog001Repository_persistsCompleteEvent_ },
+    { name: "LOG-001 / recent event ordering", test: AKS_testLog001Repository_readsNewestEventsFirst_ },
+    { name: "LOG-001 / storage schema integrity", test: AKS_testLog001Repository_rejectsIncompatibleSchema_ },
+    { name: "LOG-001 / storage lock timeout", test: AKS_testLog001Repository_rejectsUnavailableLock_ },
+    { name: "LOG-001 / lock release after failure", test: AKS_testLog001Repository_releasesLockAfterFailure_ },
+    { name: "LOG-001 / core logger persistent pipeline", test: AKS_testLog001CoreLogger_delegatesToPersistentPipeline_ }
   ]);
 }
 
