@@ -36,9 +36,13 @@ function AKS_testUx001AdminViewsUseSharedFoundation_() {
     parameters: []
   });
   var logs = AKS_renderUx001AdminView_("ui/admin/Logs", {
-    navigation: { homeTarget: "?app=admin" },
+    navigation: {
+      homeTarget: "?app=admin",
+      resetTarget: "?app=logs"
+    },
     filters: { level: "", category: "", module: "", search: "", limit: 25 },
     options: { levels: [], categories: [], limits: [25] },
+    result: { count: 0, filtered: false },
     events: []
   });
   var marker = "--aks-primary-dark";
