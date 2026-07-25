@@ -17,7 +17,15 @@ function AKS_runConfig001Tests() {
     AKS_testConfig001_resolvesExplicitValue_,
     AKS_testConfig001_resolvesDocumentedDefault_,
     AKS_testConfig001_rejectsMissingRequiredValue_,
-    AKS_testConfig001_rejectsInvalidExplicitValue_
+    AKS_testConfig001_rejectsInvalidExplicitValue_,
+    AKS_testConfig001_persistsTypedValue_,
+    AKS_testConfig001_rejectsInvalidValueBeforePersistence_,
+    AKS_testConfig001_rejectsNonAdministrableWrite_,
+    AKS_testConfig001_requiresMutationActor_,
+    AKS_testConfig001_removesExplicitValueAndRestoresDefault_,
+    AKS_testConfig001_protectsRequiredValueFromDeletion_,
+    AKS_testConfig001_detectsCorruptedPersistentValue_,
+    AKS_testConfig001_releasesPersistenceLockAfterFailure_
   ];
   var passed = 0;
   var results = [];
