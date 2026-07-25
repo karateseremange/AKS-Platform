@@ -31,14 +31,18 @@ function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   assertEquals_(releaseInfo.version, viewModel.platform.version);
   assertEquals_(releaseInfo.releaseName, viewModel.platform.releaseName);
   assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
-  assertEquals_(2, viewModel.actions.length);
+  assertEquals_(3, viewModel.actions.length);
   assertEquals_(
     "admin.config",
     viewModel.actions[0].id
   );
   assertEquals_(
-    "module.health-questionnaire",
+    "admin.logs",
     viewModel.actions[1].id
+  );
+  assertEquals_(
+    "module.health-questionnaire",
+    viewModel.actions[2].id
   );
   assertTrue_(
     viewModel.navigation.families.length === 2 &&

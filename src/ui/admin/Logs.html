@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAdminLogFile_("ui/admin/LogsStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-logs-shell">
+      <header class="aks-logs-header">
+        <div>
+          <p class="aks-logs-eyebrow">Administration</p>
+          <h1>Journaux</h1>
+          <p>Consultez les événements techniques et fonctionnels récents.</p>
+        </div>
+        <a class="aks-logs-back" href="<?= viewModel.navigation.homeTarget ?>">
+          Retour au Centre de pilotage
+        </a>
+      </header>
+
+      <form class="aks-logs-filters" method="get">
+        <input type="hidden" name="app" value="logs">
+        <label>Niveau
+          <select name="level">
+            <option value="">Tous</option>
+            <? viewModel.options.levels.forEach(function (level) { ?>
+              <option value="<?= level ?>" <? if (viewModel.filters.level === level) { ?>selected<? } ?>><?= level ?></option>
+            <? }); ?>
+          </select>
+        </label>
+        <label>Catégorie
+          <select name="category">
+            <option value="">Toutes</option>
+            <? viewModel.options.categories.forEach(function (category) { ?>
+              <option value="<?= category ?>" <? if (viewModel.filters.category === category) { ?>selected<? } ?>><?= category ?></option>
+            <? }); ?>
+          </select>
+        </label>
+        <label>Module
+          <input name="module" value="<?= viewModel.filters.module ?>" maxlength="100">
+        </label>
+        <label>Recherche
+          <input name="search" value="<?= viewModel.filters.search ?>" maxlength="100">
+        </label>
+        <label>Nombre
+          <select name="limit">
+            <? viewModel.options.limits.forEach(function (limit) { ?>
+              <option value="<?= limit ?>" <? if (viewModel.filters.limit === limit) { ?>selected<? } ?>><?= limit ?></option>
+            <? }); ?>
+          </select>
+        </label>
+        <button type="submit">Filtrer</button>
+      </form>
+
+      <? if (viewModel.events.length === 0) { ?>
+        <p class="aks-logs-empty">Aucun événement ne correspond aux critères.</p>
+      <? } else { ?>
+        <section class="aks-logs-list" aria-label="Événements journalisés">
+          <? viewModel.events.forEach(function (entry) { ?>
+            <article class="aks-log-entry">
+              <div class="aks-log-entry__heading">
+                <div>
+                  <span class="aks-log-level aks-log-level--<?= entry.level.toLowerCase() ?>"><?= entry.level ?></span>
+                  <span class="aks-log-category"><?= entry.category ?></span>
+                </div>
+                <time datetime="<?= entry.timestamp ?>"><?= entry.timestamp ?></time>
+              </div>
+              <h2><?= entry.message ?></h2>
+              <dl>
+                <div><dt>Type</dt><dd><?= entry.eventType ?></dd></div>
+                <div><dt>Source</dt><dd><?= entry.source ?><?= entry.module ? " / " + entry.module : "" ?></dd></div>
+                <div><dt>Événement</dt><dd><?= entry.eventId ?></dd></div>
+                <div><dt>Corrélation</dt><dd><?= entry.correlationId ?></dd></div>
+                <? if (entry.outcome) { ?><div><dt>Résultat</dt><dd><?= entry.outcome ?></dd></div><? } ?>
+                <? if (entry.reference) { ?><div><dt>Référence</dt><dd><?= entry.reference ?></dd></div><? } ?>
+                <? if (entry.durationMs !== null) { ?><div><dt>Durée</dt><dd><?= entry.durationMs ?> ms</dd></div><? } ?>
+              </dl>
+              <? if (entry.actorJson || entry.contextJson) { ?>
+                <details>
+                  <summary>Détails</summary>
+                  <? if (entry.actorJson) { ?><h3>Acteur</h3><pre><?= entry.actorJson ?></pre><? } ?>
+                  <? if (entry.contextJson) { ?><h3>Contexte</h3><pre><?= entry.contextJson ?></pre><? } ?>
+                </details>
+              <? } ?>
+            </article>
+          <? }); ?>
+        </section>
+      <? } ?>
+    </main>
+  </body>
+</html>

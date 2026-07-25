@@ -470,3 +470,129 @@ function AKS_testLog001Retention_tracesControlledPurge_() {
   assertEquals_(3, events[0].context.deletedRows);
   assertEquals_("corr-purge-001", events[0].correlationId);
 }
+
+function AKS_createLog001AdminFixture_(options) {
+  options = options || {};
+  var events = options.events || [];
+  var reads = 0;
+  var access = {
+    assertCurrentUserAuthorized: function () {
+      if (options.denied) {
+        var error = new Error("Accès refusé.");
+        error.code = "ADMIN001_ACCESS_DENIED";
+        throw error;
+      }
+      return "admin@example.com";
+    }
+  };
+  return {
+    controller: AKS_createAdminLogController_(
+      access,
+      {
+        listRecent: function (limit) {
+          reads += 1;
+          return events.slice(0, limit);
+        }
+      },
+      function () { return "https://example.test/app"; }
+    ),
+    reads: function () { return reads; }
+  };
+}
+
+function AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_() {
+  var fixture = AKS_createLog001AdminFixture_({ denied: true });
+
+  assertThrows_(function () {
+    fixture.controller.getViewModel();
+  }, "ADMIN001_ACCESS_DENIED");
+  assertEquals_(0, fixture.reads());
+}
+
+function AKS_testLog001Admin_normalizesControlledFilters_() {
+  var fixture = AKS_createLog001AdminFixture_();
+  var model = fixture.controller.getViewModel({
+    level: "invalid",
+    category: "SECURITY",
+    module: "  core  ",
+    search: "  panne  ",
+    limit: "999"
+  });
+
+  assertEquals_("", model.filters.level);
+  assertEquals_("security", model.filters.category);
+  assertEquals_("core", model.filters.module);
+  assertEquals_("panne", model.filters.search);
+  assertEquals_(25, model.filters.limit);
+}
+
+function AKS_testLog001Admin_filtersAndLimitsRecentEvents_() {
+  var security = AKS_createLog001PersistedEvent_();
+  var technical = Object.assign({}, security, {
+    eventId: "evt-technical",
+    level: "WARN",
+    category: "technical",
+    message: "Alerte stockage"
+  });
+  var fixture = AKS_createLog001AdminFixture_({
+    events: [technical, security]
+  });
+  var model = fixture.controller.getViewModel({
+    level: "WARN",
+    category: "technical",
+    search: "stockage",
+    limit: 25
+  });
+
+  assertEquals_(1, model.events.length);
+  assertEquals_("evt-technical", model.events[0].eventId);
+}
+
+function AKS_testLog001Admin_presentsMaskedDetailsReadOnly_() {
+  var event = Object.assign({}, AKS_createLog001PersistedEvent_(), {
+    actor: { id: "admin@example.com", token: "[MASQUÉ]" },
+    context: { reference: "CFG-001", secret: "[MASQUÉ]" }
+  });
+  var model = AKS_createLog001AdminFixture_({
+    events: [event]
+  }).controller.getViewModel();
+
+  assertTrue_(model.events[0].actorJson.indexOf("[MASQUÉ]") !== -1);
+  assertTrue_(model.events[0].contextJson.indexOf("[MASQUÉ]") !== -1);
+  assertEquals_(undefined, model.events[0].actor);
+  assertEquals_(undefined, model.events[0].context);
+  assertTrue_(Object.isFrozen(model));
+  assertTrue_(Object.isFrozen(model.events));
+  assertTrue_(Object.isFrozen(model.events[0]));
+}
+
+function AKS_testLog001Admin_buildsReadOnlyNavigation_() {
+  var model = AKS_createLog001AdminFixture_().controller.getViewModel();
+
+  assertEquals_("admin@example.com", model.administrator.email);
+  assertEquals_(
+    "https://example.test/app?app=admin",
+    model.navigation.homeTarget
+  );
+  assertEquals_(
+    "https://example.test/app?app=logs",
+    model.navigation.logsTarget
+  );
+  assertEquals_(undefined, model.actions);
+}
+
+function AKS_testLog001Admin_dashboardDegradesWithoutStorage_() {
+  var controller = AKS_createAdminLogController_(
+    { assertCurrentUserAuthorized: function () { return "admin@example.com"; } },
+    { listRecent: function () { throw new Error("Stockage indisponible"); } },
+    function () { return "https://example.test/app"; }
+  );
+  var model = controller.getDashboardModel();
+
+  assertEquals_(false, model.available);
+  assertEquals_(0, model.events.length);
+  assertEquals_(
+    "https://example.test/app?app=logs",
+    model.navigation.logsTarget
+  );
+}

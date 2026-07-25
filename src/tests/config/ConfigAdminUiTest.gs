@@ -132,6 +132,11 @@ function AKS_testConfig001AdminUi_publishesNavigationDestination_() {
     "https://example.test/app?app=config",
     administration.destinations[0].target
   );
+  assertEquals_("admin.logs", administration.destinations[1].id);
+  assertEquals_(
+    "https://example.test/app?app=logs",
+    administration.destinations[1].target
+  );
 }
 
 function AKS_testConfig001AdminUi_masksSensitiveValue_() {
