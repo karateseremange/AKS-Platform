@@ -3,8 +3,8 @@ var AKS = AKS || {};
 /**
  * Centralized AKS Platform V1.1 validation suite.
  *
- * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004 and
- * ADMIN-003 and ADMIN-002 tests and emits
+ * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004,
+ * ADMIN-003, ADMIN-002 and ADMIN-005 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -61,7 +61,16 @@ function AKS_runValidationSuiteV11() {
     { name: "ADMIN-002 / external link", test: AKS_testAdmin002IdentifiesExternalLinks_ },
     { name: "ADMIN-002 / dashboard return", test: AKS_testAdmin002ExposesDashboardReturn_ },
     { name: "ADMIN-002 / active modules", test: AKS_testAdmin002PublishesOnlyActiveModules_ },
-    { name: "ADMIN-002 / immutable model", test: AKS_testAdmin002CreatesImmutableDefensiveModel_ }
+    { name: "ADMIN-002 / immutable model", test: AKS_testAdmin002CreatesImmutableDefensiveModel_ },
+
+    { name: "ADMIN-005 / authorized access", test: AKS_testAdmin005AcceptsAuthorizedAccess_ },
+    { name: "ADMIN-005 / unauthorized access", test: AKS_testAdmin005RejectsUnauthorizedAccess_ },
+    { name: "ADMIN-005 / zero providers", test: AKS_testAdmin005SupportsZeroProviders_ },
+    { name: "ADMIN-005 / multiple providers and widgets", test: AKS_testAdmin005SupportsMultipleProvidersAndWidgets_ },
+    { name: "ADMIN-005 / server-side authorization", test: AKS_testAdmin005FiltersUnauthorizedDataServerSide_ },
+    { name: "ADMIN-005 / failure isolation and safe logging", test: AKS_testAdmin005IsolatesAndLogsProviderFailure_ },
+    { name: "ADMIN-005 / invalid contract", test: AKS_testAdmin005RejectsInvalidContractWithoutGlobalFailure_ },
+    { name: "ADMIN-005 / no fictitious destination", test: AKS_testAdmin005ExposesNoFictitiousDestination_ }
   ]);
 }
 
