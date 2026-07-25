@@ -10,11 +10,38 @@ function AKS_ux001FoundationSource_() {
   return AKS_includeAdminDashboardFile_("ui/admin/AdminFoundationStyle");
 }
 
+function AKS_renderUx001AdminView_(path, viewModel) {
+  var template = HtmlService.createTemplateFromFile(path);
+  template.viewModel = viewModel;
+  return template.evaluate().getContent();
+}
+
 function AKS_testUx001AdminViewsUseSharedFoundation_() {
-  var dashboard = AKS_includeAdminDashboardFile_("ui/admin/Dashboard");
-  var configuration = AKS_includeAdminConfigurationFile_("ui/admin/Configuration");
-  var logs = AKS_includeAdminLogFile_("ui/admin/Logs");
-  var marker = 'ui/admin/AdminFoundationStyle';
+  var dashboard = AKS_renderUx001AdminView_("ui/admin/Dashboard", {
+    platform: { name: "AKS Platform", version: "test", releaseName: "test" },
+    administrator: { email: "admin@example.invalid" },
+    navigation: { families: [] },
+    actions: [],
+    recentLogs: {
+      available: true,
+      events: [],
+      navigation: { logsTarget: "?app=logs" }
+    }
+  });
+  var configuration = AKS_renderUx001AdminView_("ui/admin/Configuration", {
+    navigation: {
+      configurationTarget: "?app=configuration",
+      homeTarget: "?app=admin"
+    },
+    parameters: []
+  });
+  var logs = AKS_renderUx001AdminView_("ui/admin/Logs", {
+    navigation: { homeTarget: "?app=admin" },
+    filters: { level: "", category: "", module: "", search: "", limit: 25 },
+    options: { levels: [], categories: [], limits: [25] },
+    events: []
+  });
+  var marker = "--aks-primary-dark";
 
   AKS_assertUx001_(
     dashboard.indexOf(marker) !== -1 &&
