@@ -16,6 +16,10 @@ function doGet(event) {
     return AKS.Admin.Dashboard.render();
   }
 
+  if (event.parameter && event.parameter.app === "config") {
+    return AKS.Admin.Configuration.render();
+  }
+
   var installResult = AKS.Core.Application.install();
 
   if (!installResult.ok) {

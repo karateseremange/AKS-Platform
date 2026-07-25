@@ -145,3 +145,55 @@ function AKS_createParameterRegistry_() {
   });
 }
 
+/**
+ * Creates the platform registry used by the CONFIG-001 administration UI.
+ *
+ * @returns {Object}
+ */
+function AKS_createPlatformParameterRegistry_() {
+  var registry = AKS_createParameterRegistry_();
+
+  [
+    {
+      key: "club.name",
+      label: "Nom du club",
+      description: "Nom affiché par les services communs de la plateforme.",
+      type: "string",
+      scope: "platform",
+      required: true,
+      administrable: true,
+      defaultValue: "Association Karaté Serémange"
+    },
+    {
+      key: "club.contact.email",
+      label: "Adresse de contact",
+      description: "Adresse générale utilisée pour contacter le club.",
+      type: "email",
+      scope: "platform",
+      required: true,
+      administrable: true,
+      defaultValue: "contact@karate-seremange.fr"
+    },
+    {
+      key: "platform.activeSeason",
+      label: "Saison active",
+      description: "Saison de référence au format AAAA-AAAA.",
+      type: "string",
+      scope: "season",
+      required: true,
+      administrable: true
+    },
+    {
+      key: "platform.language",
+      label: "Langue",
+      description: "Langue fonctionnelle de la plateforme.",
+      type: "string",
+      scope: "platform",
+      required: true,
+      administrable: false,
+      defaultValue: "fr"
+    }
+  ].forEach(registry.register);
+
+  return registry;
+}

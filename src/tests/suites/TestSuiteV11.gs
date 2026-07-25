@@ -87,7 +87,15 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / restore default", test: AKS_testConfig001_removesExplicitValueAndRestoresDefault_ },
     { name: "CONFIG-001 / required delete protection", test: AKS_testConfig001_protectsRequiredValueFromDeletion_ },
     { name: "CONFIG-001 / corrupted persistence", test: AKS_testConfig001_detectsCorruptedPersistentValue_ },
-    { name: "CONFIG-001 / persistence lock release", test: AKS_testConfig001_releasesPersistenceLockAfterFailure_ }
+    { name: "CONFIG-001 / persistence lock release", test: AKS_testConfig001_releasesPersistenceLockAfterFailure_ },
+    { name: "CONFIG-001 / authorized administration model", test: AKS_testConfig001AdminUi_buildsAuthorizedViewModel_ },
+    { name: "CONFIG-001 / administration access denied", test: AKS_testConfig001AdminUi_rejectsUnauthorizedUser_ },
+    { name: "CONFIG-001 / invalid required parameter status", test: AKS_testConfig001AdminUi_reportsInvalidRequiredParameter_ },
+    { name: "CONFIG-001 / read-only parameter", test: AKS_testConfig001AdminUi_marksReadOnlyParameter_ },
+    { name: "CONFIG-001 / authenticated mutation actor", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
+    { name: "CONFIG-001 / administration restores default", test: AKS_testConfig001AdminUi_restoresDefault_ },
+    { name: "CONFIG-001 / administration navigation", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
+    { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ }
   ]);
 }
 

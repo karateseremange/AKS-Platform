@@ -25,7 +25,15 @@ function AKS_runConfig001Tests() {
     AKS_testConfig001_removesExplicitValueAndRestoresDefault_,
     AKS_testConfig001_protectsRequiredValueFromDeletion_,
     AKS_testConfig001_detectsCorruptedPersistentValue_,
-    AKS_testConfig001_releasesPersistenceLockAfterFailure_
+    AKS_testConfig001_releasesPersistenceLockAfterFailure_,
+    AKS_testConfig001AdminUi_buildsAuthorizedViewModel_,
+    AKS_testConfig001AdminUi_rejectsUnauthorizedUser_,
+    AKS_testConfig001AdminUi_reportsInvalidRequiredParameter_,
+    AKS_testConfig001AdminUi_marksReadOnlyParameter_,
+    AKS_testConfig001AdminUi_usesAuthenticatedActor_,
+    AKS_testConfig001AdminUi_restoresDefault_,
+    AKS_testConfig001AdminUi_publishesNavigationDestination_,
+    AKS_testConfig001AdminUi_masksSensitiveValue_
   ];
   var passed = 0;
   var results = [];

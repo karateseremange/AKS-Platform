@@ -31,14 +31,19 @@ function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   assertEquals_(releaseInfo.version, viewModel.platform.version);
   assertEquals_(releaseInfo.releaseName, viewModel.platform.releaseName);
   assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
-  assertEquals_(1, viewModel.actions.length);
+  assertEquals_(2, viewModel.actions.length);
   assertEquals_(
-    "module.health-questionnaire",
+    "admin.config",
     viewModel.actions[0].id
   );
+  assertEquals_(
+    "module.health-questionnaire",
+    viewModel.actions[1].id
+  );
   assertTrue_(
-    viewModel.navigation.families.length === 1 &&
-      viewModel.navigation.families[0].id === "modules",
+    viewModel.navigation.families.length === 2 &&
+      viewModel.navigation.families[0].id === "administration" &&
+      viewModel.navigation.families[1].id === "modules",
     "The Dashboard must expose only navigation families with real destinations."
   );
 }

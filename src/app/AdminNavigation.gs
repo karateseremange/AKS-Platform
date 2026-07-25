@@ -141,7 +141,16 @@ function AKS_createAdminNavigation_(options) {
 
 AKS.Admin.Navigation = Object.freeze({
   getModel: function (baseUrl) {
-    var entries = [];
+    var entries = [{
+      id: "admin.config",
+      label: "Paramétrage",
+      family: "administration",
+      target: "?app=config",
+      available: true,
+      authorized: true,
+      priority: 10,
+      quickAction: true
+    }];
     var modules = AKS.App &&
       AKS.App.Bootstrap &&
       typeof AKS.App.Bootstrap.getModules === "function"
