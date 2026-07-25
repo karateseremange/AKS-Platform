@@ -1,0 +1,165 @@
+<style>
+  :root {
+    --aks-primary: #2a4b9b;
+    --aks-primary-dark: #1f3978;
+    --aks-background: #f4f6fa;
+    --aks-surface: #ffffff;
+    --aks-text: #172033;
+    --aks-muted: #667085;
+    --aks-border: #dfe4ec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--aks-background);
+    color: var(--aks-text);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .aks-logs-shell {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 40px 0 64px;
+  }
+  .aks-logs-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .aks-logs-eyebrow {
+    margin: 0 0 8px;
+    color: var(--aks-primary);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { margin-bottom: 8px; }
+  .aks-logs-header p:last-child { color: var(--aks-muted); }
+  .aks-logs-back {
+    align-self: flex-start;
+    padding: 11px 14px;
+    border: 1px solid var(--aks-border);
+    border-radius: 9px;
+    background: var(--aks-surface);
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .aks-logs-filters {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(120px, 1fr)) auto;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 18px;
+    border: 1px solid var(--aks-border);
+    border-radius: 14px;
+    background: var(--aks-surface);
+  }
+  .aks-logs-filters label {
+    display: grid;
+    gap: 7px;
+    color: var(--aks-muted);
+    font-size: .85rem;
+    font-weight: 700;
+  }
+  .aks-logs-filters input,
+  .aks-logs-filters select,
+  .aks-logs-filters button {
+    min-height: 42px;
+    padding: 9px 10px;
+    border: 1px solid var(--aks-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--aks-text);
+    font: inherit;
+  }
+  .aks-logs-filters button {
+    border-color: var(--aks-primary);
+    background: var(--aks-primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .aks-logs-list { display: grid; gap: 16px; }
+  .aks-logs-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    color: var(--aks-muted);
+  }
+  .aks-logs-result p,
+  .aks-logs-empty p { margin: 0; }
+  .aks-logs-result a,
+  .aks-logs-empty a {
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+  }
+  .aks-log-entry {
+    padding: 20px;
+    border: 1px solid var(--aks-border);
+    border-radius: 14px;
+    background: var(--aks-surface);
+  }
+  .aks-log-entry__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--aks-muted);
+    font-size: .85rem;
+  }
+  .aks-log-level, .aks-log-category {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #edf2ff;
+    font-weight: 700;
+  }
+  .aks-log-level--error, .aks-log-level--critical {
+    background: #fee4e2;
+    color: #b42318;
+  }
+  .aks-log-level--warn { background: #fef0c7; color: #93370d; }
+  .aks-log-entry h2 { margin: 14px 0; font-size: 1.05rem; }
+  .aks-log-entry dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+    margin: 0;
+  }
+  .aks-log-entry dl div { display: grid; grid-template-columns: 95px 1fr; gap: 8px; }
+  .aks-log-entry dt { color: var(--aks-muted); }
+  .aks-log-entry dd { margin: 0; overflow-wrap: anywhere; }
+  details { margin-top: 16px; border-top: 1px solid var(--aks-border); padding-top: 14px; }
+  summary { color: var(--aks-primary-dark); font-weight: 700; cursor: pointer; }
+  details h3 { margin: 14px 0 6px; font-size: .9rem; }
+  pre {
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    border-radius: 8px;
+    background: #f7f9fc;
+    white-space: pre-wrap;
+  }
+  .aks-logs-empty {
+    padding: 24px;
+    border: 1px solid var(--aks-border);
+    border-radius: 14px;
+    background: var(--aks-surface);
+    color: var(--aks-muted);
+  }
+  @media (max-width: 900px) {
+    .aks-logs-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 620px) {
+    .aks-logs-shell { width: min(100% - 24px, 1180px); padding-top: 24px; }
+    .aks-logs-header { flex-direction: column; }
+    .aks-logs-filters, .aks-log-entry dl { grid-template-columns: 1fr; }
+    .aks-log-entry__heading { flex-direction: column; }
+    .aks-logs-result { align-items: flex-start; flex-direction: column; }
+  }
+</style>

@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.1.0 — Consolidation de la plateforme — En préparation
+
+### Administration
+
+- Ajout du Centre de pilotage comme point d’entrée administratif.
+- Ajout d’une navigation déclarative et d’un contrôle d’accès Google côté serveur.
+- Ajout des contrats `DashboardProvider` et `DashboardWidget`.
+- Isolation des widgets afin qu’une défaillance locale ne bloque pas le tableau de bord.
+
+### Paramétrage
+
+- Ajout d’un registre central des paramètres et de leur résolution.
+- Ajout de la persistance et de l’écriture contrôlée.
+- Ajout de l’interface d’administration du paramétrage.
+- Ajout de retours accessibles et de la prévention des doubles soumissions.
+
+### Journalisation
+
+- Ajout d’événements structurés et de fournisseurs de journalisation isolés.
+- Ajout de la persistance durable dans `AKS_Logs`.
+- Ajout d’une conservation à 90 jours et d’une purge contrôlée par lots.
+- Ajout d’une consultation administrative en lecture seule avec filtres.
+
+### Expérience utilisateur
+
+- Ajout d’un socle CSS commun aux écrans administratifs.
+- Harmonisation du focus clavier, des zones d’action et des états désactivés.
+- Ajout d’états filtrés, d’un résumé des résultats et d’une réinitialisation des filtres.
+- Présentation des dates au format français et des niveaux d’événement avec des libellés compréhensibles.
+
+### Architecture et qualité
+
+- Ajout d’une API de métadonnées de version embarquées.
+- Préservation du Questionnaire santé V1.0 et du parcours public par défaut.
+- Ajout de la suite de validation Apps Script V1.1.
+- État validé avant préparation de la release : **121/121 tests réussis, 0 échec**.
+
+## ADMIN-001 — Tableau de bord d’administration — 2026-07-19
+
+- Ajout du premier incrément du Dashboard administratif.
+- Ajout du contrôle d’autorisation Google côté serveur.
+- Affichage de la version et du nom de code depuis `AKS.Version`.
+- Ajout de la carte « Actions rapides » avec état vide explicite.
+- Ajout du routage `?app=admin` sans modification du comportement public par défaut.
+- Ajout de 4 tests automatisés ADMIN-001.
+
 ## HQ-010 — Intégration WordPress professionnelle — 2026-07-15
 
 - Ajout du shortcode `[aks_health_questionnaire_page]` pour une page publique complète.

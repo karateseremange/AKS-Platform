@@ -1,0 +1,76 @@
+<style>
+  :root {
+    --aks-primary: #2a4b9b;
+    --aks-primary-dark: #1f3978;
+    --aks-background: #f4f6fa;
+    --aks-surface: #ffffff;
+    --aks-text: #172033;
+    --aks-muted: #667085;
+    --aks-border: #dfe4ec;
+    --aks-focus: rgba(42, 75, 155, 0.32);
+    --aks-disabled: #e8ebf0;
+    --aks-disabled-text: #717784;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  summary {
+    min-height: 44px;
+  }
+
+  .aks-config-back,
+  .aks-logs-back,
+  .aks-admin-card__header--action a,
+  summary {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid var(--aks-focus);
+    outline-offset: 3px;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    border-color: var(--aks-disabled);
+    background: var(--aks-disabled);
+    color: var(--aks-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>

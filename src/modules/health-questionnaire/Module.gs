@@ -18,6 +18,20 @@ AKS.Modules.HealthQuestionnaire.Module = Object.freeze({
     };
   },
 
+  getAdminNavigationEntries: function () {
+    return [{
+      id: "module.health-questionnaire",
+      label: "Questionnaire santé",
+      family: "modules",
+      target: "?app=health-questionnaire",
+      available: true,
+      authorized: true,
+      external: false,
+      priority: 10,
+      quickAction: true
+    }];
+  },
+
   install: function () {
     var repository =
       AKS.Modules.HealthQuestionnaire
