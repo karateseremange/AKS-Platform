@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAdminConfigurationFile_("ui/admin/ConfigurationStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-config-shell">
+      <header class="aks-config-header">
+        <div>
+          <p class="aks-config-eyebrow">Administration</p>
+          <h1>Paramétrage</h1>
+          <p>Consultez les valeurs effectives et modifiez uniquement les paramètres autorisés.</p>
+        </div>
+        <a class="aks-config-back" href="<?= viewModel.navigation.homeTarget ?>">
+          Retour au Centre de pilotage
+        </a>
+      </header>
+
+      <div id="aks-config-message" class="aks-config-message" role="status" aria-live="polite"></div>
+
+      <section class="aks-config-list" aria-label="Paramètres de la plateforme">
+        <? viewModel.parameters.forEach(function (parameter) { ?>
+          <article class="aks-config-card" data-key="<?= parameter.key ?>">
+            <div class="aks-config-card__heading">
+              <div>
+                <p class="aks-config-key"><?= parameter.key ?></p>
+                <h2><?= parameter.label ?></h2>
+              </div>
+              <span class="aks-config-source aks-config-source--<?= parameter.source ?>">
+                <?= parameter.source ?>
+              </span>
+            </div>
+
+            <p class="aks-config-description"><?= parameter.description ?></p>
+            <dl class="aks-config-meta">
+              <div><dt>Portée</dt><dd><?= parameter.scope ?></dd></div>
+              <div><dt>Type</dt><dd><?= parameter.type ?></dd></div>
+              <div><dt>État</dt><dd><?= parameter.valid ? "Valide" : "À corriger" ?></dd></div>
+              <? if (parameter.modifiedBy) { ?>
+                <div><dt>Modifié par</dt><dd><?= parameter.modifiedBy ?></dd></div>
+              <? } ?>
+            </dl>
+
+            <? if (parameter.sensitive) { ?>
+              <p class="aks-config-sensitive">Valeur sensible masquée.</p>
+            <? } else if (parameter.administrable) { ?>
+              <form class="aks-config-form" data-type="<?= parameter.type ?>">
+                <label for="value-<?= parameter.key ?>">Valeur</label>
+                <? if (parameter.type === "boolean") { ?>
+                  <select id="value-<?= parameter.key ?>" name="value">
+                    <option value="true" <? if (parameter.value === true) { ?>selected<? } ?>>Activé</option>
+                    <option value="false" <? if (parameter.value === false) { ?>selected<? } ?>>Désactivé</option>
+                  </select>
+                <? } else { ?>
+                  <input
+                    id="value-<?= parameter.key ?>"
+                    name="value"
+                    type="<?= parameter.type === "email" ? "email" : (parameter.type === "url" ? "url" : "text") ?>"
+                    value="<?= parameter.value === null ? "" : parameter.value ?>"
+                    <? if (parameter.required) { ?>required<? } ?>
+                  >
+                <? } ?>
+                <div class="aks-config-actions">
+                  <button type="submit">Enregistrer</button>
+                  <? if (parameter.canReset) { ?>
+                    <button type="button" class="aks-config-reset">Restaurer la valeur par défaut</button>
+                  <? } ?>
+                </div>
+              </form>
+            <? } else { ?>
+              <p class="aks-config-readonly">
+                <?= parameter.value === null ? "Valeur non disponible" : parameter.value ?>
+                <span>Non modifiable depuis l’administration</span>
+              </p>
+            <? } ?>
+          </article>
+        <? }); ?>
+      </section>
+    </main>
+    <?!= AKS_includeAdminConfigurationFile_("ui/admin/ConfigurationClient"); ?>
+  </body>
+</html>

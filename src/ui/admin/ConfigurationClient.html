@@ -1,0 +1,61 @@
+<script>
+  (function () {
+    "use strict";
+
+    var message = document.getElementById("aks-config-message");
+
+    function showMessage(text, success) {
+      message.textContent = text;
+      message.className = "aks-config-message " +
+        (success ? "aks-config-message--success" : "aks-config-message--error");
+    }
+
+    function fail(error) {
+      showMessage(
+        error && error.message
+          ? error.message
+          : "La modification n’a pas pu être enregistrée.",
+        false
+      );
+    }
+
+    function reloadOnSuccess() {
+      showMessage("Paramètre enregistré.", true);
+      window.setTimeout(function () { window.location.reload(); }, 500);
+    }
+
+    document.querySelectorAll(".aks-config-form").forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var card = form.closest("[data-key]");
+        var field = form.elements.value;
+        var value = field.value;
+        var type = form.getAttribute("data-type");
+
+        if (type === "boolean") {
+          value = value === "true";
+        } else if (type === "number" || type === "integer") {
+          value = Number(value);
+        }
+
+        google.script.run
+          .withSuccessHandler(reloadOnSuccess)
+          .withFailureHandler(fail)
+          .AKS_saveAdminConfigurationParameter(card.getAttribute("data-key"), value);
+      });
+    });
+
+    document.querySelectorAll(".aks-config-reset").forEach(function (button) {
+      button.addEventListener("click", function () {
+        if (!window.confirm("Restaurer la valeur par défaut de ce paramètre ?")) {
+          return;
+        }
+        var card = button.closest("[data-key]");
+        google.script.run
+          .withSuccessHandler(reloadOnSuccess)
+          .withFailureHandler(fail)
+          .AKS_resetAdminConfigurationParameter(card.getAttribute("data-key"));
+      });
+    });
+  })();
+</script>
