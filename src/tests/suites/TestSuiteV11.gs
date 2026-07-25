@@ -4,7 +4,7 @@ var AKS = AKS || {};
  * Centralized AKS Platform V1.1 validation suite.
  *
  * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004,
- * ADMIN-003, ADMIN-002, ADMIN-005, CONFIG-001 and LOG-001 tests and emits
+ * ADMIN-003, ADMIN-002, ADMIN-005, CONFIG-001, LOG-001 and UX-001 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -122,7 +122,13 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / filtered recent events", test: AKS_testLog001Admin_filtersAndLimitsRecentEvents_ },
     { name: "LOG-001 / masked read-only details", test: AKS_testLog001Admin_presentsMaskedDetailsReadOnly_ },
     { name: "LOG-001 / consultation navigation", test: AKS_testLog001Admin_buildsReadOnlyNavigation_ },
-    { name: "LOG-001 / dashboard storage degradation", test: AKS_testLog001Admin_dashboardDegradesWithoutStorage_ }
+    { name: "LOG-001 / dashboard storage degradation", test: AKS_testLog001Admin_dashboardDegradesWithoutStorage_ },
+
+    { name: "UX-001 / shared administration foundation", test: AKS_testUx001AdminViewsUseSharedFoundation_ },
+    { name: "UX-001 / visible keyboard focus", test: AKS_testUx001ProvidesVisibleKeyboardFocus_ },
+    { name: "UX-001 / accessible action targets", test: AKS_testUx001ProvidesAccessibleActionTargets_ },
+    { name: "UX-001 / explicit disabled state", test: AKS_testUx001ProvidesExplicitDisabledState_ },
+    { name: "UX-001 / reduced motion preference", test: AKS_testUx001RespectsReducedMotionPreference_ }
   ]);
 }
 
