@@ -4,7 +4,7 @@ var AKS = AKS || {};
  * Centralized AKS Platform V1.1 validation suite.
  *
  * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004,
- * ADMIN-003, ADMIN-002 and ADMIN-005 tests and emits
+ * ADMIN-003, ADMIN-002, ADMIN-005 and CONFIG-001 tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -70,7 +70,16 @@ function AKS_runValidationSuiteV11() {
     { name: "ADMIN-005 / server-side authorization", test: AKS_testAdmin005FiltersUnauthorizedDataServerSide_ },
     { name: "ADMIN-005 / failure isolation and safe logging", test: AKS_testAdmin005IsolatesAndLogsProviderFailure_ },
     { name: "ADMIN-005 / invalid contract", test: AKS_testAdmin005RejectsInvalidContractWithoutGlobalFailure_ },
-    { name: "ADMIN-005 / no fictitious destination", test: AKS_testAdmin005ExposesNoFictitiousDestination_ }
+    { name: "ADMIN-005 / no fictitious destination", test: AKS_testAdmin005ExposesNoFictitiousDestination_ },
+
+    { name: "CONFIG-001 / immutable definition", test: AKS_testConfig001_registersImmutableDefinition_ },
+    { name: "CONFIG-001 / duplicate key", test: AKS_testConfig001_rejectsDuplicateKey_ },
+    { name: "CONFIG-001 / stable key convention", test: AKS_testConfig001_rejectsInvalidKey_ },
+    { name: "CONFIG-001 / secret separation", test: AKS_testConfig001_rejectsSecretValue_ },
+    { name: "CONFIG-001 / explicit value", test: AKS_testConfig001_resolvesExplicitValue_ },
+    { name: "CONFIG-001 / documented default", test: AKS_testConfig001_resolvesDocumentedDefault_ },
+    { name: "CONFIG-001 / required value", test: AKS_testConfig001_rejectsMissingRequiredValue_ },
+    { name: "CONFIG-001 / service validation", test: AKS_testConfig001_rejectsInvalidExplicitValue_ }
   ]);
 }
 
