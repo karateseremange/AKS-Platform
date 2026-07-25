@@ -4,23 +4,33 @@
 
     var message = document.getElementById("aks-config-message");
 
-    function showMessage(text, success) {
+    function showMessage(text, state) {
       message.textContent = text;
       message.className = "aks-config-message " +
-        (success ? "aks-config-message--success" : "aks-config-message--error");
+        "aks-config-message--" + state;
+      message.setAttribute("role", state === "error" ? "alert" : "status");
     }
 
-    function fail(error) {
-      showMessage(
-        error && error.message
-          ? error.message
-          : "La modification n’a pas pu être enregistrée.",
-        false
-      );
+    function setBusy(container, busy) {
+      container.setAttribute("aria-busy", busy ? "true" : "false");
+      container.setAttribute("data-busy", busy ? "true" : "false");
+      container.querySelectorAll("button, input, select").forEach(function (control) {
+        control.disabled = busy;
+      });
+    }
+
+    function fail(container) {
+      return function () {
+        setBusy(container, false);
+        showMessage(
+          "La modification n’a pas pu être enregistrée. Réessayez dans quelques instants.",
+          "error"
+        );
+      };
     }
 
     function reloadOnSuccess() {
-      showMessage("Paramètre enregistré.", true);
+      showMessage("Paramètre enregistré.", "success");
       window.setTimeout(function () {
         var shell = document.querySelector(".aks-config-shell");
         var target = shell && shell.getAttribute("data-configuration-target");
@@ -35,6 +45,9 @@
     document.querySelectorAll(".aks-config-form").forEach(function (form) {
       form.addEventListener("submit", function (event) {
         event.preventDefault();
+        if (form.getAttribute("data-busy") === "true") {
+          return;
+        }
         var card = form.closest("[data-key]");
         var field = form.elements.value;
         var value = field.value;
@@ -46,22 +59,30 @@
           value = Number(value);
         }
 
+        setBusy(form, true);
+        showMessage("Enregistrement en cours…", "pending");
         google.script.run
           .withSuccessHandler(reloadOnSuccess)
-          .withFailureHandler(fail)
+          .withFailureHandler(fail(form))
           .AKS_saveAdminConfigurationParameter(card.getAttribute("data-key"), value);
       });
     });
 
     document.querySelectorAll(".aks-config-reset").forEach(function (button) {
       button.addEventListener("click", function () {
+        var form = button.closest(".aks-config-form");
+        if (form.getAttribute("data-busy") === "true") {
+          return;
+        }
         if (!window.confirm("Restaurer la valeur par défaut de ce paramètre ?")) {
           return;
         }
         var card = button.closest("[data-key]");
+        setBusy(form, true);
+        showMessage("Restauration en cours…", "pending");
         google.script.run
           .withSuccessHandler(reloadOnSuccess)
-          .withFailureHandler(fail)
+          .withFailureHandler(fail(form))
           .AKS_resetAdminConfigurationParameter(card.getAttribute("data-key"));
       });
     });
