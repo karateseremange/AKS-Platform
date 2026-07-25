@@ -32,7 +32,11 @@ AKS.Admin.Dashboard = (function () {
         email: authorizedEmail
       }),
       navigation: navigation,
-      actions: navigation.quickActions
+      actions: navigation.quickActions,
+      recentLogs: AKS.Admin.Logs.getDashboardModelForAuthorizedUser(
+        authorizedEmail,
+        typeof baseUrl === "string" ? baseUrl : getWebAppUrl_()
+      )
     });
   }
 

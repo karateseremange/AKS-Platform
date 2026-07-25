@@ -84,6 +84,31 @@
             </nav>
           <? } ?>
         </article>
+
+        <article class="aks-admin-card aks-admin-card--wide" aria-labelledby="logs-card-title">
+          <div class="aks-admin-card__header aks-admin-card__header--action">
+            <div>
+              <p class="aks-admin-card__kicker">Supervision</p>
+              <h2 id="logs-card-title">Journal récent</h2>
+            </div>
+            <a href="<?= viewModel.recentLogs.navigation.logsTarget ?>">Consulter les journaux</a>
+          </div>
+          <? if (!viewModel.recentLogs.available) { ?>
+            <p class="aks-admin-empty-state">Le journal est momentanément indisponible.</p>
+          <? } else if (viewModel.recentLogs.events.length === 0) { ?>
+            <p class="aks-admin-empty-state">Aucun événement n’est encore journalisé.</p>
+          <? } else { ?>
+            <ol class="aks-admin-log-list">
+              <? viewModel.recentLogs.events.forEach(function (entry) { ?>
+                <li>
+                  <span class="aks-admin-log-level"><?= entry.level ?></span>
+                  <span><?= entry.message ?></span>
+                  <time datetime="<?= entry.timestamp ?>"><?= entry.timestamp ?></time>
+                </li>
+              <? }); ?>
+            </ol>
+          <? } ?>
+        </article>
       </section>
     </main>
   </body>

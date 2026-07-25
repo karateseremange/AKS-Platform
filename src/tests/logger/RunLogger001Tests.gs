@@ -23,7 +23,13 @@ function AKS_runLogger001Tests() {
     AKS_testLog001Retention_purgesExpiredRowsOnly_,
     AKS_testLog001Retention_respectsBatchLimit_,
     AKS_testLog001Retention_rejectsInvalidPolicy_,
-    AKS_testLog001Retention_tracesControlledPurge_
+    AKS_testLog001Retention_tracesControlledPurge_,
+    AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_,
+    AKS_testLog001Admin_normalizesControlledFilters_,
+    AKS_testLog001Admin_filtersAndLimitsRecentEvents_,
+    AKS_testLog001Admin_presentsMaskedDetailsReadOnly_,
+    AKS_testLog001Admin_buildsReadOnlyNavigation_,
+    AKS_testLog001Admin_dashboardDegradesWithoutStorage_
   ];
   var passed = 0;
   var results = [];

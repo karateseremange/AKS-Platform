@@ -116,7 +116,13 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / expired rows purge", test: AKS_testLog001Retention_purgesExpiredRowsOnly_ },
     { name: "LOG-001 / purge batch limit", test: AKS_testLog001Retention_respectsBatchLimit_ },
     { name: "LOG-001 / invalid retention policy", test: AKS_testLog001Retention_rejectsInvalidPolicy_ },
-    { name: "LOG-001 / controlled purge trace", test: AKS_testLog001Retention_tracesControlledPurge_ }
+    { name: "LOG-001 / controlled purge trace", test: AKS_testLog001Retention_tracesControlledPurge_ },
+    { name: "LOG-001 / consultation authorization", test: AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_ },
+    { name: "LOG-001 / controlled filters", test: AKS_testLog001Admin_normalizesControlledFilters_ },
+    { name: "LOG-001 / filtered recent events", test: AKS_testLog001Admin_filtersAndLimitsRecentEvents_ },
+    { name: "LOG-001 / masked read-only details", test: AKS_testLog001Admin_presentsMaskedDetailsReadOnly_ },
+    { name: "LOG-001 / consultation navigation", test: AKS_testLog001Admin_buildsReadOnlyNavigation_ },
+    { name: "LOG-001 / dashboard storage degradation", test: AKS_testLog001Admin_dashboardDegradesWithoutStorage_ }
   ]);
 }
 

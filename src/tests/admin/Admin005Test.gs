@@ -282,7 +282,7 @@ function AKS_testAdmin005ExposesNoFictitiousDestination_() {
 
   AKS_assertAdmin005_(
     destinationIds.join(",") ===
-      "admin.config,module.health-questionnaire",
+      "admin.config,admin.logs,module.health-questionnaire",
     "La recette ne doit exposer aucune capacité ou destination fictive."
   );
 }

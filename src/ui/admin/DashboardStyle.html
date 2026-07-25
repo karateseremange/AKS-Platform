@@ -147,6 +147,54 @@
     box-shadow: var(--aks-shadow);
   }
 
+  .aks-admin-card--wide {
+    grid-column: 1 / -1;
+    min-height: auto;
+  }
+
+  .aks-admin-card__header--action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .aks-admin-card__header--action a {
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+  }
+
+  .aks-admin-log-list {
+    display: grid;
+    gap: 0;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .aks-admin-log-list li {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--aks-border);
+  }
+
+  .aks-admin-log-list li:last-child {
+    border-bottom: 0;
+  }
+
+  .aks-admin-log-level {
+    color: var(--aks-primary-dark);
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .aks-admin-log-list time {
+    color: var(--aks-muted);
+    font-size: .84rem;
+  }
+
   .aks-admin-card__header {
     padding-bottom: 20px;
     border-bottom: 1px solid var(--aks-border);
@@ -230,6 +278,14 @@
     .aks-admin-card {
       min-height: auto;
       padding: 22px;
+    }
+
+    .aks-admin-log-list li {
+      grid-template-columns: 64px 1fr;
+    }
+
+    .aks-admin-log-list time {
+      grid-column: 2;
     }
   }
 </style>

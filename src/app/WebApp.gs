@@ -20,6 +20,10 @@ function doGet(event) {
     return AKS.Admin.Configuration.render();
   }
 
+  if (event.parameter && event.parameter.app === "logs") {
+    return AKS.Admin.Logs.render(event.parameter);
+  }
+
   var installResult = AKS.Core.Application.install();
 
   if (!installResult.ok) {
