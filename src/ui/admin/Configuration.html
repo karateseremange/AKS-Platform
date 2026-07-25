@@ -5,7 +5,10 @@
     <?!= AKS_includeAdminConfigurationFile_("ui/admin/ConfigurationStyle"); ?>
   </head>
   <body>
-    <main class="aks-config-shell">
+    <main
+      class="aks-config-shell"
+      data-configuration-target="<?= viewModel.navigation.configurationTarget ?>"
+    >
       <header class="aks-config-header">
         <div>
           <p class="aks-config-eyebrow">Administration</p>

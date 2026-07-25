@@ -21,7 +21,15 @@
 
     function reloadOnSuccess() {
       showMessage("Paramètre enregistré.", true);
-      window.setTimeout(function () { window.location.reload(); }, 500);
+      window.setTimeout(function () {
+        var shell = document.querySelector(".aks-config-shell");
+        var target = shell && shell.getAttribute("data-configuration-target");
+        if (target) {
+          window.top.location.href = target;
+          return;
+        }
+        window.location.reload();
+      }, 500);
     }
 
     document.querySelectorAll(".aks-config-form").forEach(function (form) {

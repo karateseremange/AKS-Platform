@@ -38,6 +38,10 @@ function AKS_testConfig001AdminUi_buildsAuthorizedViewModel_() {
 
   assertEquals_("admin@example.com", model.administrator.email);
   assertEquals_("https://example.test/app?app=admin", model.navigation.homeTarget);
+  assertEquals_(
+    "https://example.test/app?app=config",
+    model.navigation.configurationTarget
+  );
   assertEquals_(4, model.parameters.length);
   assertTrue_(Object.isFrozen(model));
   assertTrue_(Object.isFrozen(model.parameters));

@@ -93,7 +93,8 @@ function AKS_createAdminConfigurationController_(
     return deepFreeze_({
       administrator: { email: email },
       navigation: {
-        homeTarget: baseUrl_() + "?app=admin"
+        homeTarget: baseUrl_() + "?app=admin",
+        configurationTarget: baseUrl_() + "?app=config"
       },
       parameters: configurationService.definitions().map(presentDefinition_)
     });
