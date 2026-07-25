@@ -3,7 +3,15 @@ function AKS_runLogger001Tests() {
     AKS_testLogger_exposesStablePublicApi,
     AKS_testLogger_acceptsCallsWithoutContext,
     AKS_testLogger_acceptsOptionalContext,
-    AKS_testLogger_delegatesToInternalProvider
+    AKS_testLogger_delegatesToInternalProvider,
+    AKS_testLog001_buildsStructuredImmutableEvent_,
+    AKS_testLog001_propagatesValidCorrelationId_,
+    AKS_testLog001_replacesInvalidCorrelationId_,
+    AKS_testLog001_masksSensitiveDataBeforeProvider_,
+    AKS_testLog001_rejectsUnknownLevel_,
+    AKS_testLog001_rejectsUnknownCategory_,
+    AKS_testLog001_requiresStableEventType_,
+    AKS_testLog001_isolatesProviderFailure_
   ];
   var passed = 0;
   var results = [];
