@@ -210,7 +210,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / contenus cours féminin", test: AKS_testAnalyticsReportContent_mentionsHistoricalWomensExclusion_ },
     { name: "ANALYTICS / contenus indicateurs désactivés", test: AKS_testAnalyticsReportContent_exposesDisabledIndicatorsWithoutScore_ },
     { name: "ANALYTICS / contenus GOLD-006", test: AKS_testAnalyticsReportContent_matchesGold006_ },
-    { name: "ANALYTICS / contenus immuables", test: AKS_testAnalyticsReportContent_isDeterministicPureAndImmutable_ },\n\n    { name: "ANALYTICS / graphiques cours et global", test: AKS_testAnalyticsChartModel_buildsCourseAndGlobalCharts_ },\n    { name: "ANALYTICS / graphiques axe fixe", test: AKS_testAnalyticsChartModel_usesFixedPercentageAxis_ },\n    { name: "ANALYTICS / graphiques valeurs", test: AKS_testAnalyticsChartModel_preservesValuesWithoutRecalculation_ },\n    { name: "ANALYTICS / graphiques couverture", test: AKS_testAnalyticsChartModel_exposesCoverageSeparately_ },\n    { name: "ANALYTICS / graphiques indisponible", test: AKS_testAnalyticsChartModel_marksUnavailableWithoutZero_ },\n    { name: "ANALYTICS / graphiques comparaison globale", test: AKS_testAnalyticsChartModel_buildsGlobalComparisonAndReferences_ },\n    { name: "ANALYTICS / graphiques accessibles", test: AKS_testAnalyticsChartModel_usesAccessiblePrintConventions_ },\n    { name: "ANALYTICS / graphiques indicateurs exclus", test: AKS_testAnalyticsChartModel_excludesDisabledIndicatorsAndScore_ },\n    { name: "ANALYTICS / graphiques GOLD-006", test: AKS_testAnalyticsChartModel_matchesGold006_ },\n    { name: "ANALYTICS / graphiques immuables", test: AKS_testAnalyticsChartModel_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / contenus immuables", test: AKS_testAnalyticsReportContent_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / graphiques cours et global", test: AKS_testAnalyticsChartModel_buildsCourseAndGlobalCharts_ },
+    { name: "ANALYTICS / graphiques axe fixe", test: AKS_testAnalyticsChartModel_usesFixedPercentageAxis_ },
+    { name: "ANALYTICS / graphiques valeurs", test: AKS_testAnalyticsChartModel_preservesValuesWithoutRecalculation_ },
+    { name: "ANALYTICS / graphiques couverture", test: AKS_testAnalyticsChartModel_exposesCoverageSeparately_ },
+    { name: "ANALYTICS / graphiques indisponible", test: AKS_testAnalyticsChartModel_marksUnavailableWithoutZero_ },
+    { name: "ANALYTICS / graphiques comparaison globale", test: AKS_testAnalyticsChartModel_buildsGlobalComparisonAndReferences_ },
+    { name: "ANALYTICS / graphiques accessibles", test: AKS_testAnalyticsChartModel_usesAccessiblePrintConventions_ },
+    { name: "ANALYTICS / graphiques indicateurs exclus", test: AKS_testAnalyticsChartModel_excludesDisabledIndicatorsAndScore_ },
+    { name: "ANALYTICS / graphiques GOLD-006", test: AKS_testAnalyticsChartModel_matchesGold006_ },
+    { name: "ANALYTICS / graphiques immuables", test: AKS_testAnalyticsChartModel_isDeterministicPureAndImmutable_ }
   ]);
 }
 
