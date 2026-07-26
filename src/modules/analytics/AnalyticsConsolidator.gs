@@ -85,7 +85,11 @@ AKS.Analytics.Consolidator = (function () {
     });
 
     Object.keys(groups).sort().forEach(function (key) {
-      var group = groups[key];
+      var group = groups[key].slice().sort(function (left, right) {
+        var leftValue = JSON.stringify(left.row);
+        var rightValue = JSON.stringify(right.row);
+        return leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0;
+      });
       var statuses = {};
       group.forEach(function (item) { statuses[item.row.status] = true; });
 
@@ -93,7 +97,6 @@ AKS.Analytics.Consolidator = (function () {
         group.forEach(function (item) {
           rejected.push({
             row: item.row,
-            source_index: item.source_index,
             reason: ISSUE.DOUBLON_CONTRADICTOIRE
           });
         });
@@ -108,7 +111,6 @@ AKS.Analytics.Consolidator = (function () {
       group.slice(1).forEach(function (item) {
         duplicates.push({
           row: item.row,
-          source_index: item.source_index,
           reason: ISSUE.DOUBLON_IDENTIQUE
         });
       });
