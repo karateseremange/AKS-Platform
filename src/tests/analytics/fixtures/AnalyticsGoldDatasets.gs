@@ -9,8 +9,18 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-002", title: "Éligibilité temporelle", purpose: "Entrée et sortie en cours de saison.",
-    input: { memberId: "LIC-000002", entryDate: "2026-10-01", exitDate: "2027-03-31" },
-    expected: { beforeEntry: "NON_ELIGIBLE", duringMembership: "ELIGIBLE", afterExit: "NON_ELIGIBLE" }
+    input: {
+      memberId: "LIC-000002", entryDate: "2026-10-01", exitDate: "2027-03-31",
+      checkNames: ["beforeEntry", "duringMembership", "afterExit"],
+      checkDates: ["2026-09-30", "2026-12-01", "2027-04-01"]
+    },
+    expected: {
+      eligibility: {
+        beforeEntry: "NON_ELIGIBLE",
+        duringMembership: "ELIGIBLE",
+        afterExit: "NON_ELIGIBLE"
+      }
+    }
   },
   {
     id: "GOLD-003", title: "Données incomplètes", purpose: "Une cellule vide reste non renseignée.",
@@ -19,8 +29,14 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-004", title: "Séances annulées ou exclues", purpose: "Les séances non réalisées ne pénalisent personne.",
-    input: { sessions: ["REALISEE", "ANNULEE", "EXCLUE"] },
-    expected: { includedSessions: 1, excludedSessions: 2 }
+    input: {
+      sessions: [
+        { status: "REALISEE" },
+        { status: "ANNULEE" },
+        { status: "EXCLUE" }
+      ]
+    },
+    expected: { includedSessions: 1, excludedSessions: 2, exclusionCode: "SEANCE_NON_REALISEE" }
   },
   {
     id: "GOLD-005", title: "Doublons et conflits", purpose: "Distinguer doublon identique et contradiction.",
@@ -34,18 +50,32 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-007", title: "Identifiants", purpose: "Le licencie_id pilote Analytics ; le numéro fédéral reste facultatif.",
-    input: { memberId: "LIC-000007", licenceNumber: null, duplicatedLicenceNumber: "12345678" },
-    expected: { memberAccepted: true, warnings: ["NUMERO_LICENCE_ABSENT"], errors: ["NUMERO_LICENCE_DUPLIQUE"] }
+    input: {
+      members: [
+        { licencie_id: "LIC-000007", numero_licence: null },
+        { licencie_id: "LIC-000008", numero_licence: "12345678" }
+      ]
+    },
+    expected: {
+      acceptedMembers: 2,
+      warnings: ["NUMERO_LICENCE_ABSENT"],
+      duplicateLicenceError: "NUMERO_LICENCE_DUPLIQUE"
+    }
   },
   {
     id: "GOLD-008", title: "Exclusion du cours féminin historique", purpose: "Exclure entièrement ce cours de 2025-2026.",
-    input: { season: "2025-2026", courses: ["BABY", "FEMININ"] },
+    input: {
+      courses: [
+        { season: "2025-2026", code: "BABY" },
+        { season: "2025-2026", code: "FEMININ" }
+      ]
+    },
     expected: { includedCourses: ["BABY"], exclusions: ["FEMININ_HORS_PERIMETRE_HISTORIQUE"] }
   },
   {
     id: "GOLD-009", title: "Versions de schéma", purpose: "Refuser une version inconnue sans interprétation implicite.",
     input: { supportedVersion: "1.0", receivedVersion: "99.0" },
-    expected: { outcome: "REJETE", errors: ["VERSION_SCHEMA_INCONNUE"] }
+    expected: { acceptedVersion: "1.0", rejectedVersionError: "VERSION_SCHEMA_INCONNUE" }
   },
   {
     id: "GOLD-010", title: "Préparation de saison", purpose: "Une seconde exécution est non destructive et idempotente.",
