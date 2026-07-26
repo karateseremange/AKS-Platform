@@ -249,7 +249,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / rapports HTML global", test: AKS_testAnalyticsHtmlReport_rendersGlobalVariant_ },
     { name: "ANALYTICS / rapports HTML empreinte", test: AKS_testAnalyticsHtmlReport_exposesVersionsAndFingerprint_ },
     { name: "ANALYTICS / rapports HTML GOLD-006", test: AKS_testAnalyticsHtmlReport_matchesGold006_ },
-    { name: "ANALYTICS / rapports HTML immuables", test: AKS_testAnalyticsHtmlReport_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / rapports HTML immuables", test: AKS_testAnalyticsHtmlReport_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / lot PDF complet", test: AKS_testAnalyticsPdf_convertsCompleteFiveDocumentBatch_ },
+    { name: "ANALYTICS / rapports PDF métadonnées", test: AKS_testAnalyticsPdf_preservesMetadataAndHtmlFingerprint_ },
+    { name: "ANALYTICS / rapports PDF noms", test: AKS_testAnalyticsPdf_normalizesPdfNames_ },
+    { name: "ANALYTICS / rapports PDF taille blob", test: AKS_testAnalyticsPdf_exposesValidatedBlobSize_ },
+    { name: "ANALYTICS / rapports PDF limite", test: AKS_testAnalyticsPdf_rejectsBatchBeforeQuotaConsumption_ },
+    { name: "ANALYTICS / rapports PDF politique quota", test: AKS_testAnalyticsPdf_rejectsInvalidQuotaPolicy_ },
+    { name: "ANALYTICS / rapports PDF quota Google", test: AKS_testAnalyticsPdf_mapsGoogleQuotaFailure_ },
+    { name: "ANALYTICS / rapports PDF MIME", test: AKS_testAnalyticsPdf_rejectsInvalidMimeType_ },
+    { name: "ANALYTICS / rapports PDF signature", test: AKS_testAnalyticsPdf_rejectsInvalidSignature_ },
+    { name: "ANALYTICS / rapports PDF GOLD-006", test: AKS_testAnalyticsPdf_matchesGold006_ }
   ]);
 }
 

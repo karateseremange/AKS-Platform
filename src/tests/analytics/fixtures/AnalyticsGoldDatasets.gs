@@ -115,7 +115,8 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
       reportContent: { reportCount: 5, globalState: "PARTIEL" },
       chartModel: { chartCount: 5, globalState: "PARTIEL" },
       reportLayout: { compositionCount: 5, globalState: "PARTIEL" },
-      htmlReports: { documentCount: 5, mimeType: "text/html", globalState: "PARTIEL" }
+      htmlReports: { documentCount: 5, mimeType: "text/html", globalState: "PARTIEL" },
+      pdfReports: { documentCount: 5, mimeType: "application/pdf", globalState: "PARTIEL" }
     }
   },
   {
