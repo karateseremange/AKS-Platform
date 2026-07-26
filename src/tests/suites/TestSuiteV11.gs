@@ -199,7 +199,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / restitution indicateurs désactivés", test: AKS_testAnalyticsRestitution_exposesDisabledIndicatorsWithoutScore_ },
     { name: "ANALYTICS / restitution qualité", test: AKS_testAnalyticsRestitution_aggregatesDataQuality_ },
     { name: "ANALYTICS / restitution GOLD-006", test: AKS_testAnalyticsRestitution_matchesGold006_ },
-    { name: "ANALYTICS / restitution immuable", test: AKS_testAnalyticsRestitution_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / restitution immuable", test: AKS_testAnalyticsRestitution_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / contenus cours et global", test: AKS_testAnalyticsReportContent_buildsCourseAndGlobalReports_ },
+    { name: "ANALYTICS / contenus harmonisés", test: AKS_testAnalyticsReportContent_usesHarmonizedStructure_ },
+    { name: "ANALYTICS / contenus métriques", test: AKS_testAnalyticsReportContent_formatsMetricsWithoutRecalculation_ },
+    { name: "ANALYTICS / contenus couverture", test: AKS_testAnalyticsReportContent_exposesCoverage_ },
+    { name: "ANALYTICS / contenus partiels", test: AKS_testAnalyticsReportContent_preservesPartialState_ },
+    { name: "ANALYTICS / contenus indisponibles", test: AKS_testAnalyticsReportContent_marksUnavailableCourse_ },
+    { name: "ANALYTICS / contenus cours féminin", test: AKS_testAnalyticsReportContent_mentionsHistoricalWomensExclusion_ },
+    { name: "ANALYTICS / contenus indicateurs désactivés", test: AKS_testAnalyticsReportContent_exposesDisabledIndicatorsWithoutScore_ },
+    { name: "ANALYTICS / contenus GOLD-006", test: AKS_testAnalyticsReportContent_matchesGold006_ },
+    { name: "ANALYTICS / contenus immuables", test: AKS_testAnalyticsReportContent_isDeterministicPureAndImmutable_ }
   ]);
 }
 
