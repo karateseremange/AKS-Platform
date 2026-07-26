@@ -188,7 +188,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / agrégation multi-cours", test: AKS_testAnalyticsOrchestrator_buildsWeightedGlobalAggregate_ },
     { name: "ANALYTICS / diagnostics orchestrés", test: AKS_testAnalyticsOrchestrator_propagatesDiagnostics_ },
     { name: "ANALYTICS / orchestration GOLD-006", test: AKS_testAnalyticsOrchestrator_matchesGold006_ },
-    { name: "ANALYTICS / orchestration immuable", test: AKS_testAnalyticsOrchestrator_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / orchestration immuable", test: AKS_testAnalyticsOrchestrator_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / restitution cours et global", test: AKS_testAnalyticsRestitution_buildsCourseAndGlobalBlocks_ },
+    { name: "ANALYTICS / restitution métriques", test: AKS_testAnalyticsRestitution_exposesAuditableMetrics_ },
+    { name: "ANALYTICS / restitution affichage", test: AKS_testAnalyticsRestitution_formatsOneDecimalWithoutChangingRawValue_ },
+    { name: "ANALYTICS / restitution diagnostics", test: AKS_testAnalyticsRestitution_separatesTechnicalDiagnostics_ },
+    { name: "ANALYTICS / restitution indisponible", test: AKS_testAnalyticsRestitution_preservesUnavailableCourses_ },
+    { name: "ANALYTICS / restitution cours féminin", test: AKS_testAnalyticsRestitution_mentionsHistoricalWomensExclusion_ },
+    { name: "ANALYTICS / restitution indicateurs désactivés", test: AKS_testAnalyticsRestitution_exposesDisabledIndicatorsWithoutScore_ },
+    { name: "ANALYTICS / restitution qualité", test: AKS_testAnalyticsRestitution_aggregatesDataQuality_ },
+    { name: "ANALYTICS / restitution GOLD-006", test: AKS_testAnalyticsRestitution_matchesGold006_ },
+    { name: "ANALYTICS / restitution immuable", test: AKS_testAnalyticsRestitution_isDeterministicPureAndImmutable_ }
   ]);
 }
 
