@@ -155,7 +155,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / cours féminin historique", test: AKS_testAnalyticsNormalizer_excludesHistoricalWomensCourse_ },
     { name: "ANALYTICS / version de schéma", test: AKS_testAnalyticsNormalizer_rejectsUnknownSchema_ },
     { name: "ANALYTICS / pureté et déterminisme", test: AKS_testAnalyticsNormalizer_isPureAndDeterministic_ },
-    { name: "ANALYTICS / conformité jeux d'or", test: AKS_testAnalyticsNormalizer_matchesGoldDatasets_ }
+    { name: "ANALYTICS / conformité jeux d'or", test: AKS_testAnalyticsNormalizer_matchesGoldDatasets_ },
+
+    { name: "ANALYTICS / ensemble nominal", test: AKS_testAnalyticsConsolidator_acceptsNominalSet_ },
+    { name: "ANALYTICS / doublons identiques", test: AKS_testAnalyticsConsolidator_neutralizesIdenticalDuplicates_ },
+    { name: "ANALYTICS / contradictions rejetées", test: AKS_testAnalyticsConsolidator_rejectsEntireConflictingGroup_ },
+    { name: "ANALYTICS / clé métier présence", test: AKS_testAnalyticsConsolidator_usesBusinessAttendanceKey_ },
+    { name: "ANALYTICS / numéro fédéral partagé", test: AKS_testAnalyticsConsolidator_detectsSharedLicenceNumber_ },
+    { name: "ANALYTICS / identité licencie_id", test: AKS_testAnalyticsConsolidator_keepsLicencieIdAsIdentity_ },
+    { name: "ANALYTICS / indépendance à l'ordre", test: AKS_testAnalyticsConsolidator_isOrderIndependent_ },
+    { name: "ANALYTICS / idempotence", test: AKS_testAnalyticsConsolidator_isIdempotent_ },
+    { name: "ANALYTICS / absence de mutation", test: AKS_testAnalyticsConsolidator_doesNotMutateInput_ },
+    { name: "ANALYTICS / agrégation diagnostics", test: AKS_testAnalyticsConsolidator_aggregatesDiagnostics_ }
   ]);
 }
 
