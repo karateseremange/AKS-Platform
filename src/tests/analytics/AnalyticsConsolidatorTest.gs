@@ -62,7 +62,7 @@ function AKS_testAnalyticsConsolidator_isOrderIndependent_() {
   var rows = AKS.Tests.AnalyticsGoldDatasets[4].input.attendances;
   var first = AKS.Analytics.Consolidator.consolidate({ attendances: rows });
   var second = AKS.Analytics.Consolidator.consolidate({ attendances: rows.slice().reverse() });
-  assertEquals_(0, AKS.Analytics.GoldDatasetSupport.compare(first.accepted, second.accepted).length);
+  assertEquals_(0, AKS.Analytics.GoldDatasetSupport.compare(first, second).length);
   assertEquals_(first.state, second.state);
 }
 
