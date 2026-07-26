@@ -8,8 +8,15 @@ AKS.Analytics = AKS.Analytics || {};
 AKS.Analytics.Consolidator = (function () {
   "use strict";
 
-  var MODEL = AKS.Analytics.NormalizedModel;
-  var ISSUE = MODEL.ISSUE;
+  function model_() {
+    var model = AKS.Analytics.NormalizedModel;
+    if (!model) throw new Error("AnalyticsConsolidator: dépendance AnalyticsNormalizedModel indisponible.");
+    return model;
+  }
+
+  function issue_() {
+    return model_().ISSUE;
+  }
 
   function clone_(value) {
     return JSON.parse(JSON.stringify(value));
@@ -61,7 +68,7 @@ AKS.Analytics.Consolidator = (function () {
     return Object.keys(byLicence).sort().filter(function (licence) {
       return Object.keys(byLicence[licence]).length > 1;
     }).map(function (licence) {
-      return diagnostic_(ISSUE.NUMERO_LICENCE_DUPLIQUE, licence, {
+      return diagnostic_(issue_().NUMERO_LICENCE_DUPLIQUE, licence, {
         licencie_ids: Object.keys(byLicence[licence]).sort()
       });
     });
@@ -97,10 +104,10 @@ AKS.Analytics.Consolidator = (function () {
         group.forEach(function (item) {
           rejected.push({
             row: item.row,
-            reason: ISSUE.DOUBLON_CONTRADICTOIRE
+            reason: issue_().DOUBLON_CONTRADICTOIRE
           });
         });
-        errors.push(diagnostic_(ISSUE.DOUBLON_CONTRADICTOIRE, key, {
+        errors.push(diagnostic_(issue_().DOUBLON_CONTRADICTOIRE, key, {
           statuses: Object.keys(statuses).sort(),
           rejected_count: group.length
         }));
@@ -111,19 +118,19 @@ AKS.Analytics.Consolidator = (function () {
       group.slice(1).forEach(function (item) {
         duplicates.push({
           row: item.row,
-          reason: ISSUE.DOUBLON_IDENTIQUE
+          reason: issue_().DOUBLON_IDENTIQUE
         });
       });
       if (group.length > 1) {
-        warnings.push(diagnostic_(ISSUE.DOUBLON_IDENTIQUE, key, {
+        warnings.push(diagnostic_(issue_().DOUBLON_IDENTIQUE, key, {
           neutralized_count: group.length - 1
         }));
       }
     });
 
-    var state = MODEL.DATASET_STATE.VALIDE;
+    var state = model_().DATASET_STATE.VALIDE;
     if (errors.length || warnings.length || exclusions.length || duplicates.length || rejected.length) {
-      state = accepted.length ? MODEL.DATASET_STATE.PARTIEL : MODEL.DATASET_STATE.ERREUR;
+      state = accepted.length ? model_().DATASET_STATE.PARTIEL : model_().DATASET_STATE.ERREUR;
     }
 
     return freeze_({
