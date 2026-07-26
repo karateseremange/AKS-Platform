@@ -177,7 +177,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / exclusion cours féminin", test: AKS_testAnalyticsIndicators_excludesHistoricalWomensCourse_ },
     { name: "ANALYTICS / agrégation pondérée", test: AKS_testAnalyticsIndicators_usesWeightedAggregations_ },
     { name: "ANALYTICS / indicateurs désactivés", test: AKS_testAnalyticsIndicators_exposesDisabledIndicatorsWithoutScore_ },
-    { name: "ANALYTICS / déterminisme et immutabilité", test: AKS_testAnalyticsIndicators_isDeterministicAndDeeplyImmutable_ }
+    { name: "ANALYTICS / déterminisme et immutabilité", test: AKS_testAnalyticsIndicators_isDeterministicAndDeeplyImmutable_ },
+
+    { name: "ANALYTICS / cours indépendants", test: AKS_testAnalyticsOrchestrator_processesCoursesIndependently_ },
+    { name: "ANALYTICS / isolation d'un échec", test: AKS_testAnalyticsOrchestrator_isolatesCourseFailure_ },
+    { name: "ANALYTICS / résultat partiel exploitable", test: AKS_testAnalyticsOrchestrator_preservesPartialCourse_ },
+    { name: "ANALYTICS / cours attendu absent", test: AKS_testAnalyticsOrchestrator_reportsMissingExpectedCourse_ },
+    { name: "ANALYTICS / orchestration cours féminin", test: AKS_testAnalyticsOrchestrator_excludesHistoricalWomensCourse_ },
+    { name: "ANALYTICS / aucun cours exploitable", test: AKS_testAnalyticsOrchestrator_returnsErrorWithoutExploitableCourse_ },
+    { name: "ANALYTICS / agrégation multi-cours", test: AKS_testAnalyticsOrchestrator_buildsWeightedGlobalAggregate_ },
+    { name: "ANALYTICS / diagnostics orchestrés", test: AKS_testAnalyticsOrchestrator_propagatesDiagnostics_ },
+    { name: "ANALYTICS / orchestration GOLD-006", test: AKS_testAnalyticsOrchestrator_matchesGold006_ },
+    { name: "ANALYTICS / orchestration immuable", test: AKS_testAnalyticsOrchestrator_isDeterministicPureAndImmutable_ }
   ]);
 }
 
