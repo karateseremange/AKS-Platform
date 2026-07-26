@@ -166,7 +166,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / indépendance à l'ordre", test: AKS_testAnalyticsConsolidator_isOrderIndependent_ },
     { name: "ANALYTICS / idempotence", test: AKS_testAnalyticsConsolidator_isIdempotent_ },
     { name: "ANALYTICS / absence de mutation", test: AKS_testAnalyticsConsolidator_doesNotMutateInput_ },
-    { name: "ANALYTICS / agrégation diagnostics", test: AKS_testAnalyticsConsolidator_aggregatesDiagnostics_ }
+    { name: "ANALYTICS / agrégation diagnostics", test: AKS_testAnalyticsConsolidator_aggregatesDiagnostics_ },
+
+    { name: "ANALYTICS / participation séance", test: AKS_testAnalyticsIndicators_calculatesSessionParticipation_ },
+    { name: "ANALYTICS / couverture partielle", test: AKS_testAnalyticsIndicators_marksIncompleteCoverage_ },
+    { name: "ANALYTICS / dénominateur nul", test: AKS_testAnalyticsIndicators_returnsNonCalculableWithoutKnownStatus_ },
+    { name: "ANALYTICS / assiduité individuelle", test: AKS_testAnalyticsIndicators_calculatesIndividualAssiduity_ },
+    { name: "ANALYTICS / excusé au dénominateur", test: AKS_testAnalyticsIndicators_countsExcusedInDenominator_ },
+    { name: "ANALYTICS / exclusions séance et éligibilité", test: AKS_testAnalyticsIndicators_excludesIneligibleAndCancelledRows_ },
+    { name: "ANALYTICS / exclusion cours féminin", test: AKS_testAnalyticsIndicators_excludesHistoricalWomensCourse_ },
+    { name: "ANALYTICS / agrégation pondérée", test: AKS_testAnalyticsIndicators_usesWeightedAggregations_ },
+    { name: "ANALYTICS / indicateurs désactivés", test: AKS_testAnalyticsIndicators_exposesDisabledIndicatorsWithoutScore_ },
+    { name: "ANALYTICS / déterminisme et immutabilité", test: AKS_testAnalyticsIndicators_isDeterministicAndDeeplyImmutable_ }
   ]);
 }
 
