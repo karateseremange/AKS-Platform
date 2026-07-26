@@ -112,7 +112,7 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
     expected: {
       publishedCourses: 3, failedCourses: ["ENFANT_1"], globalOutcome: "PARTIEL",
       restitution: { availableCourses: 3, unavailableCourses: ["ENFANT_1"], state: "PARTIEL" },
-      reportContent: { reportCount: 5, globalState: "PARTIEL" }
+      reportContent: { reportCount: 5, globalState: "PARTIEL" },\n      chartModel: { chartCount: 5, globalState: "PARTIEL" }
     }
   },
   {
