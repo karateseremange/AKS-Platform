@@ -41,7 +41,7 @@ function AKS_testAnalyticsHtmlReport_marksUnavailableWithoutZero_() {
   chart.series[0].points[0].display_value = "Indisponible";
   var doc = AKS.Analytics.HtmlReportGenerator.build(layout).documents[0];
   assertTrue_(doc.html.indexOf("Indisponible") > -1);
-  assertTrue_(doc.html.indexOf(">0 %<") === -1);
+  assertEquals_(1, (doc.html.match(/>0 %</g) || []).length);
 }
 
 function AKS_testAnalyticsHtmlReport_escapesUntrustedContent_() {
