@@ -232,7 +232,13 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / mises en page vue globale", test: AKS_testAnalyticsReportLayout_buildsGlobalOverview_ },
     { name: "ANALYTICS / mises en page accessibles", test: AKS_testAnalyticsReportLayout_definesA4AccessiblePrintContract_ },
     { name: "ANALYTICS / mises en page GOLD-006", test: AKS_testAnalyticsReportLayout_matchesGold006_ },
-    { name: "ANALYTICS / mises en page immuables", test: AKS_testAnalyticsReportLayout_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / mises en page immuables", test: AKS_testAnalyticsReportLayout_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / modules avant modèle", test: AKS_testAnalyticsLoadOrder_modulesInitializeBeforeModel_ },
+    { name: "ANALYTICS / résolution tardive consolidation", test: AKS_testAnalyticsLoadOrder_consolidatorResolvesModelAtCallTime_ },
+    { name: "ANALYTICS / résolution tardive normalisation", test: AKS_testAnalyticsLoadOrder_normalizerResolvesModelAtCallTime_ },
+    { name: "ANALYTICS / résolution tardive indicateurs", test: AKS_testAnalyticsLoadOrder_indicatorEngineResolvesModelAtCallTime_ },
+    { name: "ANALYTICS / résolution tardive orchestration", test: AKS_testAnalyticsLoadOrder_orchestratorResolvesModelAtCallTime_ }
   ]);
 }
 

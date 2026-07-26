@@ -8,13 +8,26 @@ AKS.Analytics = AKS.Analytics || {};
 AKS.Analytics.IndicatorEngine = (function () {
   "use strict";
 
-  var MODEL = AKS.Analytics.NormalizedModel;
-  var STATUS = MODEL.ATTENDANCE_STATUS;
   var RULE_VERSION = "analytics-indicators/1.0.0";
-  var KNOWN = {};
-  KNOWN[STATUS.PRESENT] = true;
-  KNOWN[STATUS.ABSENT] = true;
-  KNOWN[STATUS.EXCUSE] = true;
+
+  function model_() {
+    var model = AKS.Analytics.NormalizedModel;
+    if (!model) throw new Error("AnalyticsIndicatorEngine: dépendance AnalyticsNormalizedModel indisponible.");
+    return model;
+  }
+
+  function status_() {
+    return model_().ATTENDANCE_STATUS;
+  }
+
+  function known_() {
+    var status = status_();
+    var known = {};
+    known[status.PRESENT] = true;
+    known[status.ABSENT] = true;
+    known[status.EXCUSE] = true;
+    return known;
+  }
 
   function text_(value) {
     return value === null || typeof value === "undefined" ? "" : String(value).trim();
@@ -39,11 +52,11 @@ AKS.Analytics.IndicatorEngine = (function () {
 
   function addStatus_(counts, status) {
     counts.expected += 1;
-    if (status === STATUS.PRESENT) counts.present += 1;
-    else if (status === STATUS.ABSENT) counts.absent += 1;
-    else if (status === STATUS.EXCUSE) counts.excused += 1;
-    else if (status === STATUS.NON_RENSEIGNE) counts.not_recorded += 1;
-    if (KNOWN[status]) counts.known += 1;
+    if (status === status_().PRESENT) counts.present += 1;
+    else if (status === status_().ABSENT) counts.absent += 1;
+    else if (status === status_().EXCUSE) counts.excused += 1;
+    else if (status === status_().NON_RENSEIGNE) counts.not_recorded += 1;
+    if (known_()[status]) counts.known += 1;
   }
 
   function addCounts_(target, source) {
@@ -117,7 +130,7 @@ AKS.Analytics.IndicatorEngine = (function () {
       session_date: text_(row.session_date),
       licencie_id: text_(row.licencie_id),
       status: text_(row.status).toUpperCase(),
-      session_status: text_(row.session_status || MODEL.SESSION_STATUS.REALISEE).toUpperCase()
+      session_status: text_(row.session_status || model_().SESSION_STATUS.REALISEE).toUpperCase()
     };
   }
 
@@ -133,12 +146,12 @@ AKS.Analytics.IndicatorEngine = (function () {
         exclusions.push({ code: "FEMININ_HORS_PERIMETRE_HISTORIQUE", row: row });
         return;
       }
-      if (row.session_status !== MODEL.SESSION_STATUS.REALISEE) {
+      if (row.session_status !== model_().SESSION_STATUS.REALISEE) {
         exclusions.push({ code: "SEANCE_NON_REALISEE", row: row });
         return;
       }
-      if (row.status === STATUS.NON_ELIGIBLE) return;
-      if (!KNOWN[row.status] && row.status !== STATUS.NON_RENSEIGNE) {
+      if (row.status === status_().NON_ELIGIBLE) return;
+      if (!known_()[row.status] && row.status !== status_().NON_RENSEIGNE) {
         exclusions.push({ code: "STATUT_PRESENCE_INCONNU", row: row });
         return;
       }

@@ -8,8 +8,13 @@ AKS.Analytics = AKS.Analytics || {};
 AKS.Analytics.CourseOrchestrator = (function () {
   "use strict";
 
-  var MODEL = AKS.Analytics.NormalizedModel;
   var RULE_VERSION = "analytics-orchestration/1.0.0";
+
+  function model_() {
+    var model = AKS.Analytics.NormalizedModel;
+    if (!model) throw new Error("AnalyticsCourseOrchestrator: dépendance AnalyticsNormalizedModel indisponible.");
+    return model;
+  }
 
   function text_(value) {
     return value === null || typeof value === "undefined" ? "" : String(value).trim();
@@ -53,7 +58,7 @@ AKS.Analytics.CourseOrchestrator = (function () {
     (source.attendances || []).forEach(function (row, index) {
       var status = AKS.Analytics.Normalizer.normalizeAttendanceStatus(row.status);
       var session = AKS.Analytics.Normalizer.normalizeSession({
-        status: row.session_status || MODEL.SESSION_STATUS.REALISEE
+        status: row.session_status || model_().SESSION_STATUS.REALISEE
       });
       var rowErrors = (status.errors || []).concat(session.errors || []);
       warnings = warnings.concat(status.warnings || [], session.warnings || []);
@@ -73,7 +78,7 @@ AKS.Analytics.CourseOrchestrator = (function () {
         session_date: text_(row.session_date),
         licencie_id: text_(row.licencie_id),
         status: status.value,
-        session_status: MODEL.SESSION_STATUS.REALISEE
+        session_status: model_().SESSION_STATUS.REALISEE
       });
     });
 
@@ -91,14 +96,14 @@ AKS.Analytics.CourseOrchestrator = (function () {
   }
 
   function courseState_(consolidated, indicators) {
-    if (!isCalculable_(indicators)) return MODEL.DATASET_STATE.ERREUR;
-    if (consolidated.state !== MODEL.DATASET_STATE.VALIDE ||
+    if (!isCalculable_(indicators)) return model_().DATASET_STATE.ERREUR;
+    if (consolidated.state !== model_().DATASET_STATE.VALIDE ||
         indicators.course_aggregates.participation.concat(
           indicators.course_aggregates.assiduity
         ).some(function (item) { return item.status !== "VALIDE"; })) {
-      return MODEL.DATASET_STATE.PARTIEL;
+      return model_().DATASET_STATE.PARTIEL;
     }
-    return MODEL.DATASET_STATE.VALIDE;
+    return model_().DATASET_STATE.VALIDE;
   }
 
   function processCourse_(source, defaultSeason) {
@@ -130,15 +135,15 @@ AKS.Analytics.CourseOrchestrator = (function () {
       exclusions: consolidated.diagnostics.exclusions.concat(indicators.exclusions || [])
     };
     var state = courseState_(consolidated, indicators);
-    if (prepared.diagnostics.errors.length && state === MODEL.DATASET_STATE.VALIDE) {
-      state = MODEL.DATASET_STATE.PARTIEL;
+    if (prepared.diagnostics.errors.length && state === model_().DATASET_STATE.VALIDE) {
+      state = model_().DATASET_STATE.PARTIEL;
     }
 
     return {
       course_code: prepared.code,
       season: prepared.season,
       state: state,
-      exploitable: state !== MODEL.DATASET_STATE.ERREUR,
+      exploitable: state !== model_().DATASET_STATE.ERREUR,
       results: indicators,
       consolidation: {
         accepted_count: consolidated.accepted.length,
@@ -219,7 +224,7 @@ AKS.Analytics.CourseOrchestrator = (function () {
         result = {
           course_code: text_(source.code || source.course_code).toUpperCase(),
           season: text_(source.season || input.season),
-          state: MODEL.DATASET_STATE.ERREUR,
+          state: model_().DATASET_STATE.ERREUR,
           exploitable: false,
           results: null,
           consolidation: null,
@@ -241,7 +246,7 @@ AKS.Analytics.CourseOrchestrator = (function () {
       courses.push({
         course_code: code,
         season: text_(input.season),
-        state: MODEL.DATASET_STATE.ERREUR,
+        state: model_().DATASET_STATE.ERREUR,
         exploitable: false,
         results: null,
         consolidation: null,
@@ -255,9 +260,9 @@ AKS.Analytics.CourseOrchestrator = (function () {
     courses.sort(function (left, right) { return left.course_code.localeCompare(right.course_code); });
 
     var exploitableCount = courses.filter(function (course) { return course.exploitable; }).length;
-    var state = !exploitableCount ? MODEL.DATASET_STATE.ERREUR :
-      (courses.some(function (course) { return course.state !== MODEL.DATASET_STATE.VALIDE; }) ?
-        MODEL.DATASET_STATE.PARTIEL : MODEL.DATASET_STATE.VALIDE);
+    var state = !exploitableCount ? model_().DATASET_STATE.ERREUR :
+      (courses.some(function (course) { return course.state !== model_().DATASET_STATE.VALIDE; }) ?
+        model_().DATASET_STATE.PARTIEL : model_().DATASET_STATE.VALIDE);
 
     return freeze_({
       rule_version: RULE_VERSION,
@@ -272,7 +277,7 @@ AKS.Analytics.CourseOrchestrator = (function () {
         received_count: sources.length,
         exploitable_count: exploitableCount,
         failed_count: courses.filter(function (course) {
-          return course.state === MODEL.DATASET_STATE.ERREUR;
+          return course.state === model_().DATASET_STATE.ERREUR;
         }).length,
         excluded_count: courses.filter(function (course) { return course.state === "EXCLU"; }).length
       }
