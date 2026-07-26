@@ -84,6 +84,24 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
     id: "GOLD-006", title: "Résultat partiel multi-cours", purpose: "Isoler l'échec d'un cours.",
     input: {
       courses: { BABY: "VALIDE", ENFANT_1: "ERREUR", ENFANT_2: "VALIDE", ADO_ADULTE: "VALIDE" },
+      orchestration: {
+        season: "2026-2027",
+        expected_courses: ["BABY", "ENFANT_1", "ENFANT_2", "ADO_ADULTE"],
+        courses: [
+          { code: "BABY", attendances: [
+            { session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" }
+          ] },
+          { code: "ENFANT_1", attendances: [
+            { session_date: "2026-09-05", licencie_id: "LIC-000002", status: "INCONNU" }
+          ] },
+          { code: "ENFANT_2", attendances: [
+            { session_date: "2026-09-05", licencie_id: "LIC-000003", status: "PRESENT" }
+          ] },
+          { code: "ADO_ADULTE", attendances: [
+            { session_date: "2026-09-05", licencie_id: "LIC-000004", status: "PRESENT" }
+          ] }
+        ]
+      },
       indicatorAttendances: [
         { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
         { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT" },
