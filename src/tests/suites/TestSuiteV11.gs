@@ -4,7 +4,8 @@ var AKS = AKS || {};
  * Centralized AKS Platform V1.1 validation suite.
  *
  * Runs the verified VERSION-001, ADMIN-001, DASHBOARD-001, ADMIN-004,
- * ADMIN-003, ADMIN-002, ADMIN-005, CONFIG-001, LOG-001 and UX-001 tests and emits
+ * ADMIN-003, ADMIN-002, ADMIN-005, CONFIG-001, LOG-001, UX-001 and Analytics
+ * foundation tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
 function AKS_runValidationSuiteV11() {
@@ -138,7 +139,12 @@ function AKS_runValidationSuiteV11() {
     { name: "UX-001 / filtered empty log recovery", test: AKS_testUx001FilteredEmptyLogViewOffersReset_ },
     { name: "UX-001 / readable log metadata model", test: AKS_testUx001LogModelPresentsReadableEventMetadata_ },
     { name: "UX-001 / readable log event view", test: AKS_testUx001LogViewUsesReadableEventMetadata_ },
-    { name: "UX-001 / readable dashboard event view", test: AKS_testUx001DashboardUsesReadableEventMetadata_ }
+    { name: "UX-001 / readable dashboard event view", test: AKS_testUx001DashboardUsesReadableEventMetadata_ },
+
+    { name: "ANALYTICS / corpus GOLD-001 à GOLD-010", test: AKS_testAnalyticsGoldDatasets_coverValidatedCorpus_ },
+    { name: "ANALYTICS / immutabilité profonde", test: AKS_testAnalyticsGoldDatasets_areDeeplyImmutable_ },
+    { name: "ANALYTICS / reproductibilité", test: AKS_testAnalyticsGoldDatasets_areReproducible_ },
+    { name: "ANALYTICS / comparaison récursive", test: AKS_testAnalyticsGoldDatasetComparator_reportsPrecisePath_ }
   ]);
 }
 
