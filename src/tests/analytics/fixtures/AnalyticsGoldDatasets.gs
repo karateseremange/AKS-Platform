@@ -109,7 +109,10 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
         { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000003", status: "ABSENT" }
       ]
     },
-    expected: { publishedCourses: 3, failedCourses: ["ENFANT_1"], globalOutcome: "PARTIEL" }
+    expected: {
+      publishedCourses: 3, failedCourses: ["ENFANT_1"], globalOutcome: "PARTIEL",
+      restitution: { availableCourses: 3, unavailableCourses: ["ENFANT_1"], state: "PARTIEL" }
+    }
   },
   {
     id: "GOLD-007", title: "Identifiants", purpose: "Le licencie_id pilote Analytics ; le numéro fédéral reste facultatif.",
