@@ -238,7 +238,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / résolution tardive consolidation", test: AKS_testAnalyticsLoadOrder_consolidatorResolvesModelAtCallTime_ },
     { name: "ANALYTICS / résolution tardive normalisation", test: AKS_testAnalyticsLoadOrder_normalizerResolvesModelAtCallTime_ },
     { name: "ANALYTICS / résolution tardive indicateurs", test: AKS_testAnalyticsLoadOrder_indicatorEngineResolvesModelAtCallTime_ },
-    { name: "ANALYTICS / résolution tardive orchestration", test: AKS_testAnalyticsLoadOrder_orchestratorResolvesModelAtCallTime_ }
+    { name: "ANALYTICS / résolution tardive orchestration", test: AKS_testAnalyticsLoadOrder_orchestratorResolvesModelAtCallTime_ },
+
+    { name: "ANALYTICS / rapports HTML autonomes", test: AKS_testAnalyticsHtmlReport_buildsAutonomousDocuments_ },
+    { name: "ANALYTICS / rapports HTML A4", test: AKS_testAnalyticsHtmlReport_definesA4PrintOutput_ },
+    { name: "ANALYTICS / rapports HTML SVG", test: AKS_testAnalyticsHtmlReport_rendersIntegratedSvg_ },
+    { name: "ANALYTICS / rapports HTML sans recalcul", test: AKS_testAnalyticsHtmlReport_preservesValuesWithoutRecalculation_ },
+    { name: "ANALYTICS / rapports HTML indisponible", test: AKS_testAnalyticsHtmlReport_marksUnavailableWithoutZero_ },
+    { name: "ANALYTICS / rapports HTML échappement", test: AKS_testAnalyticsHtmlReport_escapesUntrustedContent_ },
+    { name: "ANALYTICS / rapports HTML global", test: AKS_testAnalyticsHtmlReport_rendersGlobalVariant_ },
+    { name: "ANALYTICS / rapports HTML empreinte", test: AKS_testAnalyticsHtmlReport_exposesVersionsAndFingerprint_ },
+    { name: "ANALYTICS / rapports HTML GOLD-006", test: AKS_testAnalyticsHtmlReport_matchesGold006_ },
+    { name: "ANALYTICS / rapports HTML immuables", test: AKS_testAnalyticsHtmlReport_isDeterministicPureAndImmutable_ }
   ]);
 }
 
