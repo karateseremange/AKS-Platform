@@ -40,8 +40,21 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-005", title: "Doublons et conflits", purpose: "Distinguer doublon identique et contradiction.",
-    input: { duplicateKinds: ["IDENTIQUE", "CONTRADICTOIRE"] },
-    expected: { accepted: 1, rejected: 1, anomalies: ["DOUBLON_CONTRADICTOIRE"] }
+    input: {
+      attendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "ABSENT" }
+      ]
+    },
+    expected: {
+      accepted: 1,
+      duplicatesNeutralized: 1,
+      rejected: 2,
+      state: "PARTIEL",
+      anomalies: ["DOUBLON_IDENTIQUE", "DOUBLON_CONTRADICTOIRE"]
+    }
   },
   {
     id: "GOLD-006", title: "Résultat partiel multi-cours", purpose: "Isoler l'échec d'un cours.",
@@ -53,11 +66,12 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
     input: {
       members: [
         { licencie_id: "LIC-000007", numero_licence: null },
-        { licencie_id: "LIC-000008", numero_licence: "12345678" }
+        { licencie_id: "LIC-000008", numero_licence: "12345678" },
+        { licencie_id: "LIC-000009", numero_licence: "12345678" }
       ]
     },
     expected: {
-      acceptedMembers: 2,
+      acceptedMembers: 3,
       warnings: ["NUMERO_LICENCE_ABSENT"],
       duplicateLicenceError: "NUMERO_LICENCE_DUPLIQUE"
     }
