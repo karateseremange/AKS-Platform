@@ -221,7 +221,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / graphiques accessibles", test: AKS_testAnalyticsChartModel_usesAccessiblePrintConventions_ },
     { name: "ANALYTICS / graphiques indicateurs exclus", test: AKS_testAnalyticsChartModel_excludesDisabledIndicatorsAndScore_ },
     { name: "ANALYTICS / graphiques GOLD-006", test: AKS_testAnalyticsChartModel_matchesGold006_ },
-    { name: "ANALYTICS / graphiques immuables", test: AKS_testAnalyticsChartModel_isDeterministicPureAndImmutable_ }
+    { name: "ANALYTICS / graphiques immuables", test: AKS_testAnalyticsChartModel_isDeterministicPureAndImmutable_ },
+
+    { name: "ANALYTICS / mises en page cours et global", test: AKS_testAnalyticsReportLayout_buildsCourseAndGlobalCompositions_ },
+    { name: "ANALYTICS / mises en page harmonisées", test: AKS_testAnalyticsReportLayout_usesHarmonizedCourseStructure_ },
+    { name: "ANALYTICS / mises en page sections", test: AKS_testAnalyticsReportLayout_ordersRequiredSections_ },
+    { name: "ANALYTICS / mises en page graphiques", test: AKS_testAnalyticsReportLayout_placesMatchingChartWithoutRecalculation_ },
+    { name: "ANALYTICS / mises en page visibilité", test: AKS_testAnalyticsReportLayout_appliesConditionalVisibility_ },
+    { name: "ANALYTICS / mises en page indisponible", test: AKS_testAnalyticsReportLayout_preservesUnavailableState_ },
+    { name: "ANALYTICS / mises en page vue globale", test: AKS_testAnalyticsReportLayout_buildsGlobalOverview_ },
+    { name: "ANALYTICS / mises en page accessibles", test: AKS_testAnalyticsReportLayout_definesA4AccessiblePrintContract_ },
+    { name: "ANALYTICS / mises en page GOLD-006", test: AKS_testAnalyticsReportLayout_matchesGold006_ },
+    { name: "ANALYTICS / mises en page immuables", test: AKS_testAnalyticsReportLayout_isDeterministicPureAndImmutable_ }
   ]);
 }
 
