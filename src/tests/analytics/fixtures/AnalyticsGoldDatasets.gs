@@ -4,7 +4,16 @@ AKS.Tests = AKS.Tests || {};
 AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   {
     id: "GOLD-001", title: "Jeu nominal", purpose: "Présences complètes et calculables.",
-    input: { season: "2026-2027", courses: ["BABY"], statuses: ["PRESENT", "ABSENT", "EXCUSE"] },
+    input: {
+      season: "2026-2027", courses: ["BABY"], statuses: ["PRESENT", "ABSENT", "EXCUSE"],
+      attendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000002", status: "ABSENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000003", status: "EXCUSE" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000002", status: "NON_RENSEIGNE" }
+      ]
+    },
     expected: { outcome: "CALCULABLE", warnings: [] }
   },
   {
@@ -12,7 +21,12 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
     input: {
       memberId: "LIC-000002", entryDate: "2026-10-01", exitDate: "2027-03-31",
       checkNames: ["beforeEntry", "duringMembership", "afterExit"],
-      checkDates: ["2026-09-30", "2026-12-01", "2027-04-01"]
+      checkDates: ["2026-09-30", "2026-12-01", "2027-04-01"],
+      indicatorAttendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-30", licencie_id: "LIC-000002", status: "NON_ELIGIBLE" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-12-01", licencie_id: "LIC-000002", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2027-04-01", licencie_id: "LIC-000002", status: "NON_ELIGIBLE" }
+      ]
     },
     expected: {
       eligibility: {
@@ -24,7 +38,13 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-003", title: "Données incomplètes", purpose: "Une cellule vide reste non renseignée.",
-    input: { legacyValues: ["P", "", "E", "A"] },
+    input: {
+      legacyValues: ["P", "", "E", "A"],
+      indicatorAttendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000002", status: "NON_RENSEIGNE" }
+      ]
+    },
     expected: { normalized: ["PRESENT", "NON_RENSEIGNE", "EXCUSE", "ABSENT"], outcome: "PARTIEL" }
   },
   {
@@ -34,6 +54,10 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
         { status: "REALISEE" },
         { status: "ANNULEE" },
         { status: "EXCLUE" }
+      ],
+      indicatorAttendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT", session_status: "ANNULEE" }
       ]
     },
     expected: { includedSessions: 1, excludedSessions: 2, exclusionCode: "SEANCE_NON_REALISEE" }
@@ -58,7 +82,15 @@ AKS.Tests.AnalyticsGoldDatasets = AKS.Analytics.GoldDatasetSupport.prepare([
   },
   {
     id: "GOLD-006", title: "Résultat partiel multi-cours", purpose: "Isoler l'échec d'un cours.",
-    input: { courses: { BABY: "VALIDE", ENFANT_1: "ERREUR", ENFANT_2: "VALIDE", ADO_ADULTE: "VALIDE" } },
+    input: {
+      courses: { BABY: "VALIDE", ENFANT_1: "ERREUR", ENFANT_2: "VALIDE", ADO_ADULTE: "VALIDE" },
+      indicatorAttendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000001", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000002", status: "PRESENT" },
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-12", licencie_id: "LIC-000003", status: "ABSENT" }
+      ]
+    },
     expected: { publishedCourses: 3, failedCourses: ["ENFANT_1"], globalOutcome: "PARTIEL" }
   },
   {
