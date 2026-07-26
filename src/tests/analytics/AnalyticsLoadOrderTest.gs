@@ -37,7 +37,11 @@ function AKS_testAnalyticsLoadOrder_normalizerResolvesModelAtCallTime_() {
 
 function AKS_testAnalyticsLoadOrder_indicatorEngineResolvesModelAtCallTime_() {
   var message = AKS_withAnalyticsModelUnavailable_(function () {
-    AKS.Analytics.IndicatorEngine.calculate({ attendances: [] });
+    AKS.Analytics.IndicatorEngine.calculate({
+      attendances: [
+        { season: "2026-2027", course_code: "BABY", session_date: "2026-09-05", licencie_id: "LIC-LOAD-001", status: "PRESENT" }
+      ]
+    });
   });
   assertTrue_(message.indexOf("AnalyticsNormalizedModel indisponible") >= 0, "La dépendance absente doit être explicite.");
   assertTrue_(!!AKS.Analytics.IndicatorEngine.calculate({ attendances: [] }), "Le moteur doit reprendre après restauration.");
