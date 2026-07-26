@@ -144,7 +144,18 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / corpus GOLD-001 à GOLD-010", test: AKS_testAnalyticsGoldDatasets_coverValidatedCorpus_ },
     { name: "ANALYTICS / immutabilité profonde", test: AKS_testAnalyticsGoldDatasets_areDeeplyImmutable_ },
     { name: "ANALYTICS / reproductibilité", test: AKS_testAnalyticsGoldDatasets_areReproducible_ },
-    { name: "ANALYTICS / comparaison récursive", test: AKS_testAnalyticsGoldDatasetComparator_reportsPrecisePath_ }
+    { name: "ANALYTICS / comparaison récursive", test: AKS_testAnalyticsGoldDatasetComparator_reportsPrecisePath_ },
+
+    { name: "ANALYTICS / modèle canonique", test: AKS_testAnalyticsNormalizer_exposesCanonicalModel_ },
+    { name: "ANALYTICS / statuts historiques", test: AKS_testAnalyticsNormalizer_normalizesLegacyStatuses_ },
+    { name: "ANALYTICS / statut inconnu", test: AKS_testAnalyticsNormalizer_rejectsUnknownStatus_ },
+    { name: "ANALYTICS / éligibilité temporelle", test: AKS_testAnalyticsNormalizer_appliesTemporalEligibility_ },
+    { name: "ANALYTICS / identifiants licencié", test: AKS_testAnalyticsNormalizer_validatesMemberIdentifiers_ },
+    { name: "ANALYTICS / séance non réalisée", test: AKS_testAnalyticsNormalizer_excludesNonPerformedSessions_ },
+    { name: "ANALYTICS / cours féminin historique", test: AKS_testAnalyticsNormalizer_excludesHistoricalWomensCourse_ },
+    { name: "ANALYTICS / version de schéma", test: AKS_testAnalyticsNormalizer_rejectsUnknownSchema_ },
+    { name: "ANALYTICS / pureté et déterminisme", test: AKS_testAnalyticsNormalizer_isPureAndDeterministic_ },
+    { name: "ANALYTICS / conformité jeux d'or", test: AKS_testAnalyticsNormalizer_matchesGoldDatasets_ }
   ]);
 }
 
