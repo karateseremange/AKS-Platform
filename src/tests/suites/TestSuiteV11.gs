@@ -282,6 +282,15 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ }
     ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
     ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
+    ,{ name: "ANALYTICS / aperçu sans écriture", test: AKS_testAnalyticsOperational_previewIsReadOnly_ }
+    ,{ name: "ANALYTICS / sources incomplètes bloquées", test: AKS_testAnalyticsOperational_blocksIncompleteSources_ }
+    ,{ name: "ANALYTICS / données de validation bloquées", test: AKS_testAnalyticsOperational_blocksValidationRows_ }
+    ,{ name: "ANALYTICS / confirmation explicite", test: AKS_testAnalyticsOperational_requiresExplicitConfirmation_ }
+    ,{ name: "ANALYTICS / aperçu périmé", test: AKS_testAnalyticsOperational_rejectsStalePreview_ }
+    ,{ name: "ANALYTICS / publication confirmée", test: AKS_testAnalyticsOperational_publishesConfirmedCurrentPreview_ }
+    ,{ name: "ANALYTICS / verrou libéré", test: AKS_testAnalyticsOperational_releasesLockAfterFailure_ }
+    ,{ name: "ANALYTICS / publication concurrente", test: AKS_testAnalyticsOperational_rejectsConcurrentPublication_ }
+    ,{ name: "ANALYTICS / chaîne réelle composée", test: AKS_testAnalyticsOperational_composesRealAnalyticsChain_ }
   ]);
 }
 

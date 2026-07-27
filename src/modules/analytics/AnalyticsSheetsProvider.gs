@@ -152,6 +152,8 @@ AKS.Analytics.SheetsProvider = (function () {
         return {
           licencie_id: text_(row["ID licencié"]),
           numero_licence: text_(row["Numéro licence FFK"]) || null,
+          nom: text_(row.Nom) || null,
+          prenom: text_(row.Prénom) || null,
           entry_date: dateText_(row["Date entrée"]) || null,
           exit_date: dateText_(row["Date sortie"]) || null
         };
