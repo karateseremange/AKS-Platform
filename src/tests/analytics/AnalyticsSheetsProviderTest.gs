@@ -43,6 +43,23 @@ function AKS_testAnalyticsSheets_loadsOfficialModel_() {
   assertEquals_("VALIDE", result.state);
   assertEquals_(4, result.orchestrator_input.courses.length);
 }
+function AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_() {
+  var options = AKS_analyticsSheetsOptions_(function (books) {
+    Object.keys(books).forEach(function (bookId) {
+      var sheets = books[bookId].sheets;
+      Object.keys(sheets).forEach(function (sheetName) {
+        sheets[sheetName] = [
+          ["AKS Analytics — " + sheetName],
+          ["Consignes du modèle officiel"],
+          []
+        ].concat(sheets[sheetName]);
+      });
+    });
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  assertEquals_("VALIDE", result.state);
+  assertEquals_(4, result.summary.valid_count);
+}
 function AKS_testAnalyticsSheets_rejectsInvalidSeason_() {
   var options = AKS_analyticsSheetsOptions_(); options.season = "2026";
   assertThrows_(function () {
@@ -107,6 +124,7 @@ function AKS_testAnalyticsSheets_feedsOrchestrator_() {
 function AKS_runAnalyticsSheetsProviderSuite() {
   return AKS_runNamedTestSuite_("AKS Analytics — fournisseur Google Sheets", [
     { name: "ANALYTICS / Sheets modèle officiel", test: AKS_testAnalyticsSheets_loadsOfficialModel_ },
+    { name: "ANALYTICS / Sheets en-têtes après préambule", test: AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_ },
     { name: "ANALYTICS / Sheets saison", test: AKS_testAnalyticsSheets_rejectsInvalidSeason_ },
     { name: "ANALYTICS / Sheets quatre IDs", test: AKS_testAnalyticsSheets_requiresFourIds_ },
     { name: "ANALYTICS / Sheets feuille obligatoire", test: AKS_testAnalyticsSheets_detectsMissingSheet_ },
