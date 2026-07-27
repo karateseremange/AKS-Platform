@@ -218,9 +218,12 @@ AKS.Analytics.SheetsProvider = (function () {
     var season = validateSeason_(options.season);
     var adapter = options.adapter || defaultAdapter_();
     var ids = options.spreadsheet_ids || {};
+    var explicitIds = Object.prototype.hasOwnProperty.call(options, "spreadsheet_ids");
     var expectedCourses = expectedCourses_(season);
     var courses = expectedCourses.map(function (courseCode) {
-      var id = text_(ids[courseCode] || property_(COURSE_PROPERTIES[courseCode]));
+      var id = explicitIds ?
+        text_(ids[courseCode]) :
+        property_(COURSE_PROPERTIES[courseCode]);
       if (!id) {
         return {
           code: courseCode, season: season, spreadsheet_id: null,
