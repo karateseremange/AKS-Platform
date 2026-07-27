@@ -74,11 +74,20 @@
     google.script.run.withSuccessHandler(function (result) {
       renderDiagnostic_(result);
       previewToken = result.confirmationToken;
-      reports.innerHTML = result.reports.map(function (report) {
-        return '<article class="aks-analytics-report"><h3>' + escape_(report.label) +
-          '</h3><iframe title="Aperçu — ' + escape_(report.label) + '" sandbox srcdoc="' +
-          escape_(report.html) + '"></iframe></article>';
-      }).join("");
+      reports.innerHTML = "";
+      result.reports.forEach(function (report) {
+        var article = document.createElement("article");
+        var title = document.createElement("h3");
+        var frame = document.createElement("iframe");
+        article.className = "aks-analytics-report";
+        title.textContent = report.label || "Rapport";
+        frame.title = "Aperçu — " + (report.label || "Rapport");
+        frame.setAttribute("sandbox", "");
+        frame.srcdoc = report.html || "";
+        article.appendChild(title);
+        article.appendChild(frame);
+        reports.appendChild(article);
+      });
       confirmation.disabled = !previewToken;
       setBusy_(false);
       message_("Aperçu généré sans écriture Drive. Vérifiez les rapports.", "success");
