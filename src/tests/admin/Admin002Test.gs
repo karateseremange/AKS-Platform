@@ -143,8 +143,9 @@ function AKS_testAdmin002PublishesOnlyActiveModules_() {
   })[0].destinations;
 
   AKS_assertAdmin002_(
-    moduleDestinations.length === 1 &&
-      moduleDestinations[0].id === "module.health-questionnaire",
+    moduleDestinations.length === 2 &&
+      moduleDestinations[0].id === "module.analytics" &&
+      moduleDestinations[1].id === "module.health-questionnaire",
     "Seul le module actif et déclaré doit publier sa destination."
   );
 }
