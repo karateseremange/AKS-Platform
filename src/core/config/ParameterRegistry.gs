@@ -202,6 +202,15 @@ function AKS_createPlatformParameterRegistry_() {
       required: true,
       administrable: true,
       defaultValue: 90
+    },
+    {
+      key: "analytics.driveRootFolderId",
+      label: "Dossier racine Analytics",
+      description: "Identifiant Drive du dossier racine autorisé pour les publications Analytics.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
     }
   ].forEach(registry.register);
 
