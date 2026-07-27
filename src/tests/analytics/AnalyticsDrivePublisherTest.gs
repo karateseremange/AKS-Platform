@@ -1,8 +1,12 @@
 function AKS_analyticsDrivePdfBundle_() {
-  return AKS.Analytics.PdfReportConverter.convert(
+  var bundle = AKS.Analytics.PdfReportConverter.convert(
     AKS_analyticsPdfHtmlBundle_(),
     { converter: AKS_analyticsPdfFakeConverter_([]) }
   );
+  return {
+    season: "2025-2026",
+    documents: bundle.documents
+  };
 }
 
 function AKS_analyticsDriveFakeAdapter_(options) {
