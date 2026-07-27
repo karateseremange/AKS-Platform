@@ -2,7 +2,7 @@ var AKS = AKS || {};
 AKS.Analytics = AKS.Analytics || {};
 
 /**
- * Lit en lecture seule les quatre classeurs conformes au modèle officiel
+ * Lit en lecture seule les classeurs conformes au modèle officiel
  * AKS Analytics et produit directement l'entrée de CourseOrchestrator.
  */
 AKS.Analytics.SheetsProvider = (function () {
@@ -10,12 +10,14 @@ AKS.Analytics.SheetsProvider = (function () {
 
   var RULE_VERSION = "analytics-sheets-provider/1.0.0";
   var MODEL_VERSION = "1.0";
-  var EXPECTED_COURSES = ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2"];
+  var HISTORICAL_COURSES = ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2"];
+  var CURRENT_COURSES = ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2", "FEMININ"];
   var COURSE_PROPERTIES = {
     ADO_ADULTE: "analytics.sheets.adoAdulteSpreadsheetId",
     BABY: "analytics.sheets.babySpreadsheetId",
     ENFANT_1: "analytics.sheets.enfant1SpreadsheetId",
-    ENFANT_2: "analytics.sheets.enfant2SpreadsheetId"
+    ENFANT_2: "analytics.sheets.enfant2SpreadsheetId",
+    FEMININ: "analytics.sheets.femininSpreadsheetId"
   };
   var REQUIRED_SHEETS = ["Configuration", "Licenciés", "Séances", "Présences"];
 
@@ -45,6 +47,11 @@ AKS.Analytics.SheetsProvider = (function () {
         "La saison doit respecter le format AAAA-AAAA avec deux années consécutives.");
     }
     return season;
+  }
+
+  function expectedCourses_(season) {
+    return Number(season.slice(0, 4)) >= 2026 ?
+      CURRENT_COURSES.slice() : HISTORICAL_COURSES.slice();
   }
 
   function property_(key) {
@@ -211,7 +218,8 @@ AKS.Analytics.SheetsProvider = (function () {
     var season = validateSeason_(options.season);
     var adapter = options.adapter || defaultAdapter_();
     var ids = options.spreadsheet_ids || {};
-    var courses = EXPECTED_COURSES.map(function (courseCode) {
+    var expectedCourses = expectedCourses_(season);
+    var courses = expectedCourses.map(function (courseCode) {
       var id = text_(ids[courseCode] || property_(COURSE_PROPERTIES[courseCode]));
       if (!id) {
         return {
@@ -229,17 +237,23 @@ AKS.Analytics.SheetsProvider = (function () {
     var validCount = courses.filter(function (course) {
       return course.source_state === "VALIDE";
     }).length;
+    var errorCount = courses.filter(function (course) {
+      return course.source_state === "ERREUR";
+    }).length;
+    var emptyCount = courses.filter(function (course) {
+      return course.source_state === "NON_CALCULABLE";
+    }).length;
     return Object.freeze({
       rule_version: RULE_VERSION,
       model_version: MODEL_VERSION,
       season: season,
-      state: validCount === EXPECTED_COURSES.length ? "VALIDE" :
-        (validCount ? "PARTIEL" : "ERREUR"),
-      expected_courses: EXPECTED_COURSES.slice(),
+      state: errorCount === 0 ? "VALIDE" :
+        (errorCount < expectedCourses.length ? "PARTIEL" : "ERREUR"),
+      expected_courses: expectedCourses.slice(),
       courses: courses,
       orchestrator_input: {
         season: season,
-        expected_courses: EXPECTED_COURSES.slice(),
+        expected_courses: expectedCourses.slice(),
         courses: courses.filter(function (course) {
           return course.source_state !== "ERREUR";
         }).map(function (course) {
@@ -251,11 +265,11 @@ AKS.Analytics.SheetsProvider = (function () {
         })
       },
       summary: {
-        expected_count: EXPECTED_COURSES.length,
+        expected_count: expectedCourses.length,
         valid_count: validCount,
-        error_count: courses.filter(function (course) {
-          return course.source_state === "ERREUR";
-        }).length
+        conforming_count: expectedCourses.length - errorCount,
+        non_calculable_count: emptyCount,
+        error_count: errorCount
       }
     });
   }
@@ -263,7 +277,8 @@ AKS.Analytics.SheetsProvider = (function () {
   return Object.freeze({
     RULE_VERSION: RULE_VERSION,
     MODEL_VERSION: MODEL_VERSION,
-    EXPECTED_COURSES: EXPECTED_COURSES.slice(),
+    HISTORICAL_COURSES: HISTORICAL_COURSES.slice(),
+    CURRENT_COURSES: CURRENT_COURSES.slice(),
     COURSE_PROPERTIES: COURSE_PROPERTIES,
     load: load
   });
