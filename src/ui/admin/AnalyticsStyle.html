@@ -1,24 +1,203 @@
 <style>
-  .aks-analytics-back { display: inline-block; margin: 0 0 1rem; color: #244b9b; }
-  .aks-analytics-controls { display: grid; gap: .75rem; margin-bottom: 1rem; }
-  .aks-analytics-controls input { max-width: 15rem; padding: .7rem; border: 1px solid #aab3c2; border-radius: .35rem; }
-  .aks-analytics-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
-  .aks-analytics-actions button, .aks-analytics-publish button {
-    border: 0; border-radius: .35rem; padding: .75rem 1rem; background: #2856a6; color: #fff; font-weight: 700; cursor: pointer;
+  .aks-analytics-navigation {
+    margin-bottom: 24px;
   }
-  button[disabled] { background: #737b86; cursor: not-allowed; opacity: .7; }
-  .aks-analytics-status { margin: 1rem 0; padding: .8rem 1rem; border-left: .3rem solid #2856a6; background: #eef3fb; }
-  .aks-analytics-status[data-state="error"] { border-color: #b42318; background: #fff0ee; }
-  .aks-analytics-status[data-state="success"] { border-color: #197548; background: #edf8f2; }
-  .aks-analytics-empty { color: #596273; }
-  .aks-analytics-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; }
-  .aks-analytics-metric { padding: .8rem; border: 1px solid #d8dde6; border-radius: .4rem; }
-  .aks-analytics-metric strong { display: block; font-size: 1.35rem; }
-  .aks-analytics-errors { margin-bottom: 0; }
-  .aks-analytics-report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
-  .aks-analytics-report { border: 1px solid #d8dde6; border-radius: .4rem; padding: 1rem; }
-  .aks-analytics-report iframe { width: 100%; height: 18rem; border: 1px solid #d8dde6; background: #fff; }
-  .aks-analytics-confirm { display: flex; gap: .6rem; align-items: flex-start; margin: 1rem 0; }
-  .aks-analytics-publish { margin-top: 1rem; }
-  @media (max-width: 640px) { .aks-analytics-actions button { width: 100%; } }
+
+  .aks-analytics-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border: 1px solid var(--aks-border);
+    border-radius: 9px;
+    background: var(--aks-surface);
+    color: var(--aks-primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .aks-analytics-back:hover,
+  .aks-analytics-back:focus-visible {
+    background: #edf2ff;
+  }
+
+  .aks-admin-card {
+    min-height: auto;
+    margin-bottom: 24px;
+  }
+
+  .aks-analytics-controls {
+    display: grid;
+    gap: 20px;
+  }
+
+  .aks-analytics-control-body,
+  .aks-analytics-publish-body {
+    display: grid;
+    gap: 12px;
+    padding-top: 20px;
+  }
+
+  .aks-analytics-controls label {
+    color: var(--aks-muted);
+    font-size: .92rem;
+    font-weight: 700;
+  }
+
+  .aks-analytics-controls input {
+    width: min(100%, 240px);
+    padding: 11px 12px;
+    border: 1px solid #b8c0cf;
+    border-radius: 8px;
+    background: var(--aks-surface);
+    color: var(--aks-text);
+  }
+
+  .aks-analytics-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .aks-analytics-actions button,
+  .aks-analytics-publish button {
+    padding: 11px 15px;
+    border: 1px solid var(--aks-primary);
+    border-radius: 8px;
+    background: var(--aks-primary);
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .aks-analytics-actions .aks-analytics-button--secondary {
+    border-color: var(--aks-border);
+    background: var(--aks-surface);
+    color: var(--aks-primary-dark);
+  }
+
+  .aks-analytics-actions button:hover:not(:disabled),
+  .aks-analytics-actions button:focus-visible:not(:disabled),
+  .aks-analytics-publish button:hover:not(:disabled),
+  .aks-analytics-publish button:focus-visible:not(:disabled) {
+    border-color: var(--aks-primary-dark);
+    background: var(--aks-primary-dark);
+    color: #ffffff;
+  }
+
+  .aks-analytics-status {
+    margin: 0 0 24px;
+    padding: 16px 18px;
+    border: 1px solid #cddbf5;
+    border-left: 4px solid var(--aks-primary);
+    border-radius: 12px;
+    background: #eef3fb;
+    color: var(--aks-text);
+  }
+
+  .aks-analytics-status[data-state="error"] {
+    border-color: #f3c7c3;
+    border-left-color: #b42318;
+    background: #fff0ee;
+  }
+
+  .aks-analytics-status[data-state="success"] {
+    border-color: #b9dfcc;
+    border-left-color: #197548;
+    background: #edf8f2;
+  }
+
+  .aks-analytics-empty {
+    margin: 20px 0 0;
+    padding: 18px;
+    border-radius: 12px;
+    background: #f7f9fc;
+    color: var(--aks-muted);
+    line-height: 1.55;
+  }
+
+  .aks-analytics-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .aks-analytics-metric {
+    padding: 18px;
+    border: 1px solid var(--aks-border);
+    border-radius: 12px;
+    background: #f7f9fc;
+  }
+
+  .aks-analytics-metric strong {
+    display: block;
+    color: var(--aks-primary-dark);
+    font-size: 1.5rem;
+  }
+
+  .aks-analytics-errors {
+    margin-bottom: 0;
+  }
+
+  .aks-analytics-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .aks-analytics-report {
+    padding: 18px;
+    border: 1px solid var(--aks-border);
+    border-radius: 14px;
+    background: #f7f9fc;
+  }
+
+  .aks-analytics-report iframe {
+    width: 100%;
+    height: 288px;
+    border: 1px solid var(--aks-border);
+    border-radius: 8px;
+    background: var(--aks-surface);
+  }
+
+  .aks-analytics-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 4px 0;
+    padding: 16px;
+    border: 1px solid var(--aks-border);
+    border-radius: 10px;
+    background: #f7f9fc;
+  }
+
+  .aks-analytics-confirm input {
+    flex: 0 0 auto;
+  }
+
+  .aks-analytics-publish {
+    margin-top: 0;
+  }
+
+  @media (max-width: 640px) {
+    .aks-admin-shell {
+      width: min(100% - 24px, 1120px);
+      padding-top: 24px;
+    }
+
+    .aks-analytics-back,
+    .aks-analytics-actions button,
+    .aks-analytics-publish button {
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .aks-analytics-report-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>

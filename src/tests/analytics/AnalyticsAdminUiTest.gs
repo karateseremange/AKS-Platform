@@ -145,6 +145,16 @@ function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
   assertEquals_(true, source.indexOf("Aperçu des cinq rapports") !== -1);
 }
 
+function AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_() {
+  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var style = AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle");
+  assertEquals_(true, source.indexOf('ui/admin/DashboardStyle') !== -1);
+  assertEquals_(true, source.indexOf('aks-admin-card__header') !== -1);
+  assertEquals_(true, source.indexOf('aks-admin-card__kicker') !== -1);
+  assertEquals_(true, style.indexOf("var(--aks-primary)") !== -1);
+  assertEquals_(true, style.indexOf("var(--aks-border)") !== -1);
+}
+
 function AKS_testAnalyticsAdmin_navigationPublishesDestination_() {
   var model = AKS.Admin.Navigation.getModel("https://example.test/exec");
   var destinations = [];
@@ -169,6 +179,7 @@ function AKS_runAnalyticsAdminUiSuite() {
     { name: "ANALYTICS / saison invalide bloquée", test: AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_ },
     { name: "ANALYTICS / client anti-doublon et aperçu périmé", test: AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_ },
     { name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ },
+    { name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ },
     { name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }
   ]);
 }

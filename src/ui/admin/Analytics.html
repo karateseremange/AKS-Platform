@@ -3,6 +3,7 @@
   <head>
     <base target="_top">
     <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AdminFoundationStyle"); ?>
+    <?!= AKS_includeAdminAnalyticsFile_("ui/admin/DashboardStyle"); ?>
     <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle"); ?>
   </head>
   <body>
@@ -16,19 +17,28 @@
         <div class="aks-admin-user"><?= viewModel.administrator.email ?></div>
       </header>
 
-      <a class="aks-analytics-back" href="<?= viewModel.navigation.homeTarget ?>">← Retour au Centre de pilotage</a>
+      <nav class="aks-analytics-navigation" aria-label="Navigation secondaire">
+        <a class="aks-analytics-back" href="<?= viewModel.navigation.homeTarget ?>">
+          <span aria-hidden="true">←</span>
+          Retour au Centre de pilotage
+        </a>
+      </nav>
 
       <section class="aks-admin-card aks-analytics-controls" aria-labelledby="analytics-season-title">
-        <div>
+        <div class="aks-admin-card__header">
           <p class="aks-admin-card__kicker">Périmètre</p>
           <h2 id="analytics-season-title">Saison</h2>
         </div>
-        <label for="analytics-season">Saison à analyser</label>
-        <input id="analytics-season" inputmode="numeric" pattern="\d{4}-\d{4}"
-          value="<?= viewModel.season ?>" placeholder="2026-2027" required>
-        <div class="aks-analytics-actions">
-          <button type="button" data-action="diagnose">Contrôler les sources</button>
-          <button type="button" data-action="preview" disabled>Prévisualiser les rapports</button>
+        <div class="aks-analytics-control-body">
+          <label for="analytics-season">Saison à analyser</label>
+          <input id="analytics-season" inputmode="numeric" pattern="\d{4}-\d{4}"
+            value="<?= viewModel.season ?>" placeholder="2026-2027" required>
+          <div class="aks-analytics-actions">
+            <button type="button" data-action="diagnose">Contrôler les sources</button>
+            <button type="button" class="aks-analytics-button--secondary" data-action="preview" disabled>
+              Prévisualiser les rapports
+            </button>
+          </div>
         </div>
       </section>
 
@@ -37,26 +47,37 @@
       </div>
 
       <section class="aks-admin-card" aria-labelledby="analytics-diagnostic-title">
-        <h2 id="analytics-diagnostic-title">Diagnostic</h2>
+        <div class="aks-admin-card__header">
+          <p class="aks-admin-card__kicker">Contrôle qualité</p>
+          <h2 id="analytics-diagnostic-title">Diagnostic</h2>
+        </div>
         <div data-diagnostic class="aks-analytics-empty">Aucun contrôle effectué.</div>
       </section>
 
       <section class="aks-admin-card aks-admin-card--wide" aria-labelledby="analytics-reports-title">
-        <h2 id="analytics-reports-title">Aperçu des cinq rapports</h2>
+        <div class="aks-admin-card__header">
+          <p class="aks-admin-card__kicker">Prévisualisation</p>
+          <h2 id="analytics-reports-title">Aperçu des cinq rapports</h2>
+        </div>
         <div data-reports class="aks-analytics-report-grid">
           <p class="aks-analytics-empty">L’aperçu sera disponible après un contrôle valide.</p>
         </div>
       </section>
 
       <section class="aks-admin-card aks-analytics-publish" aria-labelledby="analytics-publish-title">
-        <h2 id="analytics-publish-title">Publication</h2>
-        <p>La publication crée cinq PDF uniquement après votre confirmation explicite.</p>
-        <label class="aks-analytics-confirm">
-          <input type="checkbox" data-confirm disabled>
-          Je confirme la publication des cinq rapports prévisualisés.
-        </label>
-        <button type="button" data-action="publish" disabled>Publier les cinq PDF</button>
-        <div data-publication></div>
+        <div class="aks-admin-card__header">
+          <p class="aks-admin-card__kicker">Action finale</p>
+          <h2 id="analytics-publish-title">Publication</h2>
+        </div>
+        <div class="aks-analytics-publish-body">
+          <p>La publication crée cinq PDF uniquement après votre confirmation explicite.</p>
+          <label class="aks-analytics-confirm">
+            <input type="checkbox" data-confirm disabled>
+            <span>Je confirme la publication des cinq rapports prévisualisés.</span>
+          </label>
+          <button type="button" data-action="publish" disabled>Publier les cinq PDF</button>
+          <div data-publication></div>
+        </div>
       </section>
     </main>
     <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsClient"); ?>
