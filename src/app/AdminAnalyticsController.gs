@@ -85,7 +85,8 @@ function AKS_createAdminAnalyticsController_(
         reportCode: report.report_code,
         reportType: report.report_type,
         course: report.course,
-        label: report.course ? COURSE_LABELS[report.course] : "Rapport global",
+        label: report.report_type === "GLOBAL" ? "Rapport global" :
+          (COURSE_LABELS[report.report_code] || report.course || report.report_code || "Rapport de cours"),
         state: report.state,
         fileName: report.file_name,
         html: includeHtml ? report.html : null
