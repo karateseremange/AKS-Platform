@@ -49,7 +49,9 @@
     diagnostic.innerHTML =
       '<p><strong>État : ' + escape_(item.state) + '</strong></p>' +
       '<div class="aks-analytics-metrics">' +
-      '<div class="aks-analytics-metric"><strong>' + item.validSourceCount + '/' + item.expectedSourceCount + '</strong>sources valides</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.conformingSourceCount + '/' + item.expectedSourceCount + '</strong>sources conformes</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.emptySourceCount + '</strong>conformes mais vides</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.validSourceCount + '</strong>sources exploitables</div>' +
       '<div class="aks-analytics-metric"><strong>' + item.exploitableCourseCount + '</strong>cours exploitables</div>' +
       '<div class="aks-analytics-metric"><strong>' + item.errorSourceCount + '</strong>sources en erreur</div>' +
       '<div class="aks-analytics-metric"><strong>' + item.validationMarkerCount + '</strong>marqueurs de validation</div>' +
@@ -59,10 +61,10 @@
   }
   function diagnose_() {
     if (busy) return;
-    resetPreview_(); setBusy_(true); message_("Contrôle des quatre sources en cours…");
+    resetPreview_(); setBusy_(true); message_("Contrôle des sources en cours…");
     google.script.run.withSuccessHandler(function (result) {
       renderDiagnostic_(result); setBusy_(false);
-      message_(result.diagnostic.publishable ? "Les quatre sources sont prêtes." : "Le lot est bloqué. Corrigez les anomalies avant de continuer.",
+      message_(result.diagnostic.publishable ? "Toutes les sources sont prêtes." : "Le lot n’est pas encore publiable. Consultez les états des sources.",
         result.diagnostic.publishable ? "success" : "error");
     }).withFailureHandler(failure_).AKS_getAdminAnalyticsDiagnostic({ season: season.value });
   }
@@ -79,7 +81,7 @@
       }).join("");
       confirmation.disabled = !previewToken;
       setBusy_(false);
-      message_("Aperçu généré sans écriture Drive. Vérifiez les cinq rapports.", "success");
+      message_("Aperçu généré sans écriture Drive. Vérifiez les rapports.", "success");
     }).withFailureHandler(failure_).AKS_previewAdminAnalyticsReports({ season: season.value });
   }
   function publish_() {
@@ -87,7 +89,7 @@
     setBusy_(true); message_("Publication confirmée en cours…");
     google.script.run.withSuccessHandler(function (result) {
       previewToken = null; confirmation.disabled = true; setBusy_(false);
-      message_("Les cinq rapports ont été publiés.", "success");
+      message_("Les rapports ont été publiés.", "success");
       publication.innerHTML = result.folderUrl ?
         '<p><a target="_blank" rel="noopener noreferrer" href="' + escape_(result.folderUrl) + '">Ouvrir le dossier publié</a></p>' : "";
     }).withFailureHandler(failure_).AKS_publishAdminAnalyticsReports({
