@@ -13,10 +13,13 @@ function AKS_analyticsOperationalFixture_(overrides) {
     }),
     orchestrator_input: { season: "2026-2027", courses: [] }
   };
-  var calls = { pdf: 0, publish: 0, release: 0 };
+  var calls = { pdf: 0, publish: 0, release: 0, sheetsOptions: null };
   var options = {
     token_provider: function (value) { return "TOKEN-" + value.length; },
-    sheets_provider: { load: function () { return source; } },
+    sheets_provider: { load: function (loadOptions) {
+      calls.sheetsOptions = loadOptions;
+      return source;
+    } },
     course_orchestrator: { run: function () {
       return {
         season: "2026-2027", state: "VALIDE",
@@ -66,6 +69,8 @@ function AKS_testAnalyticsOperational_previewIsReadOnly_() {
   assertEquals_(6, result.reports.length);
   assertEquals_(0, fixture.calls.pdf);
   assertEquals_(0, fixture.calls.publish);
+  assertEquals_(false, Object.prototype.hasOwnProperty.call(
+    fixture.calls.sheetsOptions, "spreadsheet_ids"));
 }
 
 function AKS_testAnalyticsOperational_blocksIncompleteSources_() {
