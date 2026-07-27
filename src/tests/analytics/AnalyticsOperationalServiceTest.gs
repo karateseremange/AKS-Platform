@@ -176,12 +176,12 @@ function AKS_testAnalyticsOperational_composesRealAnalyticsChain_() {
   };
   var preview = AKS.Analytics.OperationalService.preview(request, options);
   assertEquals_("PRET", preview.state);
-  assertEquals_(5, preview.reports.length);
+  assertEquals_(6, preview.reports.length);
   request.confirmed = true;
   request.confirmation_token = preview.confirmation_token;
   var publication = AKS.Analytics.OperationalService.publish(request, options);
   assertEquals_("PUB-REAL-CHAIN", publication.publication_folder_id);
-  assertEquals_(5, publication.document_count);
+  assertEquals_(6, publication.document_count);
   assertEquals_(1, calls.publish);
 }
 
