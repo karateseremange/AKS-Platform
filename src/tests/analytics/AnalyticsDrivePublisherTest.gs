@@ -5,7 +5,14 @@ function AKS_analyticsDrivePdfBundle_() {
   );
   return {
     season: "2025-2026",
-    documents: bundle.documents
+    documents: bundle.documents.map(function (document) {
+      var historicalDocument = {};
+      Object.keys(document).forEach(function (key) {
+        historicalDocument[key] = document[key];
+      });
+      historicalDocument.season = "2025-2026";
+      return historicalDocument;
+    })
   };
 }
 
