@@ -15,7 +15,7 @@ function AKS_analyticsSheetsFixture_(overrides) {
 
 function AKS_analyticsSheetsOptions_(mutator) {
   var books = {};
-  ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2"].forEach(function (code) {
+  ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2", "FEMININ"].forEach(function (code) {
     var sheets = AKS_analyticsSheetsFixture_();
     sheets.Configuration[2][1] = code;
     books["ID-" + code] = { id: "ID-" + code, sheets: sheets };
@@ -25,7 +25,8 @@ function AKS_analyticsSheetsOptions_(mutator) {
     season: "2026-2027",
     spreadsheet_ids: {
       ADO_ADULTE: "ID-ADO_ADULTE", BABY: "ID-BABY",
-      ENFANT_1: "ID-ENFANT_1", ENFANT_2: "ID-ENFANT_2"
+      ENFANT_1: "ID-ENFANT_1", ENFANT_2: "ID-ENFANT_2",
+      FEMININ: "ID-FEMININ"
     },
     adapter: {
       openById: function (id) {
@@ -41,7 +42,7 @@ function AKS_analyticsSheetsOptions_(mutator) {
 function AKS_testAnalyticsSheets_loadsOfficialModel_() {
   var result = AKS.Analytics.SheetsProvider.load(AKS_analyticsSheetsOptions_());
   assertEquals_("VALIDE", result.state);
-  assertEquals_(4, result.orchestrator_input.courses.length);
+  assertEquals_(5, result.orchestrator_input.courses.length);
 }
 function AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_() {
   var options = AKS_analyticsSheetsOptions_(function (books) {
@@ -58,7 +59,7 @@ function AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_() {
   });
   var result = AKS.Analytics.SheetsProvider.load(options);
   assertEquals_("VALIDE", result.state);
-  assertEquals_(4, result.summary.valid_count);
+  assertEquals_(5, result.summary.valid_count);
 }
 function AKS_testAnalyticsSheets_rejectsInvalidSeason_() {
   var options = AKS_analyticsSheetsOptions_(); options.season = "2026";
@@ -66,10 +67,35 @@ function AKS_testAnalyticsSheets_rejectsInvalidSeason_() {
     AKS.Analytics.SheetsProvider.load(options);
   }, "ANALYTICS_SHEETS_SEASON_INVALID");
 }
-function AKS_testAnalyticsSheets_requiresFourIds_() {
+function AKS_testAnalyticsSheets_requiresExpectedIds_() {
   var options = AKS_analyticsSheetsOptions_(); delete options.spreadsheet_ids.BABY;
   var result = AKS.Analytics.SheetsProvider.load(options);
   assertEquals_("ANALYTICS_SHEETS_ID_REQUIRED", result.courses[1].diagnostics.errors[0].code);
+}
+function AKS_testAnalyticsSheets_keepsFourHistoricalCourses_() {
+  var options = AKS_analyticsSheetsOptions_();
+  options.season = "2025-2026";
+  delete options.spreadsheet_ids.FEMININ;
+  Object.keys(options.spreadsheet_ids).forEach(function (code) {
+    var book = options.adapter.openById(options.spreadsheet_ids[code]);
+    book.sheets.Configuration[1][1] = "2025-2026";
+    book.sheets.Présences[1][0] = "2025-2026";
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  assertEquals_(4, result.summary.expected_count);
+  assertEquals_(4, result.summary.valid_count);
+}
+function AKS_testAnalyticsSheets_distinguishesConformingEmptySource_() {
+  var options = AKS_analyticsSheetsOptions_(function (books) {
+    books["ID-FEMININ"].sheets.Présences = [
+      ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]
+    ];
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  assertEquals_("VALIDE", result.state);
+  assertEquals_(5, result.summary.conforming_count);
+  assertEquals_(1, result.summary.non_calculable_count);
+  assertEquals_(0, result.summary.error_count);
 }
 function AKS_testAnalyticsSheets_detectsMissingSheet_() {
   var options = AKS_analyticsSheetsOptions_(function (books) {
@@ -113,12 +139,12 @@ function AKS_testAnalyticsSheets_isolatesCourseFailure_() {
   });
   var result = AKS.Analytics.SheetsProvider.load(options);
   assertEquals_("PARTIEL", result.state);
-  assertEquals_(3, result.summary.valid_count);
+  assertEquals_(4, result.summary.valid_count);
 }
 function AKS_testAnalyticsSheets_feedsOrchestrator_() {
   var source = AKS.Analytics.SheetsProvider.load(AKS_analyticsSheetsOptions_());
   var result = AKS.Analytics.CourseOrchestrator.run(source.orchestrator_input);
-  assertEquals_(4, result.summary.exploitable_count);
+  assertEquals_(5, result.summary.exploitable_count);
 }
 
 function AKS_runAnalyticsSheetsProviderSuite() {
@@ -126,7 +152,9 @@ function AKS_runAnalyticsSheetsProviderSuite() {
     { name: "ANALYTICS / Sheets modèle officiel", test: AKS_testAnalyticsSheets_loadsOfficialModel_ },
     { name: "ANALYTICS / Sheets en-têtes après préambule", test: AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_ },
     { name: "ANALYTICS / Sheets saison", test: AKS_testAnalyticsSheets_rejectsInvalidSeason_ },
-    { name: "ANALYTICS / Sheets quatre IDs", test: AKS_testAnalyticsSheets_requiresFourIds_ },
+    { name: "ANALYTICS / Sheets IDs attendus", test: AKS_testAnalyticsSheets_requiresExpectedIds_ },
+    { name: "ANALYTICS / Sheets périmètre historique", test: AKS_testAnalyticsSheets_keepsFourHistoricalCourses_ },
+    { name: "ANALYTICS / Sheets source conforme vide", test: AKS_testAnalyticsSheets_distinguishesConformingEmptySource_ },
     { name: "ANALYTICS / Sheets feuille obligatoire", test: AKS_testAnalyticsSheets_detectsMissingSheet_ },
     { name: "ANALYTICS / Sheets colonnes", test: AKS_testAnalyticsSheets_detectsMissingColumn_ },
     { name: "ANALYTICS / Sheets identité modèle", test: AKS_testAnalyticsSheets_validatesModelIdentity_ },
@@ -142,18 +170,19 @@ function AKS_runAnalyticsSheetsIntegrationSuite() {
     ADO_ADULTE: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_ADO_ADULTE_ID"),
     BABY: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_BABY_ID"),
     ENFANT_1: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_ENFANT_1_ID"),
-    ENFANT_2: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_ENFANT_2_ID")
+    ENFANT_2: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_ENFANT_2_ID"),
+    FEMININ: PropertiesService.getScriptProperties().getProperty("ANALYTICS_SHEETS_TEST_FEMININ_ID")
   };
   return AKS_runNamedTestSuite_("AKS Analytics — intégration Sheets en lecture seule", [{
-    name: "ANALYTICS / Sheets lecture réelle des quatre classeurs",
+    name: "ANALYTICS / Sheets lecture réelle des classeurs attendus",
     test: function () {
       var result = AKS.Analytics.SheetsProvider.load({
         season: PropertiesService.getScriptProperties().getProperty(
           "ANALYTICS_SHEETS_TEST_SEASON") || "2026-2027",
         spreadsheet_ids: ids
       });
-      assertEquals_(4, result.summary.valid_count);
-      assertEquals_(4, result.orchestrator_input.courses.length);
+      assertEquals_(5, result.summary.valid_count);
+      assertEquals_(5, result.orchestrator_input.courses.length);
     }
   }]);
 }

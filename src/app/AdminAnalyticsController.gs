@@ -17,7 +17,8 @@ function AKS_createAdminAnalyticsController_(
     BABY: "Baby",
     ENFANT_1: "Enfant 1",
     ENFANT_2: "Enfant 2",
-    ADO_ADULTE: "Ado/Adulte"
+    ADO_ADULTE: "Ado/Adulte",
+    FEMININ: "Cours féminin"
   };
 
   function freeze_(value) {
@@ -66,6 +67,8 @@ function AKS_createAdminAnalyticsController_(
       publishable: preview.publishable === true,
       expectedSourceCount: Number(sourceSummary.expected_count || 4),
       validSourceCount: Number(sourceSummary.valid_count || 0),
+      conformingSourceCount: Number(sourceSummary.conforming_count || 0),
+      emptySourceCount: Number(sourceSummary.non_calculable_count || 0),
       errorSourceCount: Number(sourceSummary.error_count || 0),
       exploitableCourseCount: Number(orchestrationSummary.exploitable_count || 0),
       failedCourseCount: Number(orchestrationSummary.failed_count || 0),

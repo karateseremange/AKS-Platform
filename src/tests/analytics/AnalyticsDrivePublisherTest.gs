@@ -1,8 +1,19 @@
 function AKS_analyticsDrivePdfBundle_() {
-  return AKS.Analytics.PdfReportConverter.convert(
+  var bundle = AKS.Analytics.PdfReportConverter.convert(
     AKS_analyticsPdfHtmlBundle_(),
     { converter: AKS_analyticsPdfFakeConverter_([]) }
   );
+  return {
+    season: "2025-2026",
+    documents: bundle.documents.map(function (document) {
+      var historicalDocument = {};
+      Object.keys(document).forEach(function (key) {
+        historicalDocument[key] = document[key];
+      });
+      historicalDocument.season = "2025-2026";
+      return historicalDocument;
+    })
+  };
 }
 
 function AKS_analyticsDriveFakeAdapter_(options) {

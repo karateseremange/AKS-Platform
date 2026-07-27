@@ -13,7 +13,9 @@ AKS.Analytics.DrivePublisher = (function () {
   var ROOT_PROPERTY = "analytics.driveRootFolderId";
   var TEST_ROOT_PROPERTY = "ANALYTICS_DRIVE_TEST_ROOT_FOLDER_ID";
   var PDF_MIME = "application/pdf";
-  var REQUIRED_DOCUMENTS = 5;
+  function requiredDocuments_(season) {
+    return Number(season.slice(0, 4)) >= 2026 ? 6 : 5;
+  }
 
   function error_(code, message, cause) {
     var error = new Error(message);
@@ -91,9 +93,9 @@ AKS.Analytics.DrivePublisher = (function () {
       throw error_("ANALYTICS_DRIVE_SEASON_INVALID",
         "La saison doit respecter le format AAAA-AAAA avec deux années consécutives.");
     }
-    if (bundle.documents.length !== REQUIRED_DOCUMENTS) {
+    if (bundle.documents.length !== requiredDocuments_(season)) {
       throw error_("ANALYTICS_DRIVE_BATCH_INCOMPLETE",
-        "La publication exige exactement cinq rapports PDF.");
+        "Le nombre de rapports PDF ne correspond pas au périmètre de la saison.");
     }
     var names = Object.create(null);
     bundle.documents.forEach(function (document, index) {
@@ -140,9 +142,9 @@ AKS.Analytics.DrivePublisher = (function () {
 
   function validateCreatedFiles_(adapter, folder, expectedNames) {
     var files = adapter.files(folder);
-    if (files.length !== REQUIRED_DOCUMENTS) {
+    if (files.length !== expectedNames.length) {
       throw error_("ANALYTICS_DRIVE_STAGING_INCOMPLETE",
-        "Le dossier de préparation ne contient pas exactement cinq fichiers.");
+        "Le dossier de préparation ne contient pas tous les fichiers attendus.");
     }
     var actual = Object.create(null);
     files.forEach(function (file) {
@@ -164,8 +166,11 @@ AKS.Analytics.DrivePublisher = (function () {
     var clock = options.clock || defaultClock_;
     var idProvider = options.id_provider || defaultId_;
     var logger = options.logger || (AKS && AKS.Logger);
+    var configuredRootId = Object.prototype.hasOwnProperty.call(options, "root_folder_id")
+      ? options.root_folder_id
+      : property_(ROOT_PROPERTY);
     var rootId = requiredString_(
-      options.root_folder_id || property_(ROOT_PROPERTY),
+      configuredRootId,
       "ANALYTICS_DRIVE_ROOT_ID_REQUIRED",
       "L'ID du dossier racine Analytics Drive est obligatoire."
     );

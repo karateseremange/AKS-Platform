@@ -247,6 +247,15 @@ function AKS_createPlatformParameterRegistry_() {
       scope: "integration",
       required: false,
       administrable: true
+    },
+    {
+      key: "analytics.sheets.femininSpreadsheetId",
+      label: "Classeur Analytics — Cours féminin",
+      description: "Identifiant du classeur Google Sheets officiel du cours féminin.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
     }
   ].forEach(registry.register);
 

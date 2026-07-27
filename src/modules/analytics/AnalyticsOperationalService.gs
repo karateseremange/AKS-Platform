@@ -10,8 +10,6 @@ AKS.Analytics.OperationalService = (function () {
   "use strict";
 
   var RULE_VERSION = "analytics-operational-service/1.0.0";
-  var EXPECTED_SOURCES = 4;
-  var REQUIRED_DOCUMENTS = 5;
 
   function error_(code, message) {
     var error = new Error(message);
@@ -71,11 +69,13 @@ AKS.Analytics.OperationalService = (function () {
 
   function diagnostic_(source, orchestration, markers) {
     var errors = [];
-    if (source.state !== "VALIDE" || source.summary.valid_count !== EXPECTED_SOURCES) {
+    var expectedSources = Number(source.summary.expected_count || 0);
+    if (source.state !== "VALIDE" ||
+        Number(source.summary.conforming_count || 0) !== expectedSources) {
       errors.push({ code: "ANALYTICS_OPERATIONAL_SOURCES_INCOMPLETE" });
     }
     if (orchestration.state !== "VALIDE" ||
-        orchestration.summary.exploitable_count !== EXPECTED_SOURCES ||
+        orchestration.summary.exploitable_count !== expectedSources ||
         orchestration.summary.failed_count !== 0) {
       errors.push({ code: "ANALYTICS_OPERATIONAL_DATA_NOT_PUBLISHABLE" });
     }
@@ -111,11 +111,14 @@ AKS.Analytics.OperationalService = (function () {
     request = request || {};
     options = options || {};
     var dependencies = dependencies_(options);
-    var source = dependencies.sheets.load({
+    var sheetsRequest = {
       season: request.season,
-      spreadsheet_ids: request.spreadsheet_ids,
       adapter: options.sheets_adapter
-    });
+    };
+    if (Object.prototype.hasOwnProperty.call(request, "spreadsheet_ids")) {
+      sheetsRequest.spreadsheet_ids = request.spreadsheet_ids;
+    }
+    var source = dependencies.sheets.load(sheetsRequest);
     var orchestration = dependencies.orchestrator.run(source.orchestrator_input);
     var restitution = dependencies.restitution.build(orchestration);
     var content = dependencies.content.build(restitution);
@@ -124,7 +127,7 @@ AKS.Analytics.OperationalService = (function () {
     var htmlBundle = dependencies.html.build(layout);
     var markers = validationMarkers_(source);
     var diagnostic = diagnostic_(source, orchestration, markers);
-    if (htmlBundle.documents.length !== REQUIRED_DOCUMENTS) {
+    if (htmlBundle.documents.length !== source.summary.expected_count + 1) {
       diagnostic.errors.push({ code: "ANALYTICS_OPERATIONAL_REPORT_BATCH_INCOMPLETE" });
       diagnostic.state = "BLOQUE";
       diagnostic.publishable = false;
@@ -201,7 +204,7 @@ AKS.Analytics.OperationalService = (function () {
       }
       var pdfBundle = built.dependencies.pdf.convert(built.html_bundle, {
         converter: options.pdf_converter,
-        max_documents: REQUIRED_DOCUMENTS
+        max_documents: built.source.summary.expected_count + 1
       });
       return built.dependencies.publisher.publish(pdfBundle, {
         root_folder_id: request.root_folder_id,
@@ -217,8 +220,6 @@ AKS.Analytics.OperationalService = (function () {
 
   return Object.freeze({
     RULE_VERSION: RULE_VERSION,
-    EXPECTED_SOURCES: EXPECTED_SOURCES,
-    REQUIRED_DOCUMENTS: REQUIRED_DOCUMENTS,
     preview: preview,
     publish: publish
   });
