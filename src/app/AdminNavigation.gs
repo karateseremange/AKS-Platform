@@ -159,15 +159,6 @@ AKS.Admin.Navigation = Object.freeze({
       authorized: true,
       priority: 20,
       quickAction: true
-    }, {
-      id: "module.analytics",
-      label: "Analytics",
-      family: "modules",
-      target: "?app=analytics",
-      available: true,
-      authorized: true,
-      priority: 10,
-      quickAction: true
     }];
     var modules = AKS.App &&
       AKS.App.Bootstrap &&
