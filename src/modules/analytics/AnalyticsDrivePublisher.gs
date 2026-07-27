@@ -166,8 +166,11 @@ AKS.Analytics.DrivePublisher = (function () {
     var clock = options.clock || defaultClock_;
     var idProvider = options.id_provider || defaultId_;
     var logger = options.logger || (AKS && AKS.Logger);
+    var configuredRootId = Object.prototype.hasOwnProperty.call(options, "root_folder_id")
+      ? options.root_folder_id
+      : property_(ROOT_PROPERTY);
     var rootId = requiredString_(
-      options.root_folder_id || property_(ROOT_PROPERTY),
+      configuredRootId,
       "ANALYTICS_DRIVE_ROOT_ID_REQUIRED",
       "L'ID du dossier racine Analytics Drive est obligatoire."
     );
