@@ -1,8 +1,11 @@
 function AKS_analyticsOperationalFixture_(overrides) {
   var source = {
     season: "2026-2027", state: "VALIDE",
-    summary: { valid_count: 4, error_count: 0, expected_count: 4 },
-    courses: ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2"].map(function (code) {
+    summary: {
+      valid_count: 5, conforming_count: 5, non_calculable_count: 0,
+      error_count: 0, expected_count: 5
+    },
+    courses: ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2", "FEMININ"].map(function (code) {
       return {
         code: code, spreadsheet_id: "ID-" + code, source_state: "VALIDE",
         members: [{ licencie_id: "LIC-" + code, nom: "DUPONT", prenom: "Alice" }]
@@ -17,7 +20,7 @@ function AKS_analyticsOperationalFixture_(overrides) {
     course_orchestrator: { run: function () {
       return {
         season: "2026-2027", state: "VALIDE",
-        summary: { exploitable_count: 4, failed_count: 0 },
+        summary: { exploitable_count: 5, failed_count: 0 },
         courses: []
       };
     } },
@@ -28,7 +31,7 @@ function AKS_analyticsOperationalFixture_(overrides) {
     html_report_generator: { build: function () {
       return {
         season: "2026-2027",
-        documents: ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2", "GLOBAL"].map(function (code) {
+        documents: ["ADO_ADULTE", "BABY", "ENFANT_1", "ENFANT_2", "FEMININ", "GLOBAL"].map(function (code) {
           return {
             report_code: code, report_type: code === "GLOBAL" ? "GLOBAL" : "COURS",
             course: code === "GLOBAL" ? null : code, state: "VALIDE",
@@ -44,7 +47,7 @@ function AKS_analyticsOperationalFixture_(overrides) {
     } },
     drive_publisher: { publish: function (bundle) {
       calls.publish += 1;
-      return { season: bundle.season, document_count: 5, publication_folder_id: "PUB-1" };
+      return { season: bundle.season, document_count: 6, publication_folder_id: "PUB-1" };
     } },
     lock: {
       acquire: function () { return true; },
@@ -60,14 +63,14 @@ function AKS_testAnalyticsOperational_previewIsReadOnly_() {
   var result = AKS.Analytics.OperationalService.preview(
     { season: "2026-2027" }, fixture.options);
   assertEquals_("PRET", result.state);
-  assertEquals_(5, result.reports.length);
+  assertEquals_(6, result.reports.length);
   assertEquals_(0, fixture.calls.pdf);
   assertEquals_(0, fixture.calls.publish);
 }
 
 function AKS_testAnalyticsOperational_blocksIncompleteSources_() {
   var fixture = AKS_analyticsOperationalFixture_(function (source) {
-    source.state = "PARTIEL"; source.summary.valid_count = 3;
+    source.state = "PARTIEL"; source.summary.conforming_count = 4;
   });
   var result = AKS.Analytics.OperationalService.preview(
     { season: "2026-2027" }, fixture.options);
