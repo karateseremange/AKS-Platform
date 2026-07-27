@@ -33,7 +33,7 @@ AKS.Modules.Analytics.Module = Object.freeze({
       available: true,
       authorized: true,
       external: false,
-      priority: 20,
+      priority: 10,
       quickAction: true
     }];
   },
