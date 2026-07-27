@@ -70,16 +70,37 @@ AKS.Analytics.SheetsProvider = (function () {
     };
   }
 
-  function rows_(values, sheetName) {
+  function headerIndex_(values, sheetName, requiredHeaders) {
     if (!values || !values.length) {
       throw error_("ANALYTICS_SHEETS_REQUIRED_SHEET_MISSING",
         "La feuille obligatoire est absente ou vide : " + sheetName, { sheet: sheetName });
     }
-    var headers = values[0].map(text_);
+    var headerIndex = -1;
+    var bestMissing = requiredHeaders.slice();
+    values.forEach(function (valuesRow, index) {
+      if (headerIndex !== -1) return;
+      var actual = valuesRow.map(text_);
+      var missing = requiredHeaders.filter(function (header) {
+        return actual.indexOf(header) === -1;
+      });
+      if (missing.length < bestMissing.length) bestMissing = missing;
+      if (!missing.length) headerIndex = index;
+    });
+    if (headerIndex === -1) {
+      throw error_("ANALYTICS_SHEETS_COLUMNS_MISSING",
+        "Colonnes obligatoires absentes de " + sheetName + " : " + bestMissing.join(", "),
+        { sheet: sheetName, columns: bestMissing });
+    }
+    return headerIndex;
+  }
+
+  function rows_(values, sheetName, requiredHeaders) {
+    var headerIndex = headerIndex_(values, sheetName, requiredHeaders);
+    var headers = values[headerIndex].map(text_);
     var result = [];
-    values.slice(1).forEach(function (valuesRow, index) {
+    values.slice(headerIndex + 1).forEach(function (valuesRow, index) {
       if (!valuesRow.some(function (value) { return text_(value) !== ""; })) return;
-      var row = { __row: index + 2 };
+      var row = { __row: headerIndex + index + 2 };
       headers.forEach(function (header, column) {
         if (header) row[header] = valuesRow[column];
       });
@@ -90,20 +111,14 @@ AKS.Analytics.SheetsProvider = (function () {
 
   function configuration_(values) {
     var config = {};
-    rows_(values, "Configuration").forEach(function (row) {
+    rows_(values, "Configuration", ["Clé", "Valeur"]).forEach(function (row) {
       config[text_(row.Clé)] = text_(row.Valeur);
     });
     return config;
   }
 
   function assertHeaders_(values, sheetName, headers) {
-    var actual = (values && values[0] || []).map(text_);
-    var missing = headers.filter(function (header) { return actual.indexOf(header) === -1; });
-    if (missing.length) {
-      throw error_("ANALYTICS_SHEETS_COLUMNS_MISSING",
-        "Colonnes obligatoires absentes de " + sheetName + " : " + missing.join(", "),
-        { sheet: sheetName, columns: missing });
-    }
+    headerIndex_(values, sheetName, headers);
   }
 
   function loadCourse_(courseCode, season, spreadsheetId, adapter) {
@@ -132,7 +147,8 @@ AKS.Analytics.SheetsProvider = (function () {
           "Le classeur ne correspond pas à la saison, au cours ou à la version attendue.");
       }
 
-      var members = rows_(values.Licenciés, "Licenciés").map(function (row) {
+      var members = rows_(values.Licenciés, "Licenciés",
+        ["ID licencié", "Numéro licence FFK", "Date entrée", "Date sortie"]).map(function (row) {
         return {
           licencie_id: text_(row["ID licencié"]),
           numero_licence: text_(row["Numéro licence FFK"]) || null,
@@ -141,10 +157,12 @@ AKS.Analytics.SheetsProvider = (function () {
         };
       });
       var sessions = {};
-      rows_(values.Séances, "Séances").forEach(function (row) {
+      rows_(values.Séances, "Séances",
+        ["ID séance", "Date séance", "État"]).forEach(function (row) {
         sessions[dateText_(row["Date séance"])] = text_(row.État).toUpperCase();
       });
-      var attendances = rows_(values.Présences, "Présences").map(function (row) {
+      var attendances = rows_(values.Présences, "Présences",
+        ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]).map(function (row) {
         var sessionDate = dateText_(row["Date séance"]);
         return {
           session_date: sessionDate,
