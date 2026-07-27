@@ -6,7 +6,8 @@ Ce livrable définit la source de données officielle d’AKS Analytics et son
 adaptateur Google Sheets en lecture seule.
 
 Un classeur distinct est utilisé pour chacun des cours `BABY`, `ENFANT_1`,
-`ENFANT_2` et `ADO_ADULTE`. Les quatre classeurs partagent strictement la même
+`ENFANT_2` et `ADO_ADULTE`, auxquels s’ajoute `FEMININ` à partir de
+`2026-2027`. Tous les classeurs partagent strictement la même
 structure. Le cours féminin reste hors périmètre pour la saison 2025-2026.
 
 ## Feuilles obligatoires
@@ -69,6 +70,7 @@ Les classeurs sont identifiés exclusivement par leurs IDs :
 - `analytics.sheets.enfant1SpreadsheetId`
 - `analytics.sheets.enfant2SpreadsheetId`
 - `analytics.sheets.adoAdulteSpreadsheetId`
+- `analytics.sheets.femininSpreadsheetId` (requis à partir de `2026-2027`)
 
 ## Garanties du fournisseur
 
