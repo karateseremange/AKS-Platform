@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AdminFoundationStyle"); ?>
+    <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-admin-shell" data-analytics-root>
+      <header class="aks-admin-header">
+        <div>
+          <p class="aks-admin-eyebrow">Centre de pilotage</p>
+          <h1>AKS Analytics</h1>
+          <p class="aks-admin-subtitle">Contrôler, prévisualiser et publier les rapports de saison.</p>
+        </div>
+        <div class="aks-admin-user"><?= viewModel.administrator.email ?></div>
+      </header>
+
+      <a class="aks-analytics-back" href="<?= viewModel.navigation.homeTarget ?>">← Retour au Centre de pilotage</a>
+
+      <section class="aks-admin-card aks-analytics-controls" aria-labelledby="analytics-season-title">
+        <div>
+          <p class="aks-admin-card__kicker">Périmètre</p>
+          <h2 id="analytics-season-title">Saison</h2>
+        </div>
+        <label for="analytics-season">Saison à analyser</label>
+        <input id="analytics-season" inputmode="numeric" pattern="\d{4}-\d{4}"
+          value="<?= viewModel.season ?>" placeholder="2026-2027" required>
+        <div class="aks-analytics-actions">
+          <button type="button" data-action="diagnose">Contrôler les sources</button>
+          <button type="button" data-action="preview" disabled>Prévisualiser les rapports</button>
+        </div>
+      </section>
+
+      <div class="aks-analytics-status" role="status" aria-live="polite" data-status>
+        Sélectionnez une saison puis contrôlez les quatre sources.
+      </div>
+
+      <section class="aks-admin-card" aria-labelledby="analytics-diagnostic-title">
+        <h2 id="analytics-diagnostic-title">Diagnostic</h2>
+        <div data-diagnostic class="aks-analytics-empty">Aucun contrôle effectué.</div>
+      </section>
+
+      <section class="aks-admin-card aks-admin-card--wide" aria-labelledby="analytics-reports-title">
+        <h2 id="analytics-reports-title">Aperçu des cinq rapports</h2>
+        <div data-reports class="aks-analytics-report-grid">
+          <p class="aks-analytics-empty">L’aperçu sera disponible après un contrôle valide.</p>
+        </div>
+      </section>
+
+      <section class="aks-admin-card aks-analytics-publish" aria-labelledby="analytics-publish-title">
+        <h2 id="analytics-publish-title">Publication</h2>
+        <p>La publication crée cinq PDF uniquement après votre confirmation explicite.</p>
+        <label class="aks-analytics-confirm">
+          <input type="checkbox" data-confirm disabled>
+          Je confirme la publication des cinq rapports prévisualisés.
+        </label>
+        <button type="button" data-action="publish" disabled>Publier les cinq PDF</button>
+        <div data-publication></div>
+      </section>
+    </main>
+    <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsClient"); ?>
+  </body>
+</html>
