@@ -274,7 +274,9 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets modèle officiel", test: AKS_testAnalyticsSheets_loadsOfficialModel_ }
     ,{ name: "ANALYTICS / Sheets en-têtes après préambule", test: AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_ }
     ,{ name: "ANALYTICS / Sheets saison", test: AKS_testAnalyticsSheets_rejectsInvalidSeason_ }
-    ,{ name: "ANALYTICS / Sheets quatre IDs", test: AKS_testAnalyticsSheets_requiresFourIds_ }
+    ,{ name: "ANALYTICS / Sheets IDs attendus", test: AKS_testAnalyticsSheets_requiresExpectedIds_ }
+    ,{ name: "ANALYTICS / Sheets périmètre historique", test: AKS_testAnalyticsSheets_keepsFourHistoricalCourses_ }
+    ,{ name: "ANALYTICS / Sheets source conforme vide", test: AKS_testAnalyticsSheets_distinguishesConformingEmptySource_ }
     ,{ name: "ANALYTICS / Sheets feuille obligatoire", test: AKS_testAnalyticsSheets_detectsMissingSheet_ }
     ,{ name: "ANALYTICS / Sheets colonnes", test: AKS_testAnalyticsSheets_detectsMissingColumn_ }
     ,{ name: "ANALYTICS / Sheets identité modèle", test: AKS_testAnalyticsSheets_validatesModelIdentity_ }
