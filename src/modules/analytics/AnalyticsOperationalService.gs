@@ -111,11 +111,14 @@ AKS.Analytics.OperationalService = (function () {
     request = request || {};
     options = options || {};
     var dependencies = dependencies_(options);
-    var source = dependencies.sheets.load({
+    var sheetsRequest = {
       season: request.season,
-      spreadsheet_ids: request.spreadsheet_ids,
       adapter: options.sheets_adapter
-    });
+    };
+    if (Object.prototype.hasOwnProperty.call(request, "spreadsheet_ids")) {
+      sheetsRequest.spreadsheet_ids = request.spreadsheet_ids;
+    }
+    var source = dependencies.sheets.load(sheetsRequest);
     var orchestration = dependencies.orchestrator.run(source.orchestrator_input);
     var restitution = dependencies.restitution.build(orchestration);
     var content = dependencies.content.build(restitution);
