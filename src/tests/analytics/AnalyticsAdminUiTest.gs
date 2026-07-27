@@ -6,12 +6,15 @@ function AKS_analyticsAdminFixture_(overrides) {
     publishable: true,
     confirmation_token: "TOKEN-CURRENT",
     diagnostic: {
-      source_summary: { expected_count: 4, valid_count: 4, error_count: 0 },
-      orchestration_summary: { exploitable_count: 4, failed_count: 0 },
+      source_summary: {
+        expected_count: 5, valid_count: 5, conforming_count: 5,
+        non_calculable_count: 0, error_count: 0
+      },
+      orchestration_summary: { exploitable_count: 5, failed_count: 0 },
       validation_marker_count: 0,
       errors: []
     },
-    reports: ["BABY", "ENFANT_1", "ENFANT_2", "ADO_ADULTE", "GLOBAL"].map(function (code) {
+    reports: ["BABY", "ENFANT_1", "ENFANT_2", "ADO_ADULTE", "FEMININ", "GLOBAL"].map(function (code) {
       return {
         report_code: code,
         report_type: code === "GLOBAL" ? "GLOBAL" : "COURS",
@@ -41,7 +44,7 @@ function AKS_analyticsAdminFixture_(overrides) {
       calls.publishRequest = request;
       return {
         season: request.season,
-        document_count: 5,
+        document_count: 6,
         publication_folder_id: "PUB-1",
         publication_folder_url: "https://drive.google.com/drive/folders/PUB-1",
         documents: []
@@ -96,7 +99,7 @@ function AKS_testAnalyticsAdmin_previewDelegatesWithoutPublishing_() {
   var model = fixture.controller.preview({ season: "2026-2027" });
   assertEquals_(1, fixture.calls.preview);
   assertEquals_(0, fixture.calls.publish);
-  assertEquals_(5, model.reports.length);
+  assertEquals_(6, model.reports.length);
   assertEquals_("TOKEN-CURRENT", model.confirmationToken);
 }
 
@@ -142,7 +145,7 @@ function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
   assertEquals_(true, source.indexOf('role="status"') !== -1);
   assertEquals_(true, source.indexOf('aria-live="polite"') !== -1);
   assertEquals_(true, source.indexOf("Je confirme la publication") !== -1);
-  assertEquals_(true, source.indexOf("Aperçu des cinq rapports") !== -1);
+  assertEquals_(true, source.indexOf("Aperçu des rapports") !== -1);
 }
 
 function AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_() {
