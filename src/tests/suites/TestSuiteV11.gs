@@ -260,7 +260,17 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / rapports PDF quota Google", test: AKS_testAnalyticsPdf_mapsGoogleQuotaFailure_ },
     { name: "ANALYTICS / rapports PDF MIME", test: AKS_testAnalyticsPdf_rejectsInvalidMimeType_ },
     { name: "ANALYTICS / rapports PDF signature", test: AKS_testAnalyticsPdf_rejectsInvalidSignature_ },
-    { name: "ANALYTICS / rapports PDF GOLD-006", test: AKS_testAnalyticsPdf_matchesGold006_ }
+    { name: "ANALYTICS / rapports PDF GOLD-006", test: AKS_testAnalyticsPdf_matchesGold006_ },
+    { name: "ANALYTICS / Drive racine par ID", test: AKS_testAnalyticsDrive_requiresConfiguredRootId_ },
+    { name: "ANALYTICS / Drive saison valide", test: AKS_testAnalyticsDrive_rejectsInvalidSeasonBeforeWrite_ },
+    { name: "ANALYTICS / Drive lot complet", test: AKS_testAnalyticsDrive_rejectsIncompleteBatchBeforeWrite_ },
+    { name: "ANALYTICS / Drive arborescence", test: AKS_testAnalyticsDrive_createsControlledSeasonTree_ },
+    { name: "ANALYTICS / Drive traçabilité", test: AKS_testAnalyticsDrive_exposesIdsUrlsAndSourceTrace_ },
+    { name: "ANALYTICS / Drive archivage", test: AKS_testAnalyticsDrive_archivesPreviousPublication_ },
+    { name: "ANALYTICS / Drive échec partiel", test: AKS_testAnalyticsDrive_trashesPreparationOnPartialFailure_ },
+    { name: "ANALYTICS / Drive restauration", test: AKS_testAnalyticsDrive_restoresCurrentWhenPromotionFails_ },
+    { name: "ANALYTICS / Drive collision", test: AKS_testAnalyticsDrive_detectsControlledFolderCollision_ },
+    { name: "ANALYTICS / Drive journalisation", test: AKS_testAnalyticsDrive_logsOnlyPublicationMetadata_ }
   ]);
 }
 
