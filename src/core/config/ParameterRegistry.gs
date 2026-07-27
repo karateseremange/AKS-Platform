@@ -211,6 +211,42 @@ function AKS_createPlatformParameterRegistry_() {
       scope: "integration",
       required: false,
       administrable: true
+    },
+    {
+      key: "analytics.sheets.babySpreadsheetId",
+      label: "Classeur Analytics — Baby",
+      description: "Identifiant du classeur Google Sheets officiel du cours Baby.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
+    },
+    {
+      key: "analytics.sheets.enfant1SpreadsheetId",
+      label: "Classeur Analytics — Enfant 1",
+      description: "Identifiant du classeur Google Sheets officiel du cours Enfant 1.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
+    },
+    {
+      key: "analytics.sheets.enfant2SpreadsheetId",
+      label: "Classeur Analytics — Enfant 2",
+      description: "Identifiant du classeur Google Sheets officiel du cours Enfant 2.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
+    },
+    {
+      key: "analytics.sheets.adoAdulteSpreadsheetId",
+      label: "Classeur Analytics — Ado/Adulte",
+      description: "Identifiant du classeur Google Sheets officiel du cours Ado/Adulte.",
+      type: "resourceId",
+      scope: "integration",
+      required: false,
+      administrable: true
     }
   ].forEach(registry.register);
 

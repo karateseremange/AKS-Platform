@@ -271,6 +271,16 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / Drive restauration", test: AKS_testAnalyticsDrive_restoresCurrentWhenPromotionFails_ },
     { name: "ANALYTICS / Drive collision", test: AKS_testAnalyticsDrive_detectsControlledFolderCollision_ },
     { name: "ANALYTICS / Drive journalisation", test: AKS_testAnalyticsDrive_logsOnlyPublicationMetadata_ }
+    ,{ name: "ANALYTICS / Sheets modèle officiel", test: AKS_testAnalyticsSheets_loadsOfficialModel_ }
+    ,{ name: "ANALYTICS / Sheets saison", test: AKS_testAnalyticsSheets_rejectsInvalidSeason_ }
+    ,{ name: "ANALYTICS / Sheets quatre IDs", test: AKS_testAnalyticsSheets_requiresFourIds_ }
+    ,{ name: "ANALYTICS / Sheets feuille obligatoire", test: AKS_testAnalyticsSheets_detectsMissingSheet_ }
+    ,{ name: "ANALYTICS / Sheets colonnes", test: AKS_testAnalyticsSheets_detectsMissingColumn_ }
+    ,{ name: "ANALYTICS / Sheets identité modèle", test: AKS_testAnalyticsSheets_validatesModelIdentity_ }
+    ,{ name: "ANALYTICS / Sheets vide non renseigné", test: AKS_testAnalyticsSheets_preservesBlankAsUnknown_ }
+    ,{ name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ }
+    ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
+    ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
   ]);
 }
 
