@@ -15,10 +15,14 @@ function AKS_analyticsAdminFixture_(overrides) {
       errors: []
     },
     reports: ["BABY", "ENFANT_1", "ENFANT_2", "ADO_ADULTE", "FEMININ", "GLOBAL"].map(function (code) {
+      var courseLabels = {
+        BABY: "Baby", ENFANT_1: "Enfant 1", ENFANT_2: "Enfant 2",
+        ADO_ADULTE: "Ado/Adulte", FEMININ: "Cours féminin"
+      };
       return {
         report_code: code,
         report_type: code === "GLOBAL" ? "GLOBAL" : "COURS",
-        course: code === "GLOBAL" ? null : code,
+        course: code === "GLOBAL" ? null : courseLabels[code],
         state: "VALIDE",
         file_name: code + ".html",
         html: "<p>" + code + "</p>"
@@ -100,6 +104,10 @@ function AKS_testAnalyticsAdmin_previewDelegatesWithoutPublishing_() {
   assertEquals_(1, fixture.calls.preview);
   assertEquals_(0, fixture.calls.publish);
   assertEquals_(6, model.reports.length);
+  assertEquals_("Baby", model.reports[0].label);
+  assertEquals_("Cours féminin", model.reports[4].label);
+  assertEquals_("Rapport global", model.reports[5].label);
+  assertEquals_("<p>BABY</p>", model.reports[0].html);
   assertEquals_("TOKEN-CURRENT", model.confirmationToken);
 }
 
@@ -138,6 +146,10 @@ function AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_() {
   assertEquals_(true, source.indexOf("resetPreview_") !== -1);
   assertEquals_(true, source.indexOf("confirmed: true") !== -1);
   assertEquals_(true, source.indexOf("withFailureHandler") !== -1);
+  assertEquals_(true, source.indexOf('document.createElement("iframe")') !== -1);
+  assertEquals_(true, source.indexOf("frame.srcdoc = report.html") !== -1);
+  assertEquals_(-1, source.indexOf('srcdoc="' + " +"));
+
 }
 
 function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
