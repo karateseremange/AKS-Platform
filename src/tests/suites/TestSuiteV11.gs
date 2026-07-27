@@ -300,6 +300,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / saison invalide bloquée", test: AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_ }
     ,{ name: "ANALYTICS / client anti-doublon et aperçu périmé", test: AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_ }
     ,{ name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ }
+    ,{ name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ }
     ,{ name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }
   ]);
 }
