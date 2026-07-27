@@ -272,6 +272,7 @@ function AKS_runValidationSuiteV11() {
     { name: "ANALYTICS / Drive collision", test: AKS_testAnalyticsDrive_detectsControlledFolderCollision_ },
     { name: "ANALYTICS / Drive journalisation", test: AKS_testAnalyticsDrive_logsOnlyPublicationMetadata_ }
     ,{ name: "ANALYTICS / Sheets modèle officiel", test: AKS_testAnalyticsSheets_loadsOfficialModel_ }
+    ,{ name: "ANALYTICS / Sheets en-têtes après préambule", test: AKS_testAnalyticsSheets_detectsHeadersAfterPreamble_ }
     ,{ name: "ANALYTICS / Sheets saison", test: AKS_testAnalyticsSheets_rejectsInvalidSeason_ }
     ,{ name: "ANALYTICS / Sheets quatre IDs", test: AKS_testAnalyticsSheets_requiresFourIds_ }
     ,{ name: "ANALYTICS / Sheets feuille obligatoire", test: AKS_testAnalyticsSheets_detectsMissingSheet_ }
