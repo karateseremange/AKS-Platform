@@ -349,9 +349,30 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
         })
         .slice(0, 20);
       var eligibleMembers = eligible_(context.book, sessionDate);
+      var matchingSessions = sessions.filter(function (session) {
+        return session.date === sessionDate;
+      });
+      if (matchingSessions.length > 1) {
+        throw failure_("ATTENDANCE_SESSION_DUPLICATE",
+          "Plusieurs séances correspondent à la date sélectionnée.");
+      }
+      var currentSession = matchingSessions[0] || null;
+      if (currentSession) {
+        var attendanceRows = objects_(context.book.getSheetByName("Présences"),
+          ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]);
+        currentSession.attendances = attendanceRows.filter(function (row) {
+          return text_(row["ID séance"]) === currentSession.id;
+        }).map(function (row) {
+          return {
+            licencieId: text_(row["ID licencié"]),
+            status: text_(row.Statut).toUpperCase()
+          };
+        });
+      }
       return {
         eligibleCount: eligibleMembers.length,
         eligibleMembers: eligibleMembers,
+        currentSession: currentSession,
         sessions: sessions
       };
     }
