@@ -123,8 +123,16 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
         var entry = dateText_(row["Date entrée"], timeZone_(book));
         var exit = dateText_(row["Date sortie"], timeZone_(book));
         return (!entry || entry <= sessionDate) && (!exit || exit >= sessionDate);
-      }).map(function (row) { return { id: text_(row["ID licencié"]) }; })
-      .filter(function (member) { return member.id !== ""; });
+      }).map(function (row) {
+        var firstName = text_(row["Prénom"] || row["Prenom"]);
+        var lastName = text_(row["Nom"]);
+        return {
+          id: text_(row["ID licencié"]),
+          displayName: [lastName, firstName].filter(function (value) {
+            return value !== "";
+          }).join(" ") || text_(row["ID licencié"])
+        };
+      }).filter(function (member) { return member.id !== ""; });
   }
 
   function rowObject_(names, values) {
@@ -340,8 +348,10 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
           return left.date < right.date ? 1 : (left.date > right.date ? -1 : 0);
         })
         .slice(0, 20);
+      var eligibleMembers = eligible_(context.book, sessionDate);
       return {
-        eligibleCount: eligible_(context.book, sessionDate).length,
+        eligibleCount: eligibleMembers.length,
+        eligibleMembers: eligibleMembers,
         sessions: sessions
       };
     }
