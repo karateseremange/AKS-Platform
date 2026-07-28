@@ -348,6 +348,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS-SAISIE-003 / parcours mobile", test: AKS_testAnalyticsSaisie003_exposesMobilePage_ }
     ,{ name: "ANALYTICS-SAISIE-003 / retour accessible", test: AKS_testAnalyticsSaisie003_hasAccessibleFeedback_ }
     ,{ name: "ANALYTICS-SAISIE-003 / cibles mobiles", test: AKS_testAnalyticsSaisie003_hasMobileTargets_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / roster nettoyé", test: AKS_testAnalyticsSaisie004_returnsSafeEligibleRoster_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / reprise brouillon", test: AKS_testAnalyticsSaisie004_returnsResumableDraft_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / statuts rapides", test: AKS_testAnalyticsSaisie004_exposesRapidStatusControls_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / sauvegarde versionnée", test: AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_ }
     ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }

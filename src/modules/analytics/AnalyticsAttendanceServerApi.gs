@@ -110,6 +110,24 @@ function AKS_createAttendanceServerApi_(options) {
           season: season,
           sessionDate: sessionDate,
           eligibleCount: Number(workspace.eligibleCount || 0),
+          eligibleMembers: (workspace.eligibleMembers || []).map(function (member) {
+            return {
+              id: String(member.id || ""),
+              displayName: String(member.displayName || member.id || "")
+            };
+          }),
+          currentSession: workspace.currentSession ? {
+            id: String(workspace.currentSession.id || ""),
+            date: String(workspace.currentSession.date || ""),
+            workflowState: String(workspace.currentSession.workflowState || ""),
+            version: Number(workspace.currentSession.version || 0),
+            attendances: (workspace.currentSession.attendances || []).map(function (entry) {
+              return {
+                licencieId: String(entry.licencieId || ""),
+                status: String(entry.status || "")
+              };
+            })
+          } : null,
           sessions: (workspace.sessions || []).map(function (session) {
             return {
               id: String(session.id || ""),
