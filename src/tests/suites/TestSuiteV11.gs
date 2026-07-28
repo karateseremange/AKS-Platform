@@ -342,6 +342,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
+    ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
+    ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
+    ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
   ]);
 }
 
