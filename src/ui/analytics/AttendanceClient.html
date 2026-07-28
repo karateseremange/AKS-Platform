@@ -16,6 +16,7 @@
   var empty = document.getElementById("session-empty");
   var count = document.getElementById("eligible-count");
   var feedback = document.getElementById("feedback");
+  var actionFeedback = document.getElementById("attendance-action-feedback");
   var members = [];
   var statuses = {};
   var currentSession = null;
@@ -38,8 +39,13 @@
     });
   }
 
+  function announce(message, nearActions) {
+    feedback.textContent = message || "";
+    actionFeedback.textContent = nearActions ? (message || "") : "";
+  }
+
   function showError(message) {
-    feedback.textContent = message || "Le service est temporairement indisponible.";
+    announce(message || "Le service est temporairement indisponible.", true);
   }
 
   function submissionId() {
@@ -116,13 +122,16 @@
     renderRoster();
   }
 
-  function loadWorkspace() {
+  function loadWorkspace(successMessage) {
     if (!course.value || !date.value || busy) return;
     var parts = course.value.split("|");
     setBusy(true);
     feedback.textContent = "Chargement des séances…";
     var runner = google.script.run
-      .withSuccessHandler(render)
+      .withSuccessHandler(function (response) {
+        render(response);
+        if (successMessage) announce(successMessage, true);
+      })
       .withFailureHandler(function () {
         setBusy(false);
         showError();
@@ -158,10 +167,10 @@
           showError(response && response.error && response.error.message);
           return;
         }
-        feedback.textContent = closing ?
+        var successMessage = closing ?
           "Séance clôturée — version " + response.version + "." :
           "Brouillon enregistré — version " + response.version + ".";
-        loadWorkspace();
+        loadWorkspace(successMessage);
       })
       .withFailureHandler(function () {
         setBusy(false);

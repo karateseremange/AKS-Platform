@@ -92,8 +92,9 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
 function AKS_testAnalyticsSaisie003_hasAccessibleFeedback_() {
   var source = AKS_includeAttendanceFile_("ui/analytics/Attendance");
   AKS_assertAnalyticsSaisie003_(source.indexOf('aria-live="polite"') !== -1 &&
-    source.indexOf('role="status"') !== -1,
-    "Les retours doivent être annoncés aux technologies d'assistance.");
+    source.indexOf('role="status"') !== -1 &&
+    source.indexOf('id="attendance-action-feedback"') !== -1,
+    "Les retours doivent être annoncés aux technologies d'assistance près des actions mobiles.");
 }
 
 function AKS_testAnalyticsSaisie003_hasMobileTargets_() {
@@ -184,6 +185,9 @@ function AKS_testAnalyticsSaisie004_exposesRapidStatusControls_() {
 
 function AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_() {
   var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(client.indexOf("loadWorkspace(successMessage)") !== -1 &&
+    client.indexOf("announce(successMessage, true)") !== -1,
+    "La confirmation doit rester visible près des actions après le rechargement.");
   AKS_assertAnalyticsSaisie003_(client.indexOf(".AKS_saveAttendanceBatch") !== -1 &&
     client.indexOf('saveBatch("BROUILLON")') !== -1 &&
     client.indexOf("targetState: targetState") !== -1,
