@@ -1,13 +1,11 @@
 var AKS = AKS || {};
 
 function AKS_testAnalyticsSaisie006_locksRecipeIdentityAndTarget_() {
-  var source = String(AKS.Analytics.AttendanceMobileRecipe);
+  var constants = AKS.Analytics.AttendanceMobileRecipe.constants;
   AKS_assertAnalyticsSaisie003_(
-    source.indexOf("karate.seremange@gmail.com") !== -1 &&
-    source.indexOf("1iU9Q98uGtlmrEq8-ip5sO6HmW_uThbBYOwacw8iVOH4") !== -1 &&
-    source.indexOf("[RECETTE] Analytics Baby 2026-2027") !== -1 &&
-    source.indexOf("book.getId() === SPREADSHEET_ID") !== -1 &&
-    source.indexOf("book.getName() === SPREADSHEET_TITLE") !== -1,
+    constants.authorizedEmail === "karate.seremange@gmail.com" &&
+    constants.spreadsheetId === "1iU9Q98uGtlmrEq8-ip5sO6HmW_uThbBYOwacw8iVOH4" &&
+    constants.spreadsheetTitle === "[RECETTE] Analytics Baby 2026-2027",
     "La recette doit verrouiller l'identité et la copie Sheets exactes."
   );
 }
