@@ -139,11 +139,20 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
     }
   }
 
-  function create() {
+  function create(options) {
+    options = options || {};
+
+    function spreadsheetId_(courseCode, key) {
+      if (typeof options.spreadsheet_id_resolver === "function") {
+        return text_(options.spreadsheet_id_resolver(courseCode));
+      }
+      return property_(key);
+    }
+
     function resolve(courseCode, season) {
       var key = COURSE_PROPERTIES[courseCode];
       if (!key) throw failure_("ACCESS_SCOPE_INVALID", "Le cours est inconnu.");
-      var spreadsheetId = property_(key);
+      var spreadsheetId = spreadsheetId_(courseCode, key);
       if (!spreadsheetId) throw failure_("ATTENDANCE_WRITE_FAILED", "Classeur non configuré.");
       var book = SpreadsheetApp.openById(spreadsheetId);
       var configuration = config_(book);
