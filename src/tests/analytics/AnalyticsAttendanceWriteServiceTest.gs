@@ -260,9 +260,51 @@ function AKS_testAttendanceWrite_reportsRollbackFailure_() {
   assertEquals_("ATTENDANCE_ROLLBACK_FAILED", fixture.state.critical);
 }
 
+
+function AKS_testAttendanceWrite_deniesBeforeRepositoryRead_() {
+  var fixture = AKS_attendanceWriteFixture_();
+  var resolved = false;
+  fixture.options.access.assertCapability = function () {
+    var failure = new Error("refus");
+    failure.code = "ACCESS_DENIED";
+    throw failure;
+  };
+  fixture.options.resolver.resolve = function () {
+    resolved = true;
+    throw new Error("Le dépôt ne doit pas être lu.");
+  };
+  assertThrows_(function () {
+    AKS.Analytics.AttendanceWriteService.saveAttendanceBatch(
+      AKS_attendanceCommand_(), fixture.options);
+  }, "ACCESS_DENIED");
+  assertTrue_(!resolved, "Le classeur ne doit pas être résolu avant autorisation.");
+}
+
+function AKS_testAttendanceWrite_composesCentralAccessByDefault_() {
+  var fixture = AKS_attendanceWriteFixture_();
+  var capabilities = [];
+  var factoryCalled = false;
+  delete fixture.options.access;
+  fixture.options.access_factory = function (courseProvider) {
+    factoryCalled = !!courseProvider && typeof courseProvider.list === "function";
+    return {
+      assertCapability: function (capability) { capabilities.push(capability); },
+      getCurrentIdentity: function () { return "professeur@example.fr"; }
+    };
+  };
+  var result = AKS.Analytics.AttendanceWriteService.saveAttendanceBatch(
+    AKS_attendanceCommand_(), fixture.options);
+  assertTrue_(result.ok);
+  assertTrue_(factoryCalled, "Le fournisseur de cours doit alimenter ACCESS-001.");
+  assertEquals_("ATTENDANCE_READ", capabilities[0]);
+  assertEquals_("SESSION_CREATE", capabilities[1]);
+}
+
 function AKS_runAnalyticsAttendanceWriteSuite() {
   return AKS_runNamedTestSuite_("ANALYTICS-SAISIE-002 — écriture", [
     { name: "création brouillon", test: AKS_testAttendanceWrite_createsDraftBatch_ },
+    { name: "refus avant lecture", test: AKS_testAttendanceWrite_deniesBeforeRepositoryRead_ },
+    { name: "accès central composé", test: AKS_testAttendanceWrite_composesCentralAccessByDefault_ },
     { name: "rejeu identique", test: AKS_testAttendanceWrite_replaysIdenticalSubmission_ },
     { name: "rejeu divergent", test: AKS_testAttendanceWrite_rejectsDivergentReplay_ },
     { name: "brouillon incomplet", test: AKS_testAttendanceWrite_acceptsIncompleteDraft_ },
