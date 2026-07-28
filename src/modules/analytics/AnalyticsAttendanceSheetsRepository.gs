@@ -35,11 +35,16 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
     return value === null || typeof value === "undefined" ? "" : String(value).trim();
   }
 
-  function dateText_(value) {
+  function dateText_(value, timeZone) {
     if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
-      return Utilities.formatDate(value, "UTC", "yyyy-MM-dd");
+      return Utilities.formatDate(value, timeZone || "UTC", "yyyy-MM-dd");
     }
     return text_(value);
+  }
+
+  function timeZone_(book) {
+    return text_(book && book.getSpreadsheetTimeZone &&
+      book.getSpreadsheetTimeZone()) || Session.getScriptTimeZone() || "UTC";
   }
 
   function property_(key) {
@@ -115,8 +120,8 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
     if (!sheet) throw failure_("ATTENDANCE_WRITE_FAILED", "Feuille Licenciés absente.");
     return objects_(sheet, ["ID licencié", "Date entrée", "Date sortie"])
       .filter(function (row) {
-        var entry = dateText_(row["Date entrée"]);
-        var exit = dateText_(row["Date sortie"]);
+        var entry = dateText_(row["Date entrée"], timeZone_(book));
+        var exit = dateText_(row["Date sortie"], timeZone_(book));
         return (!entry || entry <= sessionDate) && (!exit || exit >= sessionDate);
       }).map(function (row) { return { id: text_(row["ID licencié"]) }; })
       .filter(function (member) { return member.id !== ""; });
@@ -175,13 +180,13 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
         .filter(function (row) {
           return sessionId ?
             text_(row["ID séance"]) === sessionId :
-            dateText_(row["Date séance"]) === sessionDate;
+            dateText_(row["Date séance"], timeZone_(context.book)) === sessionDate;
         });
       if (matches.length > 1) {
         throw failure_("ATTENDANCE_SESSION_DUPLICATE", "Plusieurs séances correspondent.");
       }
       var row = matches[0];
-      var date = row ? dateText_(row["Date séance"]) : sessionDate;
+      var date = row ? dateText_(row["Date séance"], timeZone_(context.book)) : sessionDate;
       context.eligibleMembers = eligible_(context.book, date);
       return row ? {
         id: text_(row["ID séance"]),
@@ -237,7 +242,7 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
           var legacySameDate = !text_(row["ID séance"]) &&
             text_(row.Saison) === context.season &&
             text_(row.Cours) === context.courseCode &&
-            dateText_(row["Date séance"]) === session.date;
+            dateText_(row["Date séance"], timeZone_(context.book)) === session.date;
           return !sameId && !legacySameDate;
         });
       var rows = attendanceObjects.map(function (row) {

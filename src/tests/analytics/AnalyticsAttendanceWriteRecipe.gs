@@ -115,9 +115,9 @@ AKS.Analytics.AttendanceWriteRecipe = (function () {
     var repository = repository_();
     var context = repository.resolver.resolve(COURSE_CODE, SEASON);
     var existing = repository.adapter.findSession(context, "", SESSION_DATE);
-    if (existing) {
+    if (existing && existing.workflowState !== "BROUILLON") {
       throw failure_("RECIPE_ALREADY_EXECUTED",
-        "Une séance existe déjà à la date de recette. Ne relancez pas la fonction.");
+        "La séance de recette est déjà clôturée.");
     }
     if (!context.eligibleMembers.length) {
       throw failure_("RECIPE_NO_ELIGIBLE_MEMBER",
@@ -129,7 +129,12 @@ AKS.Analytics.AttendanceWriteRecipe = (function () {
       resolver: repository.resolver,
       adapter: repository.adapter
     };
-    var draft = AKS.Analytics.AttendanceWriteService.saveAttendanceBatch({
+    var draft = existing ? {
+      sessionId: existing.id,
+      sessionDate: existing.date,
+      workflowState: existing.workflowState,
+      version: existing.version
+    } : AKS.Analytics.AttendanceWriteService.saveAttendanceBatch({
       courseCode: COURSE_CODE,
       season: SEASON,
       sessionDate: SESSION_DATE,

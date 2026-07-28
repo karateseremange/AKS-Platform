@@ -34,6 +34,7 @@ function AKS_analyticsSheetsOptions_(mutator) {
         return books[id];
       },
       spreadsheetId: function (book) { return book.id; },
+      spreadsheetTimeZone: function (book) { return book.timeZone || "UTC"; },
       sheetValues: function (book, name) { return book.sheets[name] || null; }
     }
   };
@@ -142,6 +143,21 @@ function AKS_testAnalyticsSheets_excludesDraftSession_() {
   assertEquals_(0, result.courses[1].attendances.length);
   assertEquals_("SAISIE_BROUILLON", result.courses[1].diagnostics.exclusions[0].code);
 }
+function AKS_testAnalyticsSheets_respectsSpreadsheetTimeZone_() {
+  var options = AKS_analyticsSheetsOptions_(function (books) {
+    var book = books["ID-BABY"];
+    book.timeZone = "Europe/Paris";
+    book.sheets.Séances[0].push("État saisie");
+    book.sheets.Séances[1][1] = new Date("2026-09-04T22:00:00.000Z");
+    book.sheets.Séances[1].push("BROUILLON");
+    book.sheets.Présences[1][2] = new Date("2026-09-04T22:00:00.000Z");
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  var baby = result.courses[1];
+  assertEquals_(0, baby.attendances.length);
+  assertEquals_("SAISIE_BROUILLON", baby.diagnostics.exclusions[0].code);
+  assertEquals_("2026-09-05", baby.diagnostics.exclusions[0].details.session_date);
+}
 function AKS_testAnalyticsSheets_readsClosedSession_() {
   var options = AKS_analyticsSheetsOptions_(function (books) {
     books["ID-BABY"].sheets.Séances[0].push("État saisie");
@@ -178,6 +194,7 @@ function AKS_runAnalyticsSheetsProviderSuite() {
     { name: "ANALYTICS / Sheets vide non renseigné", test: AKS_testAnalyticsSheets_preservesBlankAsUnknown_ },
     { name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ },
     { name: "ANALYTICS / Sheets brouillon exclu", test: AKS_testAnalyticsSheets_excludesDraftSession_ },
+    { name: "ANALYTICS / Sheets fuseau classeur", test: AKS_testAnalyticsSheets_respectsSpreadsheetTimeZone_ },
     { name: "ANALYTICS / Sheets clôture lue", test: AKS_testAnalyticsSheets_readsClosedSession_ },
     { name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ },
     { name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
