@@ -239,7 +239,15 @@ function AKS_testAnalyticsSaisie005_returnsClosedSessionToReadOnly_() {
   AKS_assertAnalyticsSaisie003_(
     client.indexOf("Séance clôturée — version ") !== -1 &&
     client.indexOf("loadWorkspace();") !== -1 &&
-    client.indexOf('workflowState === "CLOTUREE"') !== -1,
-    "Une clôture réussie doit recharger la séance en lecture seule."
+    client.indexOf('workflowState === "CLOTUREE"') !== -1 &&
+    client.indexOf("saveButton.hidden = readOnly") !== -1 &&
+    client.indexOf("button.disabled = readOnly") !== -1,
+    "Une clôture réussie doit afficher les statuts en lecture seule sans commandes d'écriture."
+  );
+  AKS_assertAnalyticsSaisie003_(
+    client.indexOf('loadButton.addEventListener("click", function () { loadWorkspace(); });') !== -1 &&
+    client.indexOf("button[data-session-date]") !== -1 &&
+    client.indexOf("sessionButton.dataset.sessionDate") !== -1,
+    "Le bouton de chargement ne doit pas transmettre l'événement comme message et les séances doivent être sélectionnables."
   );
 }

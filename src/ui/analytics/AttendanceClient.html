@@ -57,11 +57,7 @@
 
   function renderRoster() {
     roster.textContent = "";
-    if (currentSession && currentSession.workflowState === "CLOTUREE") {
-      entryCard.hidden = true;
-      feedback.textContent = "Cette séance est clôturée et disponible en lecture seule.";
-      return;
-    }
+    var readOnly = currentSession && currentSession.workflowState === "CLOTUREE";
     members.forEach(function (member) {
       var row = document.createElement("fieldset");
       row.className = "aks-attendance-member";
@@ -75,6 +71,7 @@
         button.dataset.status = status;
         button.className = statuses[member.id] === status ? "is-selected" : "";
         button.setAttribute("aria-pressed", statuses[member.id] === status ? "true" : "false");
+        button.disabled = readOnly;
         button.textContent = {
           PRESENT: "Présent", ABSENT: "Absent", EXCUSE: "Excusé",
           NON_RENSEIGNE: "À renseigner"
@@ -83,7 +80,12 @@
       });
       roster.appendChild(row);
     });
+    saveButton.hidden = readOnly;
+    closeButton.hidden = readOnly;
     entryCard.hidden = members.length === 0;
+    if (readOnly) {
+      feedback.textContent = "Cette séance est clôturée et disponible en lecture seule.";
+    }
   }
 
   function render(response) {
@@ -110,13 +112,17 @@
     empty.hidden = response.data.sessions.length !== 0;
     response.data.sessions.forEach(function (session) {
       var item = document.createElement("li");
-      item.className = "aks-attendance-session";
+      var sessionButton = document.createElement("button");
+      sessionButton.type = "button";
+      sessionButton.className = "aks-attendance-session";
+      sessionButton.dataset.sessionDate = session.date;
       var title = document.createElement("strong");
       title.textContent = session.date;
       var state = document.createElement("span");
       state.textContent = session.workflowState === "CLOTUREE" ? "Clôturée" : "Brouillon";
-      item.appendChild(title);
-      item.appendChild(state);
+      sessionButton.appendChild(title);
+      sessionButton.appendChild(state);
+      item.appendChild(sessionButton);
       list.appendChild(item);
     });
     renderRoster();
@@ -221,8 +227,14 @@
     feedback.textContent = "";
     if (course.value) loadWorkspace();
   });
-  date.addEventListener("change", loadWorkspace);
-  loadButton.addEventListener("click", loadWorkspace);
+  date.addEventListener("change", function () { loadWorkspace(); });
+  loadButton.addEventListener("click", function () { loadWorkspace(); });
+  list.addEventListener("click", function (event) {
+    var sessionButton = event.target.closest("button[data-session-date]");
+    if (!sessionButton || busy) return;
+    date.value = sessionButton.dataset.sessionDate;
+    loadWorkspace();
+  });
   saveButton.addEventListener("click", function () { saveBatch("BROUILLON"); });
   closeButton.addEventListener("click", requestClosure);
   confirmCloseButton.addEventListener("click", function () {
