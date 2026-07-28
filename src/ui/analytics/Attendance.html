@@ -9,6 +9,9 @@
       <header class="aks-attendance-header">
         <p class="aks-attendance-eyebrow">Association Karaté Serémange</p>
         <h1>Saisie des présences</h1>
+        <? if (recipeMode) { ?>
+          <p class="aks-attendance-identity">RECETTE ISOLÉE — BABY — 19/09/2026</p>
+        <? } ?>
         <? if (viewModel.ok) { ?>
           <p class="aks-attendance-identity"><?= viewModel.data.identity ?></p>
         <? } ?>
@@ -77,6 +80,7 @@
       <? } ?>
 
       <? if (viewModel.ok && viewModel.data.courses.length > 0) { ?>
+        <script>window.AKS_ATTENDANCE_RECIPE = <?!= recipeMode ? "true" : "false" ?>;</script>
         <?!= AKS_includeAttendanceFile_("ui/analytics/AttendanceClient"); ?>
       <? } ?>
     </main>
