@@ -2,11 +2,15 @@
 
 Plateforme numérique officielle de l’Association Karaté Serémange.
 
-## Version en préparation
+## Version publiée
 
-La branche `develop` contient **AKS Platform 1.1.0 — Consolidation de la plateforme**.
+La version stable de production est **AKS Platform V1.2.0**, publiée le
+28 juillet 2026.
 
-La version 1.0.0 publiée reste la référence de production sur `main` jusqu’à la validation et à la publication de la V1.1.
+- tag : `v1.2.0` ;
+- commit : `47bb3ca83eb902bc9db0867c8d41affffd3ceb47` ;
+- prochaine évolution engagée : interface de saisie des présences et contrôle
+  d’accès Analytics.
 
 ## Fonctionnalités
 
@@ -19,6 +23,10 @@ La version 1.0.0 publiée reste la référence de production sur `main` jusqu’
 - paramétrage centralisé ;
 - journalisation structurée, conservation et consultation administrative ;
 - fondations UX communes aux écrans d’administration.
+- AKS Analytics : contrôle des sources Google Sheets, consolidation, indicateurs,
+  prévisualisation et publication de rapports PDF dans Google Drive ;
+- gestion des rapports par saison et par cours, dont le cours féminin à partir de
+  2026-2027.
 
 ## Organisation
 
@@ -32,7 +40,7 @@ La version 1.0.0 publiée reste la référence de production sur `main` jusqu’
 
 Le Project Book du dépôt `AKS-Platform-ProjectBook` constitue la référence fonctionnelle et documentaire officielle.
 
-## Validation V1.1
+## Validation V1.2.0
 
 Dans Apps Script, exécuter :
 
@@ -40,7 +48,7 @@ Dans Apps Script, exécuter :
 AKS_runValidationSuiteV11
 ```
 
-État validé avant préparation de la release : **121/121 tests réussis, 0 échec**.
+État validé avant publication : **273/273 tests réussis, 0 échec**.
 
 La publication reste soumise au Quality Gate défini dans `RELEASE-001`.
 
@@ -52,4 +60,8 @@ La publication reste soumise au Quality Gate défini dans `RELEASE-001`.
 
 ## Déploiement
 
-Le déploiement Apps Script et le connecteur WordPress doivent suivre les guides d’installation correspondant à la fonctionnalité concernée. Aucun déploiement de production ne doit être réalisé directement depuis une branche de travail.
+Le déploiement Apps Script et le connecteur WordPress doivent suivre les guides
+d’installation correspondant à la fonctionnalité concernée. Avant toute
+publication Apps Script, le type du déploiement, son identifiant et ses paramètres
+d’accès doivent être vérifiés. Aucun déploiement de production ne doit être réalisé
+directement depuis une branche de travail.
