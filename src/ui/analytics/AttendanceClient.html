@@ -20,13 +20,15 @@
   var statuses = {};
   var currentSession = null;
   var busy = false;
+  var recipeMode = window.AKS_ATTENDANCE_RECIPE === true;
 
-  date.value = new Date().toISOString().slice(0, 10);
+  date.value = recipeMode ? "2026-09-19" : new Date().toISOString().slice(0, 10);
+  if (recipeMode) date.disabled = true;
 
   function setBusy(value) {
     busy = value;
     course.disabled = value;
-    date.disabled = value;
+    date.disabled = recipeMode || value;
     loadButton.disabled = value;
     saveButton.disabled = value;
     closeButton.disabled = value;
@@ -119,17 +121,22 @@
     var parts = course.value.split("|");
     setBusy(true);
     feedback.textContent = "Chargement des séances…";
-    google.script.run
+    var runner = google.script.run
       .withSuccessHandler(render)
       .withFailureHandler(function () {
         setBusy(false);
         showError();
-      })
-      .AKS_getAttendanceWorkspace({
-        courseCode: parts[0],
-        season: parts[1],
-        sessionDate: date.value
       });
+    var scope = {
+      courseCode: parts[0],
+      season: parts[1],
+      sessionDate: date.value
+    };
+    if (recipeMode) {
+      runner.AKS_getAttendanceRecipeWorkspace(scope);
+    } else {
+      runner.AKS_getAttendanceWorkspace(scope);
+    }
   }
 
   function saveBatch(targetState) {
@@ -144,7 +151,7 @@
     var parts = course.value.split("|");
     setBusy(true);
     feedback.textContent = closing ? "Clôture de la séance…" : "Enregistrement du brouillon…";
-    google.script.run
+    var runner = google.script.run
       .withSuccessHandler(function (response) {
         setBusy(false);
         if (!response || !response.ok) {
@@ -159,19 +166,24 @@
       .withFailureHandler(function () {
         setBusy(false);
         showError();
-      })
-      .AKS_saveAttendanceBatch({
-        courseCode: parts[0],
-        season: parts[1],
-        sessionId: currentSession ? currentSession.id : "",
-        sessionDate: currentSession ? "" : date.value,
-        expectedVersion: currentSession ? currentSession.version : 0,
-        submissionId: submissionId(),
-        targetState: targetState,
-        attendances: members.map(function (member) {
-          return { licencieId: member.id, status: statuses[member.id] };
-        })
       });
+    var command = {
+      courseCode: parts[0],
+      season: parts[1],
+      sessionId: currentSession ? currentSession.id : "",
+      sessionDate: currentSession ? "" : date.value,
+      expectedVersion: currentSession ? currentSession.version : 0,
+      submissionId: submissionId(),
+      targetState: targetState,
+      attendances: members.map(function (member) {
+        return { licencieId: member.id, status: statuses[member.id] };
+      })
+    };
+    if (recipeMode) {
+      runner.AKS_saveAttendanceRecipeBatch(command);
+    } else {
+      runner.AKS_saveAttendanceBatch(command);
+    }
   }
 
   function requestClosure() {
