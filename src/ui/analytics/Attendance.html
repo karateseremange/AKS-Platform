@@ -45,6 +45,15 @@
           </div>
           <ul id="session-list" class="aks-attendance-sessions"></ul>
         </section>
+
+        <section id="entry-card" class="aks-attendance-card" aria-labelledby="entry-title" hidden>
+          <h2 id="entry-title">3. Saisir les présences</h2>
+          <p class="aks-attendance-muted">Touchez un statut pour chaque licencié. Vous pouvez enregistrer un brouillon incomplet.</p>
+          <div id="attendance-list" class="aks-attendance-roster"></div>
+          <button id="save-draft" class="aks-attendance-primary" type="button">
+            Enregistrer le brouillon
+          </button>
+        </section>
       <? } else if (viewModel.ok) { ?>
         <section class="aks-attendance-card aks-attendance-empty">
           Aucun cours ne vous est affecté.
