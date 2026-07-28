@@ -105,3 +105,90 @@ function AKS_testAnalyticsSaisie003_hasMobileTargets_() {
     client.indexOf("withFailureHandler") !== -1,
     "Le client doit utiliser uniquement l'API serveur et gérer l'indisponibilité.");
 }
+
+
+function AKS_testAnalyticsSaisie004_returnsSafeEligibleRoster_() {
+  var api = AKS_attendanceSaisie003Api_({
+    assertCapability: function () {}
+  }, {
+    resolver: { resolve: function () { return {}; } },
+    adapter: {
+      listWorkspace: function () {
+        return {
+          eligibleCount: 1,
+          eligibleMembers: [{
+            id: "LIC-001",
+            displayName: "MARTIN Alice",
+            email: "secret@example.test"
+          }],
+          sessions: []
+        };
+      }
+    }
+  });
+  var result = api.getWorkspace({
+    courseCode: "BABY", season: "2026-2027", sessionDate: "2026-09-19"
+  });
+  AKS_assertAnalyticsSaisie003_(result.ok, "Le roster autorisé doit être retourné.");
+  AKS_assertAnalyticsSaisie003_(result.data.eligibleMembers.length === 1,
+    "Le licencié éligible doit être exposé.");
+  AKS_assertAnalyticsSaisie003_(result.data.eligibleMembers[0].displayName === "MARTIN Alice",
+    "Le libellé utile doit être conservé.");
+  AKS_assertAnalyticsSaisie003_(!("email" in result.data.eligibleMembers[0]),
+    "Aucune donnée individuelle non nécessaire ne doit être exposée.");
+}
+
+function AKS_testAnalyticsSaisie004_returnsResumableDraft_() {
+  var api = AKS_attendanceSaisie003Api_({
+    assertCapability: function () {}
+  }, {
+    resolver: { resolve: function () { return {}; } },
+    adapter: {
+      listWorkspace: function () {
+        return {
+          eligibleCount: 1,
+          eligibleMembers: [{ id: "LIC-001", displayName: "MARTIN Alice" }],
+          currentSession: {
+            id: "SEA-001", date: "2026-09-19", workflowState: "BROUILLON",
+            version: 2,
+            attendances: [{ licencieId: "LIC-001", status: "PRESENT", modifiedBy: "secret" }]
+          },
+          sessions: []
+        };
+      }
+    }
+  });
+  var result = api.getWorkspace({
+    courseCode: "BABY", season: "2026-2027", sessionDate: "2026-09-19"
+  });
+  AKS_assertAnalyticsSaisie003_(result.ok && result.data.currentSession.version === 2,
+    "La version du brouillon doit permettre une reprise sûre.");
+  AKS_assertAnalyticsSaisie003_(
+    result.data.currentSession.attendances[0].status === "PRESENT",
+    "Le statut sauvegardé doit être restauré.");
+  AKS_assertAnalyticsSaisie003_(
+    !("modifiedBy" in result.data.currentSession.attendances[0]),
+    "Les métadonnées techniques doivent rester masquées.");
+}
+
+function AKS_testAnalyticsSaisie004_exposesRapidStatusControls_() {
+  var source = AKS_includeAttendanceFile_("ui/analytics/Attendance");
+  var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(source.indexOf('id="attendance-list"') !== -1 &&
+    source.indexOf('id="save-draft"') !== -1,
+    "Le roster et la sauvegarde du brouillon doivent être présents.");
+  AKS_assertAnalyticsSaisie003_(client.indexOf('"PRESENT", "ABSENT", "EXCUSE", "NON_RENSEIGNE"') !== -1 &&
+    client.indexOf('aria-pressed') !== -1,
+    "Les quatre statuts doivent être utilisables et accessibles.");
+}
+
+function AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_() {
+  var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(client.indexOf(".AKS_saveAttendanceBatch") !== -1 &&
+    client.indexOf('targetState: "BROUILLON"') !== -1,
+    "La sauvegarde doit passer par l'API serveur en mode brouillon.");
+  AKS_assertAnalyticsSaisie003_(client.indexOf("currentSession.version") !== -1 &&
+    client.indexOf("currentSession.id") !== -1 &&
+    client.indexOf("submissionId()") !== -1,
+    "La reprise doit transmettre version, séance et clé de soumission.");
+}
