@@ -282,8 +282,25 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets identité modèle", test: AKS_testAnalyticsSheets_validatesModelIdentity_ }
     ,{ name: "ANALYTICS / Sheets vide non renseigné", test: AKS_testAnalyticsSheets_preservesBlankAsUnknown_ }
     ,{ name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ }
+    ,{ name: "ANALYTICS / Sheets brouillon exclu", test: AKS_testAnalyticsSheets_excludesDraftSession_ }
+    ,{ name: "ANALYTICS / Sheets clôture lue", test: AKS_testAnalyticsSheets_readsClosedSession_ }
     ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
     ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / création brouillon", test: AKS_testAttendanceWrite_createsDraftBatch_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / rejeu identique", test: AKS_testAttendanceWrite_replaysIdenticalSubmission_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / rejeu divergent", test: AKS_testAttendanceWrite_rejectsDivergentReplay_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / brouillon incomplet", test: AKS_testAttendanceWrite_acceptsIncompleteDraft_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / clôture incomplète", test: AKS_testAttendanceWrite_rejectsIncompleteClosure_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / clôture complète", test: AKS_testAttendanceWrite_closesCompleteSession_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / licencié inconnu", test: AKS_testAttendanceWrite_rejectsUnknownMember_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / licencié dupliqué", test: AKS_testAttendanceWrite_rejectsDuplicateMember_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / statut inconnu", test: AKS_testAttendanceWrite_rejectsUnknownStatus_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / version périmée", test: AKS_testAttendanceWrite_rejectsStaleVersion_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / motif obligatoire", test: AKS_testAttendanceWrite_requiresCorrectionReason_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / correction auditée", test: AKS_testAttendanceWrite_correctsClosedWithAudit_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / verrou indisponible", test: AKS_testAttendanceWrite_rejectsUnavailableLock_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / restauration", test: AKS_testAttendanceWrite_rollsBackFailedVerification_ }
+    ,{ name: "ANALYTICS-SAISIE-002 / échec restauration", test: AKS_testAttendanceWrite_reportsRollbackFailure_ }
     ,{ name: "ANALYTICS / aperçu sans écriture", test: AKS_testAnalyticsOperational_previewIsReadOnly_ }
     ,{ name: "ANALYTICS / sources incomplètes bloquées", test: AKS_testAnalyticsOperational_blocksIncompleteSources_ }
     ,{ name: "ANALYTICS / données de validation bloquées", test: AKS_testAnalyticsOperational_blocksValidationRows_ }
