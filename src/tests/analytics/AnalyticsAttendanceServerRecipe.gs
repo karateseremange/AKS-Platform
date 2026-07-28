@@ -115,6 +115,18 @@ AKS.Analytics.AttendanceServerRecipe = (function () {
     assert_(!denied.ok && denied.error.code === "ACCESS_DENIED",
       "SERVER_RECIPE_DENIAL_FAILED",
       "Le refus du compte non inscrit n'est pas conforme.");
+    var deniedWrite = deniedApi.saveAttendanceBatch({
+      courseCode: COURSE_CODE,
+      season: SEASON,
+      sessionDate: SESSION_DATE,
+      expectedVersion: 0,
+      submissionId: "RECETTE-SERVER-DENIED-20260912",
+      targetState: "BROUILLON",
+      attendances: attendances_(context.eligibleMembers, "NON_RENSEIGNE")
+    });
+    assert_(!deniedWrite.ok && deniedWrite.error.code === "ACCESS_DENIED",
+      "SERVER_RECIPE_WRITE_DENIAL_FAILED",
+      "L'écriture du compte non inscrit n'a pas été refusée.");
     assert_(!repository.adapter.findSession(context, "", SESSION_DATE),
       "SERVER_RECIPE_DENIAL_WROTE",
       "Le scénario refusé a écrit dans le classeur.");
