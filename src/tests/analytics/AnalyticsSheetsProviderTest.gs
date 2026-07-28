@@ -133,6 +133,23 @@ function AKS_testAnalyticsSheets_excludesCancelledSession_() {
   assertEquals_(0, result.courses[1].attendances.length);
   assertEquals_("SEANCE_NON_REALISEE", result.courses[1].diagnostics.exclusions[0].code);
 }
+function AKS_testAnalyticsSheets_excludesDraftSession_() {
+  var options = AKS_analyticsSheetsOptions_(function (books) {
+    books["ID-BABY"].sheets.Séances[0].push("État saisie");
+    books["ID-BABY"].sheets.Séances[1].push("BROUILLON");
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  assertEquals_(0, result.courses[1].attendances.length);
+  assertEquals_("SAISIE_BROUILLON", result.courses[1].diagnostics.exclusions[0].code);
+}
+function AKS_testAnalyticsSheets_readsClosedSession_() {
+  var options = AKS_analyticsSheetsOptions_(function (books) {
+    books["ID-BABY"].sheets.Séances[0].push("État saisie");
+    books["ID-BABY"].sheets.Séances[1].push("CLOTUREE");
+  });
+  var result = AKS.Analytics.SheetsProvider.load(options);
+  assertEquals_(1, result.courses[1].attendances.length);
+}
 function AKS_testAnalyticsSheets_isolatesCourseFailure_() {
   var options = AKS_analyticsSheetsOptions_(function (books) {
     books["ID-ENFANT_1"].sheets.Configuration[1][1] = "2025-2026";
@@ -160,6 +177,8 @@ function AKS_runAnalyticsSheetsProviderSuite() {
     { name: "ANALYTICS / Sheets identité modèle", test: AKS_testAnalyticsSheets_validatesModelIdentity_ },
     { name: "ANALYTICS / Sheets vide non renseigné", test: AKS_testAnalyticsSheets_preservesBlankAsUnknown_ },
     { name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ },
+    { name: "ANALYTICS / Sheets brouillon exclu", test: AKS_testAnalyticsSheets_excludesDraftSession_ },
+    { name: "ANALYTICS / Sheets clôture lue", test: AKS_testAnalyticsSheets_readsClosedSession_ },
     { name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ },
     { name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
   ]);

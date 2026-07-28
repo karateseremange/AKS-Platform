@@ -168,7 +168,10 @@ AKS.Analytics.SheetsProvider = (function () {
       var sessions = {};
       rows_(values.Séances, "Séances",
         ["ID séance", "Date séance", "État"]).forEach(function (row) {
-        sessions[dateText_(row["Date séance"])] = text_(row.État).toUpperCase();
+        sessions[dateText_(row["Date séance"])] = {
+          state: text_(row.État).toUpperCase(),
+          workflow_state: text_(row["État saisie"]).toUpperCase() || null
+        };
       });
       var attendances = rows_(values.Présences, "Présences",
         ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]).map(function (row) {
@@ -177,9 +180,19 @@ AKS.Analytics.SheetsProvider = (function () {
           session_date: sessionDate,
           licencie_id: text_(row["ID licencié"]),
           status: text_(row.Statut).toUpperCase() || "NON_RENSEIGNE",
-          session_status: sessions[sessionDate] || "REALISEE"
+          session_status: sessions[sessionDate] ?
+            sessions[sessionDate].state : "REALISEE",
+          workflow_state: sessions[sessionDate] ?
+            sessions[sessionDate].workflow_state : null
         };
       }).filter(function (row) {
+        if (row.workflow_state === "BROUILLON") {
+          diagnostics.exclusions.push({
+            code: "SAISIE_BROUILLON", course_code: courseCode,
+            details: { session_date: row.session_date }
+          });
+          return false;
+        }
         if (row.session_status !== "REALISEE") {
           diagnostics.exclusions.push({
             code: "SEANCE_NON_REALISEE", course_code: courseCode,
