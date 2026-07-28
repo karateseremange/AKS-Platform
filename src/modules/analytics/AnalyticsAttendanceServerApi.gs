@@ -110,6 +110,12 @@ function AKS_createAttendanceServerApi_(options) {
           season: season,
           sessionDate: sessionDate,
           eligibleCount: Number(workspace.eligibleCount || 0),
+          eligibleMembers: (workspace.eligibleMembers || []).map(function (member) {
+            return {
+              id: String(member.id || ""),
+              displayName: String(member.displayName || member.id || "")
+            };
+          }),
           sessions: (workspace.sessions || []).map(function (session) {
             return {
               id: String(session.id || ""),
