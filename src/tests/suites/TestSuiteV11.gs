@@ -283,6 +283,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets vide non renseigné", test: AKS_testAnalyticsSheets_preservesBlankAsUnknown_ }
     ,{ name: "ANALYTICS / Sheets séance annulée", test: AKS_testAnalyticsSheets_excludesCancelledSession_ }
     ,{ name: "ANALYTICS / Sheets brouillon exclu", test: AKS_testAnalyticsSheets_excludesDraftSession_ }
+    ,{ name: "ANALYTICS / Sheets fuseau classeur", test: AKS_testAnalyticsSheets_respectsSpreadsheetTimeZone_ }
     ,{ name: "ANALYTICS / Sheets clôture lue", test: AKS_testAnalyticsSheets_readsClosedSession_ }
     ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
     ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
