@@ -45,7 +45,11 @@ function AKS_createAttendanceServerApi_(options) {
 
   function composition_() {
     if (options.access && options.writeService) {
-      return { access: options.access, writeService: options.writeService };
+      return {
+        access: options.access,
+        writeService: options.writeService,
+        repository: options.repository || null
+      };
     }
     if (!AKS.Analytics.AttendanceSheetsRepository ||
         !AKS.Analytics.AttendanceWriteService ||
@@ -55,7 +59,8 @@ function AKS_createAttendanceServerApi_(options) {
     var repository = AKS.Analytics.AttendanceSheetsRepository.create();
     return {
       access: AKS_createAccessService_({ courseProvider: repository.courseProvider }),
-      writeService: AKS.Analytics.AttendanceWriteService
+      writeService: AKS.Analytics.AttendanceWriteService,
+      repository: repository
     };
   }
 
@@ -78,6 +83,48 @@ function AKS_createAttendanceServerApi_(options) {
     }
   }
 
+  function getWorkspace(scope) {
+    try {
+      scope = scope || {};
+      var courseCode = String(scope.courseCode || "").trim().toUpperCase();
+      var season = String(scope.season || "").trim();
+      var sessionDate = String(scope.sessionDate || "").trim();
+      if (!courseCode || !/^\d{4}-\d{4}$/.test(season) ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) {
+        throw { code: "ATTENDANCE_COMMAND_INVALID" };
+      }
+      var composition = composition_();
+      if (!composition.repository ||
+          !composition.repository.resolver ||
+          !composition.repository.adapter ||
+          typeof composition.repository.adapter.listWorkspace !== "function") {
+        throw new Error("Lecture des séances indisponible.");
+      }
+      composition.access.assertCapability("ATTENDANCE_READ", courseCode, season);
+      var context = composition.repository.resolver.resolve(courseCode, season);
+      var workspace = composition.repository.adapter.listWorkspace(context, sessionDate);
+      return {
+        ok: true,
+        data: {
+          courseCode: courseCode,
+          season: season,
+          sessionDate: sessionDate,
+          eligibleCount: Number(workspace.eligibleCount || 0),
+          sessions: (workspace.sessions || []).map(function (session) {
+            return {
+              id: String(session.id || ""),
+              date: String(session.date || ""),
+              workflowState: String(session.workflowState || ""),
+              version: Number(session.version || 0)
+            };
+          })
+        }
+      };
+    } catch (failure) {
+      return publicFailure_(failure);
+    }
+  }
+
   function saveAttendanceBatch(command) {
     try {
       var composition = composition_();
@@ -89,6 +136,7 @@ function AKS_createAttendanceServerApi_(options) {
 
   return Object.freeze({
     getAccessContext: getAccessContext,
+    getWorkspace: getWorkspace,
     saveAttendanceBatch: saveAttendanceBatch
   });
 }
@@ -108,4 +156,11 @@ function AKS_getAttendanceAccessContext() {
  */
 function AKS_saveAttendanceBatch(command) {
   return AKS_createAttendanceServerApi_().saveAttendanceBatch(command);
+}
+
+/**
+ * Returns a read-only, authorized workspace for the mobile attendance page.
+ */
+function AKS_getAttendanceWorkspace(scope) {
+  return AKS_createAttendanceServerApi_().getWorkspace(scope);
 }
