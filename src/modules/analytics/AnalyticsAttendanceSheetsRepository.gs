@@ -146,6 +146,9 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
 
   function create(options) {
     options = options || {};
+    var spreadsheetOpener = options.spreadsheet_opener || function (spreadsheetId) {
+      return SpreadsheetApp.openById(spreadsheetId);
+    };
 
     function spreadsheetId_(courseCode, key) {
       if (typeof options.spreadsheet_id_resolver === "function") {
@@ -154,12 +157,32 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       return property_(key);
     }
 
+    function listCourses() {
+      return Object.keys(COURSE_PROPERTIES).map(function (courseCode) {
+        var spreadsheetId = spreadsheetId_(courseCode, COURSE_PROPERTIES[courseCode]);
+        if (!spreadsheetId) return null;
+        var book = spreadsheetOpener(spreadsheetId);
+        var configuration = config_(book);
+        if (configuration.code_cours !== courseCode ||
+            configuration.version_modele !== "1.0" ||
+            !/^\d{4}-\d{4}$/.test(configuration.saison)) {
+          throw failure_("ACCESS_REGISTRY_INVALID",
+            "Le catalogue des cours Analytics est incohérent.");
+        }
+        return {
+          code: courseCode,
+          season: configuration.saison,
+          active: true
+        };
+      }).filter(function (course) { return course !== null; });
+    }
+
     function resolve(courseCode, season) {
       var key = COURSE_PROPERTIES[courseCode];
       if (!key) throw failure_("ACCESS_SCOPE_INVALID", "Le cours est inconnu.");
       var spreadsheetId = spreadsheetId_(courseCode, key);
       if (!spreadsheetId) throw failure_("ATTENDANCE_WRITE_FAILED", "Classeur non configuré.");
-      var book = SpreadsheetApp.openById(spreadsheetId);
+      var book = spreadsheetOpener(spreadsheetId);
       var configuration = config_(book);
       if (configuration.saison !== season || configuration.code_cours !== courseCode ||
           configuration.version_modele !== "1.0") {
@@ -306,7 +329,11 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       restore: restore,
       getSession: getSession
     };
-    return { resolver: repository, adapter: repository };
+    return {
+      resolver: repository,
+      adapter: repository,
+      courseProvider: Object.freeze({ list: listCourses })
+    };
   }
 
   return Object.freeze({

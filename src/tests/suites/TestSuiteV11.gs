@@ -288,6 +288,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
     ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
     ,{ name: "ANALYTICS-SAISIE-002 / création brouillon", test: AKS_testAttendanceWrite_createsDraftBatch_ }
+    ,{ name: "ACCESS-001 / refus avant lecture Sheets", test: AKS_testAttendanceWrite_deniesBeforeRepositoryRead_ }
+    ,{ name: "ACCESS-001 / composition saisie", test: AKS_testAttendanceWrite_composesCentralAccessByDefault_ }
     ,{ name: "ANALYTICS-SAISIE-002 / rejeu identique", test: AKS_testAttendanceWrite_replaysIdenticalSubmission_ }
     ,{ name: "ANALYTICS-SAISIE-002 / rejeu divergent", test: AKS_testAttendanceWrite_rejectsDivergentReplay_ }
     ,{ name: "ANALYTICS-SAISIE-002 / brouillon incomplet", test: AKS_testAttendanceWrite_acceptsIncompleteDraft_ }
