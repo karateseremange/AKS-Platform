@@ -1,0 +1,85 @@
+<style>
+  :root {
+    --aks-primary: #2a4b9b;
+    --aks-primary-dark: #1f3978;
+    --aks-background: #f4f6fa;
+    --aks-surface: #ffffff;
+    --aks-text: #172033;
+    --aks-muted: #667085;
+    --aks-border: #dfe4ec;
+    --aks-focus: rgba(42, 75, 155, 0.32);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--aks-background);
+    color: var(--aks-text);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .aks-attendance-shell {
+    width: min(680px, calc(100% - 24px));
+    margin: 0 auto;
+    padding: 24px 0 48px;
+  }
+  .aks-attendance-header { margin-bottom: 20px; }
+  .aks-attendance-eyebrow {
+    margin: 0 0 6px;
+    color: var(--aks-primary);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 7vw, 2.4rem); }
+  h2 { margin: 0 0 16px; font-size: 1.15rem; }
+  .aks-attendance-identity,
+  .aks-attendance-muted { margin: 0; color: var(--aks-muted); overflow-wrap: anywhere; }
+  .aks-attendance-card {
+    margin-top: 16px;
+    padding: 20px;
+    border: 1px solid var(--aks-border);
+    border-radius: 16px;
+    background: var(--aks-surface);
+  }
+  label { display: block; margin-bottom: 8px; font-weight: 700; }
+  select, input, button {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--aks-border);
+    border-radius: 10px;
+    font: inherit;
+  }
+  button {
+    margin-top: 12px;
+    border-color: var(--aks-primary);
+    background: var(--aks-primary);
+    color: #fff;
+    font-weight: 700;
+  }
+  button:disabled { opacity: .65; cursor: not-allowed; }
+  select:focus-visible, input:focus-visible, button:focus-visible {
+    outline: 3px solid var(--aks-focus);
+    outline-offset: 3px;
+  }
+  .aks-attendance-feedback:not(:empty) {
+    padding: 14px;
+    border-radius: 10px;
+    background: #fff4e5;
+  }
+  .aks-attendance-empty { color: var(--aks-muted); }
+  .aks-attendance-sessions { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+  .aks-attendance-session {
+    padding: 14px;
+    border: 1px solid var(--aks-border);
+    border-radius: 10px;
+  }
+  .aks-attendance-session strong,
+  .aks-attendance-session span { display: block; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+</style>

@@ -28,6 +28,10 @@ function doGet(event) {
     return AKS.Admin.Analytics.render(event.parameter);
   }
 
+  if (event.parameter && event.parameter.app === "attendance") {
+    return AKS.Analytics.AttendancePage.render();
+  }
+
   var installResult = AKS.Core.Application.install();
 
   if (!installResult.ok) {

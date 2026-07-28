@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAttendanceFile_("ui/analytics/AttendanceStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-attendance-shell">
+      <header class="aks-attendance-header">
+        <p class="aks-attendance-eyebrow">Association Karaté Serémange</p>
+        <h1>Saisie des présences</h1>
+        <? if (viewModel.ok) { ?>
+          <p class="aks-attendance-identity"><?= viewModel.data.identity ?></p>
+        <? } ?>
+      </header>
+
+      <div id="feedback" class="aks-attendance-feedback" role="status" aria-live="polite">
+        <? if (!viewModel.ok) { ?>
+          <?= viewModel.error.message ?>
+        <? } ?>
+      </div>
+
+      <? if (viewModel.ok && viewModel.data.courses.length > 0) { ?>
+        <section class="aks-attendance-card" aria-labelledby="course-title">
+          <h2 id="course-title">1. Choisir le cours</h2>
+          <label for="course">Cours et saison</label>
+          <select id="course">
+            <option value="">Sélectionner un cours</option>
+            <? viewModel.data.courses.forEach(function (course) { ?>
+              <option value="<?= course.code ?>|<?= course.season ?>">
+                <?= course.code ?> — <?= course.season ?>
+              </option>
+            <? }); ?>
+          </select>
+        </section>
+
+        <section id="sessions-card" class="aks-attendance-card" aria-labelledby="session-title" hidden>
+          <h2 id="session-title">2. Choisir la séance</h2>
+          <label for="session-date">Date de séance</label>
+          <input id="session-date" type="date">
+          <button id="load-sessions" type="button">Afficher les séances</button>
+          <p id="eligible-count" class="aks-attendance-muted"></p>
+          <div id="session-empty" class="aks-attendance-empty" hidden>
+            Aucune séance enregistrée pour ce cours.
+          </div>
+          <ul id="session-list" class="aks-attendance-sessions"></ul>
+        </section>
+      <? } else if (viewModel.ok) { ?>
+        <section class="aks-attendance-card aks-attendance-empty">
+          Aucun cours ne vous est affecté.
+        </section>
+      <? } ?>
+
+      <? if (viewModel.ok && viewModel.data.courses.length > 0) { ?>
+        <?!= AKS_includeAttendanceFile_("ui/analytics/AttendanceClient"); ?>
+      <? } ?>
+    </main>
+  </body>
+</html>

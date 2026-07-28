@@ -320,6 +320,32 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       return session;
     }
 
+    function listWorkspace(context, sessionDate) {
+      var sheet = context.book.getSheetByName("Séances");
+      if (!sheet) throw failure_("ATTENDANCE_WRITE_FAILED", "Feuille Séances absente.");
+      var sessions = objects_(sheet, ["ID séance", "Date séance", "État"])
+        .map(function (row) {
+          return {
+            id: text_(row["ID séance"]),
+            date: dateText_(row["Date séance"], timeZone_(context.book)),
+            state: text_(row.État).toUpperCase(),
+            workflowState: text_(row["État saisie"]).toUpperCase() || "CLOTUREE",
+            version: Number(row["Version saisie"] || 0)
+          };
+        })
+        .filter(function (session) {
+          return session.id && session.date;
+        })
+        .sort(function (left, right) {
+          return left.date < right.date ? 1 : (left.date > right.date ? -1 : 0);
+        })
+        .slice(0, 20);
+      return {
+        eligibleCount: eligible_(context.book, sessionDate).length,
+        sessions: sessions
+      };
+    }
+
     var repository = {
       resolve: resolve,
       findSession: findSession,
@@ -327,7 +353,8 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       replaceBatch: replaceBatch,
       verify: verify,
       restore: restore,
-      getSession: getSession
+      getSession: getSession,
+      listWorkspace: listWorkspace
     };
     return {
       resolver: repository,

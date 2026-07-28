@@ -342,6 +342,12 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / refus avant lecture", test: AKS_testAnalyticsSaisie003_deniesBeforeWorkspaceRead_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / périmètre invalide", test: AKS_testAnalyticsSaisie003_rejectsInvalidWorkspaceScope_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / espace nettoyé", test: AKS_testAnalyticsSaisie003_returnsSafeWorkspace_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / parcours mobile", test: AKS_testAnalyticsSaisie003_exposesMobilePage_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / retour accessible", test: AKS_testAnalyticsSaisie003_hasAccessibleFeedback_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / cibles mobiles", test: AKS_testAnalyticsSaisie003_hasMobileTargets_ }
     ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }

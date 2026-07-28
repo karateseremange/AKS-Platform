@@ -1,0 +1,78 @@
+<script>
+(function () {
+  "use strict";
+
+  var course = document.getElementById("course");
+  var card = document.getElementById("sessions-card");
+  var date = document.getElementById("session-date");
+  var loadButton = document.getElementById("load-sessions");
+  var list = document.getElementById("session-list");
+  var empty = document.getElementById("session-empty");
+  var count = document.getElementById("eligible-count");
+  var feedback = document.getElementById("feedback");
+
+  date.value = new Date().toISOString().slice(0, 10);
+
+  function setBusy(busy) {
+    course.disabled = busy;
+    date.disabled = busy;
+    loadButton.disabled = busy;
+  }
+
+  function showError(message) {
+    feedback.textContent = message || "Le service est temporairement indisponible.";
+  }
+
+  function render(response) {
+    setBusy(false);
+    list.textContent = "";
+    if (!response || !response.ok) {
+      showError(response && response.error && response.error.message);
+      return;
+    }
+    feedback.textContent = "";
+    count.textContent = response.data.eligibleCount +
+      " licencié(s) éligible(s) à la date sélectionnée.";
+    empty.hidden = response.data.sessions.length !== 0;
+    response.data.sessions.forEach(function (session) {
+      var item = document.createElement("li");
+      item.className = "aks-attendance-session";
+      var title = document.createElement("strong");
+      title.textContent = session.date;
+      var state = document.createElement("span");
+      state.textContent = session.workflowState === "CLOTUREE" ? "Clôturée" : "Brouillon";
+      item.appendChild(title);
+      item.appendChild(state);
+      list.appendChild(item);
+    });
+  }
+
+  function loadWorkspace() {
+    if (!course.value || !date.value) return;
+    var parts = course.value.split("|");
+    setBusy(true);
+    feedback.textContent = "Chargement des séances…";
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(function () {
+        setBusy(false);
+        showError();
+      })
+      .AKS_getAttendanceWorkspace({
+        courseCode: parts[0],
+        season: parts[1],
+        sessionDate: date.value
+      });
+  }
+
+  course.addEventListener("change", function () {
+    card.hidden = !course.value;
+    list.textContent = "";
+    empty.hidden = true;
+    count.textContent = "";
+    feedback.textContent = "";
+    if (course.value) loadWorkspace();
+  });
+  loadButton.addEventListener("click", loadWorkspace);
+}());
+</script>
