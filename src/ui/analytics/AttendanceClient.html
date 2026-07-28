@@ -4,35 +4,82 @@
 
   var course = document.getElementById("course");
   var card = document.getElementById("sessions-card");
+  var entryCard = document.getElementById("entry-card");
   var date = document.getElementById("session-date");
   var loadButton = document.getElementById("load-sessions");
+  var saveButton = document.getElementById("save-draft");
+  var roster = document.getElementById("attendance-list");
   var list = document.getElementById("session-list");
   var empty = document.getElementById("session-empty");
   var count = document.getElementById("eligible-count");
   var feedback = document.getElementById("feedback");
+  var members = [];
+  var statuses = {};
+  var busy = false;
 
   date.value = new Date().toISOString().slice(0, 10);
 
-  function setBusy(busy) {
-    course.disabled = busy;
-    date.disabled = busy;
-    loadButton.disabled = busy;
+  function setBusy(value) {
+    busy = value;
+    course.disabled = value;
+    date.disabled = value;
+    loadButton.disabled = value;
+    saveButton.disabled = value;
+    roster.querySelectorAll("button").forEach(function (button) {
+      button.disabled = value;
+    });
   }
 
   function showError(message) {
     feedback.textContent = message || "Le service est temporairement indisponible.";
   }
 
+  function submissionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return "attendance-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  function renderRoster() {
+    roster.textContent = "";
+    members.forEach(function (member) {
+      var row = document.createElement("fieldset");
+      row.className = "aks-attendance-member";
+      var legend = document.createElement("legend");
+      legend.textContent = member.displayName;
+      row.appendChild(legend);
+      ["PRESENT", "ABSENT", "EXCUSE", "NON_RENSEIGNE"].forEach(function (status) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.dataset.memberId = member.id;
+        button.dataset.status = status;
+        button.className = statuses[member.id] === status ? "is-selected" : "";
+        button.setAttribute("aria-pressed", statuses[member.id] === status ? "true" : "false");
+        button.textContent = {
+          PRESENT: "Présent", ABSENT: "Absent", EXCUSE: "Excusé",
+          NON_RENSEIGNE: "À renseigner"
+        }[status];
+        row.appendChild(button);
+      });
+      roster.appendChild(row);
+    });
+    entryCard.hidden = members.length === 0;
+  }
+
   function render(response) {
     setBusy(false);
     list.textContent = "";
     if (!response || !response.ok) {
+      entryCard.hidden = true;
       showError(response && response.error && response.error.message);
       return;
     }
     feedback.textContent = "";
-    count.textContent = response.data.eligibleCount +
-      " licencié(s) éligible(s) à la date sélectionnée.";
+    members = response.data.eligibleMembers || [];
+    statuses = {};
+    members.forEach(function (member) { statuses[member.id] = "NON_RENSEIGNE"; });
+    count.textContent = members.length + " licencié(s) éligible(s) à la date sélectionnée.";
     empty.hidden = response.data.sessions.length !== 0;
     response.data.sessions.forEach(function (session) {
       var item = document.createElement("li");
@@ -45,10 +92,11 @@
       item.appendChild(state);
       list.appendChild(item);
     });
+    renderRoster();
   }
 
   function loadWorkspace() {
-    if (!course.value || !date.value) return;
+    if (!course.value || !date.value || busy) return;
     var parts = course.value.split("|");
     setBusy(true);
     feedback.textContent = "Chargement des séances…";
@@ -65,14 +113,55 @@
       });
   }
 
+  function saveDraft() {
+    if (!course.value || !date.value || !members.length || busy) return;
+    var parts = course.value.split("|");
+    setBusy(true);
+    feedback.textContent = "Enregistrement du brouillon…";
+    google.script.run
+      .withSuccessHandler(function (response) {
+        setBusy(false);
+        if (!response || !response.ok) {
+          showError(response && response.error && response.error.message);
+          return;
+        }
+        feedback.textContent = "Brouillon enregistré — version " + response.version + ".";
+        loadWorkspace();
+      })
+      .withFailureHandler(function () {
+        setBusy(false);
+        showError();
+      })
+      .AKS_saveAttendanceBatch({
+        courseCode: parts[0],
+        season: parts[1],
+        sessionDate: date.value,
+        expectedVersion: 0,
+        submissionId: submissionId(),
+        targetState: "BROUILLON",
+        attendances: members.map(function (member) {
+          return { licencieId: member.id, status: statuses[member.id] };
+        })
+      });
+  }
+
+  roster.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-member-id]");
+    if (!button || busy) return;
+    statuses[button.dataset.memberId] = button.dataset.status;
+    renderRoster();
+  });
   course.addEventListener("change", function () {
     card.hidden = !course.value;
+    entryCard.hidden = true;
     list.textContent = "";
     empty.hidden = true;
     count.textContent = "";
     feedback.textContent = "";
     if (course.value) loadWorkspace();
   });
+  date.addEventListener("change", loadWorkspace);
   loadButton.addEventListener("click", loadWorkspace);
+  saveButton.addEventListener("click", saveDraft);
 }());
 </script>
