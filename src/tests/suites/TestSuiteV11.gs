@@ -356,6 +356,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS-SAISIE-005 / clôture incomplète bloquée", test: AKS_testAnalyticsSaisie005_rejectsIncompleteClosureClientSide_ }
     ,{ name: "ANALYTICS-SAISIE-005 / commande clôture versionnée", test: AKS_testAnalyticsSaisie005_closesThroughVersionedServerCommand_ }
     ,{ name: "ANALYTICS-SAISIE-005 / retour lecture seule", test: AKS_testAnalyticsSaisie005_returnsClosedSessionToReadOnly_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / identité et cible recette", test: AKS_testAnalyticsSaisie006_locksRecipeIdentityAndTarget_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / périmètre et date recette", test: AKS_testAnalyticsSaisie006_locksRecipeScopeAndDate_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / route recette distincte", test: AKS_testAnalyticsSaisie006_exposesDistinctRecipeRoute_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / endpoints client distincts", test: AKS_testAnalyticsSaisie006_usesDedicatedClientEndpoints_ }
     ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
