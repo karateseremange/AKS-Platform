@@ -6,12 +6,17 @@ AKS.Analytics = AKS.Analytics || {};
  * Authorization data is resolved server-side before the template is rendered.
  */
 AKS.Analytics.AttendancePage = Object.freeze({
-  render: function () {
-    var viewModel = AKS_createAttendanceServerApi_().getAccessContext();
+  render: function (options) {
+    options = options || {};
+    var recipeMode = options.recipe === true;
+    var viewModel = recipeMode ?
+      AKS.Analytics.AttendanceMobileRecipe.getAccessContext() :
+      AKS_createAttendanceServerApi_().getAccessContext();
     var template = HtmlService.createTemplateFromFile(
       "ui/analytics/Attendance"
     );
     template.viewModel = viewModel;
+    template.recipeMode = recipeMode;
 
     return template
       .evaluate()
