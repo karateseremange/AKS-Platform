@@ -158,6 +158,9 @@ AKS.Analytics.AttendanceMobileRecipe = (function () {
     getWorkspace: getWorkspace,
     saveAttendanceBatch: saveAttendanceBatch,
     constants: Object.freeze({
+      authorizedEmail: AUTHORIZED_EMAIL,
+      spreadsheetId: SPREADSHEET_ID,
+      spreadsheetTitle: SPREADSHEET_TITLE,
       courseCode: COURSE_CODE,
       season: SEASON,
       sessionDate: SESSION_DATE
