@@ -32,9 +32,9 @@ AKS.Analytics.SheetsProvider = (function () {
     return value === null || typeof value === "undefined" ? "" : String(value).trim();
   }
 
-  function dateText_(value) {
+  function dateText_(value, timeZone) {
     if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
-      return Utilities.formatDate(value, "UTC", "yyyy-MM-dd");
+      return Utilities.formatDate(value, timeZone || "UTC", "yyyy-MM-dd");
     }
     return text_(value);
   }
@@ -70,6 +70,9 @@ AKS.Analytics.SheetsProvider = (function () {
     return {
       openById: function (id) { return SpreadsheetApp.openById(id); },
       spreadsheetId: function (book) { return book.getId(); },
+      spreadsheetTimeZone: function (book) {
+        return book.getSpreadsheetTimeZone() || Session.getScriptTimeZone() || "UTC";
+      },
       sheetValues: function (book, name) {
         var sheet = book.getSheetByName(name);
         return sheet ? sheet.getDataRange().getValues() : null;
@@ -132,6 +135,8 @@ AKS.Analytics.SheetsProvider = (function () {
     var diagnostics = { errors: [], warnings: [], exclusions: [] };
     try {
       var book = adapter.openById(spreadsheetId);
+      var timeZone = typeof adapter.spreadsheetTimeZone === "function" ?
+        text_(adapter.spreadsheetTimeZone(book)) || "UTC" : "UTC";
       var values = {};
       REQUIRED_SHEETS.forEach(function (name) {
         values[name] = adapter.sheetValues(book, name);
@@ -161,21 +166,21 @@ AKS.Analytics.SheetsProvider = (function () {
           numero_licence: text_(row["Numéro licence FFK"]) || null,
           nom: text_(row.Nom) || null,
           prenom: text_(row.Prénom) || null,
-          entry_date: dateText_(row["Date entrée"]) || null,
-          exit_date: dateText_(row["Date sortie"]) || null
+          entry_date: dateText_(row["Date entrée"], timeZone) || null,
+          exit_date: dateText_(row["Date sortie"], timeZone) || null
         };
       });
       var sessions = {};
       rows_(values.Séances, "Séances",
         ["ID séance", "Date séance", "État"]).forEach(function (row) {
-        sessions[dateText_(row["Date séance"])] = {
+        sessions[dateText_(row["Date séance"], timeZone)] = {
           state: text_(row.État).toUpperCase(),
           workflow_state: text_(row["État saisie"]).toUpperCase() || null
         };
       });
       var attendances = rows_(values.Présences, "Présences",
         ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]).map(function (row) {
-        var sessionDate = dateText_(row["Date séance"]);
+        var sessionDate = dateText_(row["Date séance"], timeZone);
         return {
           session_date: sessionDate,
           licencie_id: text_(row["ID licencié"]),
