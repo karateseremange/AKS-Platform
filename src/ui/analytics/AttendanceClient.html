@@ -15,6 +15,7 @@
   var feedback = document.getElementById("feedback");
   var members = [];
   var statuses = {};
+  var currentSession = null;
   var busy = false;
 
   date.value = new Date().toISOString().slice(0, 10);
@@ -77,8 +78,16 @@
     }
     feedback.textContent = "";
     members = response.data.eligibleMembers || [];
+    currentSession = response.data.currentSession || null;
     statuses = {};
     members.forEach(function (member) { statuses[member.id] = "NON_RENSEIGNE"; });
+    if (currentSession) {
+      (currentSession.attendances || []).forEach(function (entry) {
+        if (Object.prototype.hasOwnProperty.call(statuses, entry.licencieId)) {
+          statuses[entry.licencieId] = entry.status;
+        }
+      });
+    }
     count.textContent = members.length + " licencié(s) éligible(s) à la date sélectionnée.";
     empty.hidden = response.data.sessions.length !== 0;
     response.data.sessions.forEach(function (session) {
@@ -135,8 +144,9 @@
       .AKS_saveAttendanceBatch({
         courseCode: parts[0],
         season: parts[1],
-        sessionDate: date.value,
-        expectedVersion: 0,
+        sessionId: currentSession ? currentSession.id : "",
+        sessionDate: currentSession ? "" : date.value,
+        expectedVersion: currentSession ? currentSession.version : 0,
         submissionId: submissionId(),
         targetState: "BROUILLON",
         attendances: members.map(function (member) {
