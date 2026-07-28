@@ -288,6 +288,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / Sheets isolation cours", test: AKS_testAnalyticsSheets_isolatesCourseFailure_ }
     ,{ name: "ANALYTICS / Sheets orchestration", test: AKS_testAnalyticsSheets_feedsOrchestrator_ }
     ,{ name: "ANALYTICS-SAISIE-002 / création brouillon", test: AKS_testAttendanceWrite_createsDraftBatch_ }
+    ,{ name: "ACCESS-001 / refus avant lecture Sheets", test: AKS_testAttendanceWrite_deniesBeforeRepositoryRead_ }
+    ,{ name: "ACCESS-001 / composition saisie", test: AKS_testAttendanceWrite_composesCentralAccessByDefault_ }
     ,{ name: "ANALYTICS-SAISIE-002 / rejeu identique", test: AKS_testAttendanceWrite_replaysIdenticalSubmission_ }
     ,{ name: "ANALYTICS-SAISIE-002 / rejeu divergent", test: AKS_testAttendanceWrite_rejectsDivergentReplay_ }
     ,{ name: "ANALYTICS-SAISIE-002 / brouillon incomplet", test: AKS_testAttendanceWrite_acceptsIncompleteDraft_ }
@@ -322,6 +324,28 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ }
     ,{ name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ }
     ,{ name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }
+    ,{ name: "ACCESS-001 / identité absente", test: AKS_testAccess001_rejectsMissingIdentity_ }
+    ,{ name: "ACCESS-001 / identité normalisée", test: AKS_testAccess001_normalizesIdentity_ }
+    ,{ name: "ACCESS-001 / compte inconnu", test: AKS_testAccess001_rejectsUnknownAccount_ }
+    ,{ name: "ACCESS-001 / compte dupliqué", test: AKS_testAccess001_rejectsDuplicateAccount_ }
+    ,{ name: "ACCESS-001 / professeur limité", test: AKS_testAccess001_limitsTeacherToAssignment_ }
+    ,{ name: "ACCESS-001 / assistant limité", test: AKS_testAccess001_limitsAssistant_ }
+    ,{ name: "ACCESS-001 / consultation seule", test: AKS_testAccess001_keepsConsultationReadOnly_ }
+    ,{ name: "ACCESS-001 / administrateur global", test: AKS_testAccess001_grantsAdministratorGlobalScope_ }
+    ,{ name: "ACCESS-001 / périmètre invalide", test: AKS_testAccess001_rejectsInvalidScope_ }
+    ,{ name: "ACCESS-001 / rôle inconnu", test: AKS_testAccess001_rejectsUnknownRole_ }
+    ,{ name: "ACCESS-001 / schéma inconnu", test: AKS_testAccess001_rejectsUnknownSchema_ }
+    ,{ name: "ACCESS-001 / amorçage historique", test: AKS_testAccess001_preservesLegacyBootstrap_ }
+    ,{ name: "ACCESS-001 / amorçage refusé", test: AKS_testAccess001_doesNotBootstrapUnknownUser_ }
+    ,{ name: "ACCESS-001 / cours autorisés", test: AKS_testAccess001_listsOnlyAuthorizedCourses_ }
+    ,{ name: "ACCESS-001 / dernier administrateur", test: AKS_testAccess001_rejectsLastAdministratorRemoval_ }
+    ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
+    ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
+    ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
+    ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
+    ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
+    ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
   ]);
 }
 

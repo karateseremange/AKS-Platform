@@ -94,12 +94,16 @@ AKS.Analytics.AttendanceWriteService = (function () {
   function dependencies_(options) {
     options = options || {};
     var repository = null;
-    if ((!options.resolver || !options.adapter) &&
+    if ((!options.resolver || !options.adapter || !options.access) &&
         AKS.Analytics.AttendanceSheetsRepository) {
       repository = AKS.Analytics.AttendanceSheetsRepository.create();
     }
+    var accessFactory = options.access_factory || function (courseProvider) {
+      if (typeof AKS_createAccessService_ !== "function") return null;
+      return AKS_createAccessService_({ courseProvider: courseProvider });
+    };
     return {
-      access: options.access || null,
+      access: options.access || accessFactory(repository && repository.courseProvider),
       resolver: options.resolver || (repository && repository.resolver),
       adapter: options.adapter || (repository && repository.adapter),
       lock: options.lock || defaultLock_(),
@@ -238,6 +242,11 @@ AKS.Analytics.AttendanceWriteService = (function () {
     var context = null;
     var persisted = null;
     try {
+      dependencies.access.assertCapability(
+        "ATTENDANCE_READ",
+        command.courseCode,
+        command.season
+      );
       context = dependencies.resolver.resolve(command.courseCode, command.season);
       persisted = dependencies.adapter.findSession(
         context, command.sessionId, command.sessionDate);

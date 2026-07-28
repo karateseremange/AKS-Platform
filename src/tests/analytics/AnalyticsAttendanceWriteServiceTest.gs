@@ -90,7 +90,8 @@ function AKS_testAttendanceWrite_createsDraftBatch_() {
   assertEquals_(1, result.version);
   assertEquals_(2, result.savedCount);
   assertEquals_(1, result.completedCount);
-  assertEquals_("SESSION_CREATE", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("SESSION_CREATE", fixture.state.capabilities[1]);
 }
 
 function AKS_testAttendanceWrite_replaysIdenticalSubmission_() {
@@ -139,7 +140,8 @@ function AKS_testAttendanceWrite_closesCompleteSession_() {
   var result = AKS.Analytics.AttendanceWriteService.closeAttendanceSession(
     command, fixture.options);
   assertEquals_("CLOTUREE", result.workflowState);
-  assertEquals_("SESSION_CLOSE", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("SESSION_CLOSE", fixture.state.capabilities[1]);
 }
 
 function AKS_testAttendanceWrite_rejectsUnknownMember_() {
@@ -225,7 +227,8 @@ function AKS_testAttendanceWrite_correctsClosedWithAudit_() {
       ]
     }), fixture.options);
   assertEquals_(2, result.version);
-  assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.capabilities[1]);
   assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.audits[0].action);
 }
 
@@ -260,9 +263,51 @@ function AKS_testAttendanceWrite_reportsRollbackFailure_() {
   assertEquals_("ATTENDANCE_ROLLBACK_FAILED", fixture.state.critical);
 }
 
+
+function AKS_testAttendanceWrite_deniesBeforeRepositoryRead_() {
+  var fixture = AKS_attendanceWriteFixture_();
+  var resolved = false;
+  fixture.options.access.assertCapability = function () {
+    var failure = new Error("refus");
+    failure.code = "ACCESS_DENIED";
+    throw failure;
+  };
+  fixture.options.resolver.resolve = function () {
+    resolved = true;
+    throw new Error("Le dépôt ne doit pas être lu.");
+  };
+  assertThrows_(function () {
+    AKS.Analytics.AttendanceWriteService.saveAttendanceBatch(
+      AKS_attendanceCommand_(), fixture.options);
+  }, "ACCESS_DENIED");
+  assertTrue_(!resolved, "Le classeur ne doit pas être résolu avant autorisation.");
+}
+
+function AKS_testAttendanceWrite_composesCentralAccessByDefault_() {
+  var fixture = AKS_attendanceWriteFixture_();
+  var capabilities = [];
+  var factoryCalled = false;
+  delete fixture.options.access;
+  fixture.options.access_factory = function (courseProvider) {
+    factoryCalled = !!courseProvider && typeof courseProvider.list === "function";
+    return {
+      assertCapability: function (capability) { capabilities.push(capability); },
+      getCurrentIdentity: function () { return "professeur@example.fr"; }
+    };
+  };
+  var result = AKS.Analytics.AttendanceWriteService.saveAttendanceBatch(
+    AKS_attendanceCommand_(), fixture.options);
+  assertTrue_(result.ok);
+  assertTrue_(factoryCalled, "Le fournisseur de cours doit alimenter ACCESS-001.");
+  assertEquals_("ATTENDANCE_READ", capabilities[0]);
+  assertEquals_("SESSION_CREATE", capabilities[1]);
+}
+
 function AKS_runAnalyticsAttendanceWriteSuite() {
   return AKS_runNamedTestSuite_("ANALYTICS-SAISIE-002 — écriture", [
     { name: "création brouillon", test: AKS_testAttendanceWrite_createsDraftBatch_ },
+    { name: "refus avant lecture", test: AKS_testAttendanceWrite_deniesBeforeRepositoryRead_ },
+    { name: "accès central composé", test: AKS_testAttendanceWrite_composesCentralAccessByDefault_ },
     { name: "rejeu identique", test: AKS_testAttendanceWrite_replaysIdenticalSubmission_ },
     { name: "rejeu divergent", test: AKS_testAttendanceWrite_rejectsDivergentReplay_ },
     { name: "brouillon incomplet", test: AKS_testAttendanceWrite_acceptsIncompleteDraft_ },
