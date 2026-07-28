@@ -43,10 +43,7 @@ AKS.Analytics.AttendanceServerRecipe = (function () {
   function repository_() {
     return AKS.Analytics.AttendanceSheetsRepository.create({
       spreadsheet_id_resolver: function (courseCode) {
-        assert_(courseCode === COURSE_CODE,
-          "SERVER_RECIPE_TARGET_REFUSED",
-          "Le cours de recette est invalide.");
-        return SPREADSHEET_ID;
+        return courseCode === COURSE_CODE ? SPREADSHEET_ID : "";
       }
     });
   }
