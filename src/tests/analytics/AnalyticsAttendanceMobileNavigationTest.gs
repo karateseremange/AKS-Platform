@@ -185,7 +185,8 @@ function AKS_testAnalyticsSaisie004_exposesRapidStatusControls_() {
 function AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_() {
   var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
   AKS_assertAnalyticsSaisie003_(client.indexOf(".AKS_saveAttendanceBatch") !== -1 &&
-    client.indexOf('targetState: "BROUILLON"') !== -1,
+    client.indexOf('saveBatch("BROUILLON")') !== -1 &&
+    client.indexOf("targetState: targetState") !== -1,
     "La sauvegarde doit passer par l'API serveur en mode brouillon.");
   AKS_assertAnalyticsSaisie003_(client.indexOf("currentSession.version") !== -1 &&
     client.indexOf("currentSession.id") !== -1 &&
