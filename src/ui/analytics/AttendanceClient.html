@@ -44,6 +44,11 @@
 
   function renderRoster() {
     roster.textContent = "";
+    if (currentSession && currentSession.workflowState === "CLOTUREE") {
+      entryCard.hidden = true;
+      feedback.textContent = "Cette séance est clôturée et disponible en lecture seule.";
+      return;
+    }
     members.forEach(function (member) {
       var row = document.createElement("fieldset");
       row.className = "aks-attendance-member";

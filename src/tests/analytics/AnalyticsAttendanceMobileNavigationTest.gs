@@ -191,4 +191,8 @@ function AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_() {
     client.indexOf("currentSession.id") !== -1 &&
     client.indexOf("submissionId()") !== -1,
     "La reprise doit transmettre version, séance et clé de soumission.");
+  AKS_assertAnalyticsSaisie003_(
+    client.indexOf('workflowState === "CLOTUREE"') !== -1 &&
+    client.indexOf("disponible en lecture seule") !== -1,
+    "Une séance clôturée ne doit pas redevenir un brouillon depuis cet écran.");
 }
