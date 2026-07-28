@@ -196,3 +196,45 @@ function AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_() {
     client.indexOf("disponible en lecture seule") !== -1,
     "Une séance clôturée ne doit pas redevenir un brouillon depuis cet écran.");
 }
+
+
+function AKS_testAnalyticsSaisie005_exposesExplicitClosureConfirmation_() {
+  var source = AKS_includeAttendanceFile_("ui/analytics/Attendance");
+  AKS_assertAnalyticsSaisie003_(
+    source.indexOf('id="close-session"') !== -1 &&
+    source.indexOf('id="close-dialog"') !== -1 &&
+    source.indexOf('id="confirm-close"') !== -1 &&
+    source.indexOf("Après clôture") !== -1,
+    "La clôture doit exiger une confirmation explicite."
+  );
+}
+
+function AKS_testAnalyticsSaisie005_rejectsIncompleteClosureClientSide_() {
+  var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(
+    client.indexOf('statuses[member.id] === "NON_RENSEIGNE"') !== -1 &&
+    client.indexOf("Tous les licenciés doivent être renseignés avant la clôture.") !== -1,
+    "Le client doit bloquer une clôture incomplète avant l'appel serveur."
+  );
+}
+
+function AKS_testAnalyticsSaisie005_closesThroughVersionedServerCommand_() {
+  var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(
+    client.indexOf('saveBatch("CLOTUREE")') !== -1 &&
+    client.indexOf("targetState: targetState") !== -1 &&
+    client.indexOf("currentSession.version") !== -1 &&
+    client.indexOf("submissionId()") !== -1,
+    "La clôture doit utiliser la commande serveur versionnée et idempotente."
+  );
+}
+
+function AKS_testAnalyticsSaisie005_returnsClosedSessionToReadOnly_() {
+  var client = AKS_includeAttendanceFile_("ui/analytics/AttendanceClient");
+  AKS_assertAnalyticsSaisie003_(
+    client.indexOf("Séance clôturée — version ") !== -1 &&
+    client.indexOf("loadWorkspace();") !== -1 &&
+    client.indexOf('workflowState === "CLOTUREE"') !== -1,
+    "Une clôture réussie doit recharger la séance en lecture seule."
+  );
+}
