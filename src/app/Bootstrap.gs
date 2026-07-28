@@ -9,7 +9,8 @@ AKS.App = AKS.App || {};
 AKS.App.Bootstrap = Object.freeze({
   getModules: function () {
     return [
-      AKS.Modules.HealthQuestionnaire.Module
+      AKS.Modules.HealthQuestionnaire.Module,
+      AKS.Modules.Analytics.Module
     ];
   }
 });

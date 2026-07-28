@@ -1,0 +1,116 @@
+<script>
+(function () {
+  "use strict";
+  var root = document.querySelector("[data-analytics-root]");
+  if (!root) return;
+  var season = document.getElementById("analytics-season");
+  var status = root.querySelector("[data-status]");
+  var diagnostic = root.querySelector("[data-diagnostic]");
+  var reports = root.querySelector("[data-reports]");
+  var confirmation = root.querySelector("[data-confirm]");
+  var publication = root.querySelector("[data-publication]");
+  var buttons = {
+    diagnose: root.querySelector('[data-action="diagnose"]'),
+    preview: root.querySelector('[data-action="preview"]'),
+    publish: root.querySelector('[data-action="publish"]')
+  };
+  var previewToken = null;
+  var busy = false;
+
+  function escape_(value) {
+    var node = document.createElement("span");
+    node.textContent = String(value == null ? "" : value);
+    return node.innerHTML;
+  }
+  function message_(text, state) {
+    status.textContent = text;
+    status.setAttribute("data-state", state || "");
+  }
+  function resetPreview_() {
+    previewToken = null;
+    confirmation.checked = false;
+    confirmation.disabled = true;
+    buttons.publish.disabled = true;
+    publication.innerHTML = "";
+  }
+  function setBusy_(value) {
+    busy = value;
+    buttons.diagnose.disabled = value;
+    buttons.preview.disabled = value || diagnostic.getAttribute("data-publishable") !== "true";
+    buttons.publish.disabled = value || !previewToken || !confirmation.checked;
+  }
+  function failure_(error) {
+    setBusy_(false);
+    message_("L’action n’a pas abouti. Vérifiez la saison et la configuration, puis réessayez.", "error");
+  }
+  function renderDiagnostic_(result) {
+    var item = result.diagnostic;
+    diagnostic.setAttribute("data-publishable", item.publishable ? "true" : "false");
+    diagnostic.innerHTML =
+      '<p><strong>État : ' + escape_(item.state) + '</strong></p>' +
+      '<div class="aks-analytics-metrics">' +
+      '<div class="aks-analytics-metric"><strong>' + item.conformingSourceCount + '/' + item.expectedSourceCount + '</strong>sources conformes</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.emptySourceCount + '</strong>conformes mais vides</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.validSourceCount + '</strong>sources exploitables</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.exploitableCourseCount + '</strong>cours exploitables</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.errorSourceCount + '</strong>sources en erreur</div>' +
+      '<div class="aks-analytics-metric"><strong>' + item.validationMarkerCount + '</strong>marqueurs de validation</div>' +
+      '</div>' +
+      (item.errors.length ? '<ul class="aks-analytics-errors">' +
+        item.errors.map(function (error) { return '<li>' + escape_(error.code) + '</li>'; }).join("") + '</ul>' : "");
+  }
+  function diagnose_() {
+    if (busy) return;
+    resetPreview_(); setBusy_(true); message_("Contrôle des sources en cours…");
+    google.script.run.withSuccessHandler(function (result) {
+      renderDiagnostic_(result); setBusy_(false);
+      message_(result.diagnostic.publishable ? "Toutes les sources sont prêtes." : "Le lot n’est pas encore publiable. Consultez les états des sources.",
+        result.diagnostic.publishable ? "success" : "error");
+    }).withFailureHandler(failure_).AKS_getAdminAnalyticsDiagnostic({ season: season.value });
+  }
+  function preview_() {
+    if (busy) return;
+    resetPreview_(); setBusy_(true); message_("Génération de l’aperçu sans écriture…");
+    google.script.run.withSuccessHandler(function (result) {
+      renderDiagnostic_(result);
+      previewToken = result.confirmationToken;
+      reports.innerHTML = "";
+      result.reports.forEach(function (report) {
+        var article = document.createElement("article");
+        var title = document.createElement("h3");
+        var frame = document.createElement("iframe");
+        article.className = "aks-analytics-report";
+        title.textContent = report.label || "Rapport";
+        frame.title = "Aperçu — " + (report.label || "Rapport");
+        frame.setAttribute("sandbox", "");
+        frame.srcdoc = report.html || "";
+        article.appendChild(title);
+        article.appendChild(frame);
+        reports.appendChild(article);
+      });
+      confirmation.disabled = !previewToken;
+      setBusy_(false);
+      message_("Aperçu généré sans écriture Drive. Vérifiez les rapports.", "success");
+    }).withFailureHandler(failure_).AKS_previewAdminAnalyticsReports({ season: season.value });
+  }
+  function publish_() {
+    if (busy || !previewToken || !confirmation.checked) return;
+    setBusy_(true); message_("Publication confirmée en cours…");
+    google.script.run.withSuccessHandler(function (result) {
+      previewToken = null; confirmation.disabled = true; setBusy_(false);
+      message_("Les rapports ont été publiés.", "success");
+      publication.innerHTML = result.folderUrl ?
+        '<p><a target="_blank" rel="noopener noreferrer" href="' + escape_(result.folderUrl) + '">Ouvrir le dossier publié</a></p>' : "";
+    }).withFailureHandler(failure_).AKS_publishAdminAnalyticsReports({
+      season: season.value, confirmationToken: previewToken, confirmed: true
+    });
+  }
+  season.addEventListener("input", function () {
+    diagnostic.removeAttribute("data-publishable"); buttons.preview.disabled = true; resetPreview_();
+  });
+  confirmation.addEventListener("change", function () { buttons.publish.disabled = busy || !confirmation.checked || !previewToken; });
+  buttons.diagnose.addEventListener("click", diagnose_);
+  buttons.preview.addEventListener("click", preview_);
+  buttons.publish.addEventListener("click", publish_);
+}());
+</script>

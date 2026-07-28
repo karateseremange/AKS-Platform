@@ -24,6 +24,10 @@ function doGet(event) {
     return AKS.Admin.Logs.render(event.parameter);
   }
 
+  if (event.parameter && event.parameter.app === "analytics") {
+    return AKS.Admin.Analytics.render(event.parameter);
+  }
+
   var installResult = AKS.Core.Application.install();
 
   if (!installResult.ok) {
