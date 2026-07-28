@@ -8,6 +8,9 @@
   var date = document.getElementById("session-date");
   var loadButton = document.getElementById("load-sessions");
   var saveButton = document.getElementById("save-draft");
+  var closeButton = document.getElementById("close-session");
+  var closeDialog = document.getElementById("close-dialog");
+  var confirmCloseButton = document.getElementById("confirm-close");
   var roster = document.getElementById("attendance-list");
   var list = document.getElementById("session-list");
   var empty = document.getElementById("session-empty");
@@ -26,6 +29,8 @@
     date.disabled = value;
     loadButton.disabled = value;
     saveButton.disabled = value;
+    closeButton.disabled = value;
+    confirmCloseButton.disabled = value;
     roster.querySelectorAll("button").forEach(function (button) {
       button.disabled = value;
     });
@@ -127,11 +132,18 @@
       });
   }
 
-  function saveDraft() {
+  function saveBatch(targetState) {
     if (!course.value || !date.value || !members.length || busy) return;
+    var closing = targetState === "CLOTUREE";
+    if (closing && members.some(function (member) {
+      return statuses[member.id] === "NON_RENSEIGNE";
+    })) {
+      showError("Tous les licenciés doivent être renseignés avant la clôture.");
+      return;
+    }
     var parts = course.value.split("|");
     setBusy(true);
-    feedback.textContent = "Enregistrement du brouillon…";
+    feedback.textContent = closing ? "Clôture de la séance…" : "Enregistrement du brouillon…";
     google.script.run
       .withSuccessHandler(function (response) {
         setBusy(false);
@@ -139,7 +151,9 @@
           showError(response && response.error && response.error.message);
           return;
         }
-        feedback.textContent = "Brouillon enregistré — version " + response.version + ".";
+        feedback.textContent = closing ?
+          "Séance clôturée — version " + response.version + "." :
+          "Brouillon enregistré — version " + response.version + ".";
         loadWorkspace();
       })
       .withFailureHandler(function () {
@@ -153,11 +167,22 @@
         sessionDate: currentSession ? "" : date.value,
         expectedVersion: currentSession ? currentSession.version : 0,
         submissionId: submissionId(),
-        targetState: "BROUILLON",
+        targetState: targetState,
         attendances: members.map(function (member) {
           return { licencieId: member.id, status: statuses[member.id] };
         })
       });
+  }
+
+  function requestClosure() {
+    if (busy) return;
+    if (members.some(function (member) {
+      return statuses[member.id] === "NON_RENSEIGNE";
+    })) {
+      showError("Tous les licenciés doivent être renseignés avant la clôture.");
+      return;
+    }
+    closeDialog.showModal();
   }
 
   roster.addEventListener("click", function (event) {
@@ -177,6 +202,11 @@
   });
   date.addEventListener("change", loadWorkspace);
   loadButton.addEventListener("click", loadWorkspace);
-  saveButton.addEventListener("click", saveDraft);
+  saveButton.addEventListener("click", function () { saveBatch("BROUILLON"); });
+  closeButton.addEventListener("click", requestClosure);
+  confirmCloseButton.addEventListener("click", function () {
+    closeDialog.close();
+    saveBatch("CLOTUREE");
+  });
 }());
 </script>
