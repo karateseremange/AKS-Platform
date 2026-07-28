@@ -116,4 +116,18 @@
     color: #fff;
     width: 100%;
   }
+  .aks-attendance-danger {
+    background: #a61b1b;
+    border-color: #a61b1b;
+    color: #fff;
+  }
+  dialog {
+    width: min(520px, calc(100% - 24px));
+    border: 1px solid var(--aks-border);
+    border-radius: 16px;
+    color: var(--aks-text);
+    padding: 20px;
+  }
+  dialog::backdrop { background: rgba(23, 32, 51, .58); }
+  .aks-attendance-dialog-actions { display: grid; gap: 8px; }
 </style>

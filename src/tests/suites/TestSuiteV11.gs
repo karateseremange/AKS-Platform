@@ -352,6 +352,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS-SAISIE-004 / reprise brouillon", test: AKS_testAnalyticsSaisie004_returnsResumableDraft_ }
     ,{ name: "ANALYTICS-SAISIE-004 / statuts rapides", test: AKS_testAnalyticsSaisie004_exposesRapidStatusControls_ }
     ,{ name: "ANALYTICS-SAISIE-004 / sauvegarde versionnée", test: AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / confirmation clôture", test: AKS_testAnalyticsSaisie005_exposesExplicitClosureConfirmation_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / clôture incomplète bloquée", test: AKS_testAnalyticsSaisie005_rejectsIncompleteClosureClientSide_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / commande clôture versionnée", test: AKS_testAnalyticsSaisie005_closesThroughVersionedServerCommand_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / retour lecture seule", test: AKS_testAnalyticsSaisie005_returnsClosedSessionToReadOnly_ }
     ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }

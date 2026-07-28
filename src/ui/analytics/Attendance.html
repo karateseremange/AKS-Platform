@@ -53,7 +53,23 @@
           <button id="save-draft" class="aks-attendance-primary" type="button">
             Enregistrer le brouillon
           </button>
+          <button id="close-session" class="aks-attendance-danger" type="button">
+            Clôturer la séance
+          </button>
         </section>
+
+        <dialog id="close-dialog" aria-labelledby="close-dialog-title">
+          <form method="dialog">
+            <h2 id="close-dialog-title">Confirmer la clôture</h2>
+            <p>Après clôture, la séance sera disponible en lecture seule.</p>
+            <div class="aks-attendance-dialog-actions">
+              <button id="cancel-close" value="cancel" type="submit">Annuler</button>
+              <button id="confirm-close" class="aks-attendance-danger" value="confirm" type="button">
+                Confirmer la clôture
+              </button>
+            </div>
+          </form>
+        </dialog>
       <? } else if (viewModel.ok) { ?>
         <section class="aks-attendance-card aks-attendance-empty">
           Aucun cours ne vous est affecté.
