@@ -90,7 +90,8 @@ function AKS_testAttendanceWrite_createsDraftBatch_() {
   assertEquals_(1, result.version);
   assertEquals_(2, result.savedCount);
   assertEquals_(1, result.completedCount);
-  assertEquals_("SESSION_CREATE", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("SESSION_CREATE", fixture.state.capabilities[1]);
 }
 
 function AKS_testAttendanceWrite_replaysIdenticalSubmission_() {
@@ -139,7 +140,8 @@ function AKS_testAttendanceWrite_closesCompleteSession_() {
   var result = AKS.Analytics.AttendanceWriteService.closeAttendanceSession(
     command, fixture.options);
   assertEquals_("CLOTUREE", result.workflowState);
-  assertEquals_("SESSION_CLOSE", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("SESSION_CLOSE", fixture.state.capabilities[1]);
 }
 
 function AKS_testAttendanceWrite_rejectsUnknownMember_() {
@@ -225,7 +227,8 @@ function AKS_testAttendanceWrite_correctsClosedWithAudit_() {
       ]
     }), fixture.options);
   assertEquals_(2, result.version);
-  assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_READ", fixture.state.capabilities[0]);
+  assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.capabilities[1]);
   assertEquals_("ATTENDANCE_CORRECT_CLOSED", fixture.state.audits[0].action);
 }
 
