@@ -92,11 +92,16 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
     recipe: true,
     baseUrl: deploymentUrl
   }).getContent();
+  var normalizedRendered = rendered
+    .replace(/&amp;/g, "&")
+    .replace(/&#(?:x0*3[dD]|0*61);/g, "=");
   AKS_assertAnalyticsSaisie003_(
     source.indexOf('href="<?= adminTarget ?>"') !== -1 &&
     source.indexOf('href="?app=admin"') === -1 &&
     source.indexOf("Retour au Centre de pilotage") !== -1 &&
-    rendered.indexOf('href="' + deploymentUrl + '?app=admin"') !== -1,
+    normalizedRendered.indexOf(
+      'href="' + deploymentUrl + '?app=admin"'
+    ) !== -1,
     "Le retour doit utiliser l'URL absolue du déploiement vers le Centre de pilotage.");
 }
 
