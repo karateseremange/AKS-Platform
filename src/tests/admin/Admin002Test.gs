@@ -141,12 +141,21 @@ function AKS_testAdmin002PublishesOnlyActiveModules_() {
   var moduleDestinations = model.families.filter(function (family) {
     return family.id === "modules";
   })[0].destinations;
+  var attendanceQuickAction = model.quickActions.filter(function (action) {
+    return action.id === "module.analytics.attendance";
+  })[0];
 
   AKS_assertAdmin002_(
-    moduleDestinations.length === 2 &&
+    moduleDestinations.length === 3 &&
       moduleDestinations[0].id === "module.analytics" &&
-      moduleDestinations[1].id === "module.health-questionnaire",
-    "Seul le module actif et déclaré doit publier sa destination."
+      moduleDestinations[1].id === "module.analytics.attendance" &&
+      moduleDestinations[1].target ===
+        "https://example.test/app?app=attendance" &&
+      moduleDestinations[2].id === "module.health-questionnaire" &&
+      attendanceQuickAction &&
+      attendanceQuickAction.target ===
+        "https://example.test/app?app=attendance",
+    "Les modules actifs doivent publier leurs destinations et actions rapides."
   );
 }
 

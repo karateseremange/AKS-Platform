@@ -12,7 +12,7 @@ AKS.Modules.Analytics = AKS.Modules.Analytics || {};
 AKS.Modules.Analytics.Module = Object.freeze({
   id: "analytics",
   name: "AKS Analytics",
-  version: "0.1.0",
+  version: "0.1.1",
   status: "active",
 
   getDescriptor: function () {
@@ -30,6 +30,16 @@ AKS.Modules.Analytics.Module = Object.freeze({
       label: "Analytics",
       family: "modules",
       target: "?app=analytics",
+      available: true,
+      authorized: true,
+      external: false,
+      priority: 10,
+      quickAction: true
+    }, {
+      id: "module.analytics.attendance",
+      label: "Saisie des présences",
+      family: "modules",
+      target: "?app=attendance",
       available: true,
       authorized: true,
       external: false,
