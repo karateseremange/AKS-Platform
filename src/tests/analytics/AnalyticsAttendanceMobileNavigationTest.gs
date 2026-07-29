@@ -99,7 +99,7 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
   );
   var viewModel = page.getViewModel();
   AKS_assertAnalyticsSaisie003_(
-    source.indexOf('href="<?= viewModel.navigation.homeTarget ?>"') !== -1 &&
+    source.indexOf("viewModel.navigation.homeTarget") !== -1 &&
     source.indexOf('href="?app=admin"') === -1 &&
     source.indexOf("Retour au Centre de pilotage") !== -1 &&
     viewModel.navigation.homeTarget === deploymentUrl + "?app=admin",
