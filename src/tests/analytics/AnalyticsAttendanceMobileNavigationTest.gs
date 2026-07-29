@@ -88,20 +88,15 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
     source.indexOf('id="session-list"') !== -1,
     "Le parcours cours puis séance doit être présent.");
   var deploymentUrl = "https://script.google.com/macros/s/TEST_DEPLOYMENT/exec";
-  var rendered = AKS.Analytics.AttendancePage.render({
-    recipe: true,
-    baseUrl: deploymentUrl
-  }).getContent();
-  var normalizedRendered = rendered
-    .replace(/&amp;/g, "&")
-    .replace(/&#(?:x0*3[dD]|0*61);/g, "=");
+  var page = AKS_createAttendancePage_(function () {
+    return deploymentUrl;
+  });
+  var viewModel = page.getViewModel({ recipe: true });
   AKS_assertAnalyticsSaisie003_(
-    source.indexOf('href="<?= adminTarget ?>"') !== -1 &&
+    source.indexOf('href="<?= viewModel.navigation.homeTarget ?>"') !== -1 &&
     source.indexOf('href="?app=admin"') === -1 &&
     source.indexOf("Retour au Centre de pilotage") !== -1 &&
-    normalizedRendered.indexOf(
-      'href="' + deploymentUrl + '?app=admin"'
-    ) !== -1,
+    viewModel.navigation.homeTarget === deploymentUrl + "?app=admin",
     "Le retour doit utiliser l'URL absolue du déploiement vers le Centre de pilotage.");
 }
 
