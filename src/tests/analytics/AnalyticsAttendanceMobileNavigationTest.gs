@@ -87,6 +87,10 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
     source.indexOf('id="session-date"') !== -1 &&
     source.indexOf('id="session-list"') !== -1,
     "Le parcours cours puis séance doit être présent.");
+  AKS_assertAnalyticsSaisie003_(
+    source.indexOf('href="?app=admin"') !== -1 &&
+    source.indexOf("Retour au Centre de pilotage") !== -1,
+    "La saisie des présences doit permettre le retour au Centre de pilotage.");
 }
 
 function AKS_testAnalyticsSaisie003_hasAccessibleFeedback_() {
