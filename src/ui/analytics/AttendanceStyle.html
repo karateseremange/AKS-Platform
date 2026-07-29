@@ -31,13 +31,19 @@
     min-height: 48px;
     align-items: center;
     gap: 8px;
-    color: var(--aks-primary);
+    padding: 11px 14px;
+    border: 1px solid var(--aks-border);
+    border-radius: 9px;
+    background: var(--aks-surface);
+    color: var(--aks-primary-dark);
     font-weight: 700;
     text-decoration: none;
   }
-  .aks-attendance-back:hover { text-decoration: underline; }
+  .aks-attendance-back:hover,
   .aks-attendance-back:focus-visible {
-    border-radius: 6px;
+    background: #edf2ff;
+  }
+  .aks-attendance-back:focus-visible {
     outline: 3px solid var(--aks-focus);
     outline-offset: 3px;
   }
