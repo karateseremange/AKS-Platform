@@ -22,10 +22,10 @@ function AKS_testAnalyticsSaisie006_locksRecipeScopeAndDate_() {
 
 function AKS_testAnalyticsSaisie006_exposesDistinctRecipeRoute_() {
   var webApp = String(doGet);
-  var page = String(AKS.Analytics.AttendancePage.render);
   AKS_assertAnalyticsSaisie003_(
     webApp.indexOf('app === "attendance-recipe"') !== -1 &&
-    page.indexOf("AttendanceMobileRecipe.getAccessContext") !== -1,
+    webApp.indexOf("AttendanceRecipePage.render") !== -1 &&
+    AKS.Analytics.AttendancePage !== AKS.Analytics.AttendanceRecipePage,
     "La recette doit utiliser une route et une composition serveur distinctes."
   );
 }

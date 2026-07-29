@@ -88,10 +88,16 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
     source.indexOf('id="session-list"') !== -1,
     "Le parcours cours puis séance doit être présent.");
   var deploymentUrl = "https://script.google.com/macros/s/TEST_DEPLOYMENT/exec";
-  var page = AKS_createAttendancePage_(function () {
-    return deploymentUrl;
-  });
-  var viewModel = page.getViewModel({ recipe: true });
+  var page = AKS_createAttendancePage_(
+    function () {
+      return AKS.Analytics.AttendanceMobileRecipe.getAccessContext();
+    },
+    function () {
+      return deploymentUrl;
+    },
+    true
+  );
+  var viewModel = page.getViewModel();
   AKS_assertAnalyticsSaisie003_(
     source.indexOf('href="<?= viewModel.navigation.homeTarget ?>"') !== -1 &&
     source.indexOf('href="?app=admin"') === -1 &&

@@ -5,7 +5,11 @@ AKS.Analytics = AKS.Analytics || {};
  * ANALYTICS-SAISIE-003 mobile attendance page.
  * Authorization data is resolved server-side before the template is rendered.
  */
-function AKS_createAttendancePage_(baseUrlProvider) {
+function AKS_createAttendancePage_(
+  accessContextProvider,
+  baseUrlProvider,
+  recipeMode
+) {
   function baseUrl_() {
     try {
       return typeof baseUrlProvider === "function" ? baseUrlProvider() || "" : "";
@@ -14,10 +18,8 @@ function AKS_createAttendancePage_(baseUrlProvider) {
     }
   }
 
-  function getViewModel_(recipeMode) {
-    var accessViewModel = recipeMode ?
-      AKS.Analytics.AttendanceMobileRecipe.getAccessContext() :
-      AKS_createAttendanceServerApi_().getAccessContext();
+  function getViewModel_() {
+    var accessViewModel = accessContextProvider();
     var viewModel = {};
     Object.keys(accessViewModel).forEach(function (key) {
       viewModel[key] = accessViewModel[key];
@@ -29,15 +31,12 @@ function AKS_createAttendancePage_(baseUrlProvider) {
   }
 
   return Object.freeze({
-    getViewModel: function (options) {
-      options = options || {};
-      return getViewModel_(options.recipe === true);
+    getViewModel: function () {
+      return getViewModel_();
     },
 
-    render: function (options) {
-      options = options || {};
-      var recipeMode = options.recipe === true;
-      var viewModel = getViewModel_(recipeMode);
+    render: function () {
+      var viewModel = getViewModel_();
       var template = HtmlService.createTemplateFromFile(
         "ui/analytics/Attendance"
       );
@@ -52,9 +51,25 @@ function AKS_createAttendancePage_(baseUrlProvider) {
   });
 }
 
-AKS.Analytics.AttendancePage = AKS_createAttendancePage_(function () {
-  return ScriptApp.getService().getUrl();
-});
+AKS.Analytics.AttendancePage = AKS_createAttendancePage_(
+  function () {
+    return AKS_createAttendanceServerApi_().getAccessContext();
+  },
+  function () {
+    return ScriptApp.getService().getUrl();
+  },
+  false
+);
+
+AKS.Analytics.AttendanceRecipePage = AKS_createAttendancePage_(
+  function () {
+    return AKS.Analytics.AttendanceMobileRecipe.getAccessContext();
+  },
+  function () {
+    return ScriptApp.getService().getUrl();
+  },
+  true
+);
 
 function AKS_includeAttendanceFile_(path) {
   return HtmlService.createHtmlOutputFromFile(path).getContent();
