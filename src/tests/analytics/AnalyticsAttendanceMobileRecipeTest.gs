@@ -15,7 +15,7 @@ function AKS_testAnalyticsSaisie006_locksRecipeScopeAndDate_() {
   AKS_assertAnalyticsSaisie003_(
     constants.courseCode === "BABY" &&
     constants.season === "2026-2027" &&
-    constants.sessionDate === "2026-09-19",
+    constants.sessionDate === "2026-09-26",
     "La recette doit être limitée au cours, à la saison et à la date réservés."
   );
 }

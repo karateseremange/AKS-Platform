@@ -13,7 +13,7 @@ AKS.Analytics.AttendanceMobileRecipe = (function () {
   var AUTHORIZED_EMAIL = "karate.seremange@gmail.com";
   var COURSE_CODE = "BABY";
   var SEASON = "2026-2027";
-  var SESSION_DATE = "2026-09-19";
+  var SESSION_DATE = "2026-09-26";
 
   function failure_(code, message) {
     var failure = new Error(message);
@@ -113,7 +113,7 @@ AKS.Analytics.AttendanceMobileRecipe = (function () {
       String(scope.season || "").trim() === SEASON &&
       String(scope.sessionDate || "").trim() === SESSION_DATE,
     "ACCESS_SCOPE_INVALID",
-    "La recette est limitée à BABY / 2026-2027 au 19 septembre 2026.");
+    "La recette est limitée à BABY / 2026-2027 au 26 septembre 2026.");
   }
 
   function assertCommand_(command, repository) {
