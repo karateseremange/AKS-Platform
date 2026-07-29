@@ -342,6 +342,24 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / refus avant lecture", test: AKS_testAnalyticsSaisie003_deniesBeforeWorkspaceRead_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / périmètre invalide", test: AKS_testAnalyticsSaisie003_rejectsInvalidWorkspaceScope_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / espace nettoyé", test: AKS_testAnalyticsSaisie003_returnsSafeWorkspace_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / parcours mobile", test: AKS_testAnalyticsSaisie003_exposesMobilePage_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / retour accessible", test: AKS_testAnalyticsSaisie003_hasAccessibleFeedback_ }
+    ,{ name: "ANALYTICS-SAISIE-003 / cibles mobiles", test: AKS_testAnalyticsSaisie003_hasMobileTargets_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / roster nettoyé", test: AKS_testAnalyticsSaisie004_returnsSafeEligibleRoster_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / reprise brouillon", test: AKS_testAnalyticsSaisie004_returnsResumableDraft_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / statuts rapides", test: AKS_testAnalyticsSaisie004_exposesRapidStatusControls_ }
+    ,{ name: "ANALYTICS-SAISIE-004 / sauvegarde versionnée", test: AKS_testAnalyticsSaisie004_savesVersionedDraftThroughServer_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / confirmation clôture", test: AKS_testAnalyticsSaisie005_exposesExplicitClosureConfirmation_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / clôture incomplète bloquée", test: AKS_testAnalyticsSaisie005_rejectsIncompleteClosureClientSide_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / commande clôture versionnée", test: AKS_testAnalyticsSaisie005_closesThroughVersionedServerCommand_ }
+    ,{ name: "ANALYTICS-SAISIE-005 / retour lecture seule", test: AKS_testAnalyticsSaisie005_returnsClosedSessionToReadOnly_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / identité et cible recette", test: AKS_testAnalyticsSaisie006_locksRecipeIdentityAndTarget_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / périmètre et date recette", test: AKS_testAnalyticsSaisie006_locksRecipeScopeAndDate_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / route recette distincte", test: AKS_testAnalyticsSaisie006_exposesDistinctRecipeRoute_ }
+    ,{ name: "ANALYTICS-SAISIE-006 / endpoints client distincts", test: AKS_testAnalyticsSaisie006_usesDedicatedClientEndpoints_ }
     ,{ name: "ACCESS-001 / API contexte minimal", test: AKS_testAttendanceServer_exposesSafeAccessContext_ }
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }

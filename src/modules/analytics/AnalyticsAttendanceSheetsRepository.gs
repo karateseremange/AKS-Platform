@@ -123,8 +123,16 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
         var entry = dateText_(row["Date entrée"], timeZone_(book));
         var exit = dateText_(row["Date sortie"], timeZone_(book));
         return (!entry || entry <= sessionDate) && (!exit || exit >= sessionDate);
-      }).map(function (row) { return { id: text_(row["ID licencié"]) }; })
-      .filter(function (member) { return member.id !== ""; });
+      }).map(function (row) {
+        var firstName = text_(row["Prénom"] || row["Prenom"]);
+        var lastName = text_(row["Nom"]);
+        return {
+          id: text_(row["ID licencié"]),
+          displayName: [lastName, firstName].filter(function (value) {
+            return value !== "";
+          }).join(" ") || text_(row["ID licencié"])
+        };
+      }).filter(function (member) { return member.id !== ""; });
   }
 
   function rowObject_(names, values) {
@@ -320,6 +328,55 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       return session;
     }
 
+    function listWorkspace(context, sessionDate) {
+      var sheet = context.book.getSheetByName("Séances");
+      if (!sheet) throw failure_("ATTENDANCE_WRITE_FAILED", "Feuille Séances absente.");
+      var sessions = objects_(sheet, ["ID séance", "Date séance", "État"])
+        .map(function (row) {
+          return {
+            id: text_(row["ID séance"]),
+            date: dateText_(row["Date séance"], timeZone_(context.book)),
+            state: text_(row.État).toUpperCase(),
+            workflowState: text_(row["État saisie"]).toUpperCase() || "CLOTUREE",
+            version: Number(row["Version saisie"] || 0)
+          };
+        })
+        .filter(function (session) {
+          return session.id && session.date;
+        })
+        .sort(function (left, right) {
+          return left.date < right.date ? 1 : (left.date > right.date ? -1 : 0);
+        })
+        .slice(0, 20);
+      var eligibleMembers = eligible_(context.book, sessionDate);
+      var matchingSessions = sessions.filter(function (session) {
+        return session.date === sessionDate;
+      });
+      if (matchingSessions.length > 1) {
+        throw failure_("ATTENDANCE_SESSION_DUPLICATE",
+          "Plusieurs séances correspondent à la date sélectionnée.");
+      }
+      var currentSession = matchingSessions[0] || null;
+      if (currentSession) {
+        var attendanceRows = objects_(context.book.getSheetByName("Présences"),
+          ["Saison", "Cours", "Date séance", "ID licencié", "Statut"]);
+        currentSession.attendances = attendanceRows.filter(function (row) {
+          return text_(row["ID séance"]) === currentSession.id;
+        }).map(function (row) {
+          return {
+            licencieId: text_(row["ID licencié"]),
+            status: text_(row.Statut).toUpperCase()
+          };
+        });
+      }
+      return {
+        eligibleCount: eligibleMembers.length,
+        eligibleMembers: eligibleMembers,
+        currentSession: currentSession,
+        sessions: sessions
+      };
+    }
+
     var repository = {
       resolve: resolve,
       findSession: findSession,
@@ -327,7 +384,8 @@ AKS.Analytics.AttendanceSheetsRepository = (function () {
       replaceBatch: replaceBatch,
       verify: verify,
       restore: restore,
-      getSession: getSession
+      getSession: getSession,
+      listWorkspace: listWorkspace
     };
     return {
       resolver: repository,

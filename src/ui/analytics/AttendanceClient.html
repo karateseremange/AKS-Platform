@@ -1,0 +1,245 @@
+<script>
+(function () {
+  "use strict";
+
+  var course = document.getElementById("course");
+  var card = document.getElementById("sessions-card");
+  var entryCard = document.getElementById("entry-card");
+  var date = document.getElementById("session-date");
+  var loadButton = document.getElementById("load-sessions");
+  var saveButton = document.getElementById("save-draft");
+  var closeButton = document.getElementById("close-session");
+  var closeDialog = document.getElementById("close-dialog");
+  var confirmCloseButton = document.getElementById("confirm-close");
+  var roster = document.getElementById("attendance-list");
+  var list = document.getElementById("session-list");
+  var empty = document.getElementById("session-empty");
+  var count = document.getElementById("eligible-count");
+  var feedback = document.getElementById("feedback");
+  var actionFeedback = document.getElementById("attendance-action-feedback");
+  var members = [];
+  var statuses = {};
+  var currentSession = null;
+  var busy = false;
+  var recipeMode = window.AKS_ATTENDANCE_RECIPE === true;
+
+  date.value = recipeMode ? "2026-09-19" : new Date().toISOString().slice(0, 10);
+  if (recipeMode) date.disabled = true;
+
+  function setBusy(value) {
+    busy = value;
+    course.disabled = value;
+    date.disabled = recipeMode || value;
+    loadButton.disabled = value;
+    saveButton.disabled = value;
+    closeButton.disabled = value;
+    confirmCloseButton.disabled = value;
+    roster.querySelectorAll("button").forEach(function (button) {
+      button.disabled = value;
+    });
+  }
+
+  function announce(message, nearActions) {
+    feedback.textContent = message || "";
+    actionFeedback.textContent = nearActions ? (message || "") : "";
+  }
+
+  function showError(message) {
+    announce(message || "Le service est temporairement indisponible.", true);
+  }
+
+  function submissionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return "attendance-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  function renderRoster() {
+    roster.textContent = "";
+    var readOnly = currentSession && currentSession.workflowState === "CLOTUREE";
+    members.forEach(function (member) {
+      var row = document.createElement("fieldset");
+      row.className = "aks-attendance-member";
+      var legend = document.createElement("legend");
+      legend.textContent = member.displayName;
+      row.appendChild(legend);
+      ["PRESENT", "ABSENT", "EXCUSE", "NON_RENSEIGNE"].forEach(function (status) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.dataset.memberId = member.id;
+        button.dataset.status = status;
+        button.className = statuses[member.id] === status ? "is-selected" : "";
+        button.setAttribute("aria-pressed", statuses[member.id] === status ? "true" : "false");
+        button.disabled = readOnly;
+        button.textContent = {
+          PRESENT: "Présent", ABSENT: "Absent", EXCUSE: "Excusé",
+          NON_RENSEIGNE: "À renseigner"
+        }[status];
+        row.appendChild(button);
+      });
+      roster.appendChild(row);
+    });
+    saveButton.hidden = readOnly;
+    closeButton.hidden = readOnly;
+    entryCard.hidden = members.length === 0;
+    if (readOnly) {
+      feedback.textContent = "Cette séance est clôturée et disponible en lecture seule.";
+    }
+  }
+
+  function render(response) {
+    setBusy(false);
+    list.textContent = "";
+    if (!response || !response.ok) {
+      entryCard.hidden = true;
+      showError(response && response.error && response.error.message);
+      return;
+    }
+    feedback.textContent = "";
+    members = response.data.eligibleMembers || [];
+    currentSession = response.data.currentSession || null;
+    statuses = {};
+    members.forEach(function (member) { statuses[member.id] = "NON_RENSEIGNE"; });
+    if (currentSession) {
+      (currentSession.attendances || []).forEach(function (entry) {
+        if (Object.prototype.hasOwnProperty.call(statuses, entry.licencieId)) {
+          statuses[entry.licencieId] = entry.status;
+        }
+      });
+    }
+    count.textContent = members.length + " licencié(s) éligible(s) à la date sélectionnée.";
+    empty.hidden = response.data.sessions.length !== 0;
+    response.data.sessions.forEach(function (session) {
+      var item = document.createElement("li");
+      var sessionButton = document.createElement("button");
+      sessionButton.type = "button";
+      sessionButton.className = "aks-attendance-session";
+      sessionButton.dataset.sessionDate = session.date;
+      var title = document.createElement("strong");
+      title.textContent = session.date;
+      var state = document.createElement("span");
+      state.textContent = session.workflowState === "CLOTUREE" ? "Clôturée" : "Brouillon";
+      sessionButton.appendChild(title);
+      sessionButton.appendChild(state);
+      item.appendChild(sessionButton);
+      list.appendChild(item);
+    });
+    renderRoster();
+  }
+
+  function loadWorkspace(successMessage) {
+    if (!course.value || !date.value || busy) return;
+    var parts = course.value.split("|");
+    setBusy(true);
+    feedback.textContent = "Chargement des séances…";
+    var runner = google.script.run
+      .withSuccessHandler(function (response) {
+        render(response);
+        if (successMessage) announce(successMessage, true);
+      })
+      .withFailureHandler(function () {
+        setBusy(false);
+        showError();
+      });
+    var scope = {
+      courseCode: parts[0],
+      season: parts[1],
+      sessionDate: date.value
+    };
+    if (recipeMode) {
+      runner.AKS_getAttendanceRecipeWorkspace(scope);
+    } else {
+      runner.AKS_getAttendanceWorkspace(scope);
+    }
+  }
+
+  function saveBatch(targetState) {
+    if (!course.value || !date.value || !members.length || busy) return;
+    var closing = targetState === "CLOTUREE";
+    if (closing && members.some(function (member) {
+      return statuses[member.id] === "NON_RENSEIGNE";
+    })) {
+      showError("Tous les licenciés doivent être renseignés avant la clôture.");
+      return;
+    }
+    var parts = course.value.split("|");
+    setBusy(true);
+    feedback.textContent = closing ? "Clôture de la séance…" : "Enregistrement du brouillon…";
+    var runner = google.script.run
+      .withSuccessHandler(function (response) {
+        setBusy(false);
+        if (!response || !response.ok) {
+          showError(response && response.error && response.error.message);
+          return;
+        }
+        var successMessage = closing ?
+          "Séance clôturée — version " + response.version + "." :
+          "Brouillon enregistré — version " + response.version + ".";
+        loadWorkspace(successMessage);
+      })
+      .withFailureHandler(function () {
+        setBusy(false);
+        showError();
+      });
+    var command = {
+      courseCode: parts[0],
+      season: parts[1],
+      sessionId: currentSession ? currentSession.id : "",
+      sessionDate: currentSession ? "" : date.value,
+      expectedVersion: currentSession ? currentSession.version : 0,
+      submissionId: submissionId(),
+      targetState: targetState,
+      attendances: members.map(function (member) {
+        return { licencieId: member.id, status: statuses[member.id] };
+      })
+    };
+    if (recipeMode) {
+      runner.AKS_saveAttendanceRecipeBatch(command);
+    } else {
+      runner.AKS_saveAttendanceBatch(command);
+    }
+  }
+
+  function requestClosure() {
+    if (busy) return;
+    if (members.some(function (member) {
+      return statuses[member.id] === "NON_RENSEIGNE";
+    })) {
+      showError("Tous les licenciés doivent être renseignés avant la clôture.");
+      return;
+    }
+    closeDialog.showModal();
+  }
+
+  roster.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-member-id]");
+    if (!button || busy) return;
+    statuses[button.dataset.memberId] = button.dataset.status;
+    renderRoster();
+  });
+  course.addEventListener("change", function () {
+    card.hidden = !course.value;
+    entryCard.hidden = true;
+    list.textContent = "";
+    empty.hidden = true;
+    count.textContent = "";
+    feedback.textContent = "";
+    if (course.value) loadWorkspace();
+  });
+  date.addEventListener("change", function () { loadWorkspace(); });
+  loadButton.addEventListener("click", function () { loadWorkspace(); });
+  list.addEventListener("click", function (event) {
+    var sessionButton = event.target.closest("button[data-session-date]");
+    if (!sessionButton || busy) return;
+    date.value = sessionButton.dataset.sessionDate;
+    loadWorkspace();
+  });
+  saveButton.addEventListener("click", function () { saveBatch("BROUILLON"); });
+  closeButton.addEventListener("click", requestClosure);
+  confirmCloseButton.addEventListener("click", function () {
+    closeDialog.close();
+    saveBatch("CLOTUREE");
+  });
+}());
+</script>
