@@ -17,6 +17,13 @@
         <? } ?>
       </header>
 
+      <nav class="aks-attendance-navigation" aria-label="Navigation secondaire">
+        <a class="aks-attendance-back" href="?app=admin">
+          <span aria-hidden="true">←</span>
+          Retour au Centre de pilotage
+        </a>
+      </nav>
+
       <div id="feedback" class="aks-attendance-feedback" role="status" aria-live="polite">
         <? if (!viewModel.ok) { ?>
           <?= viewModel.error.message ?>
