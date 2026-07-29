@@ -12,7 +12,9 @@ AKS.Analytics.AttendancePage = Object.freeze({
     var viewModel = recipeMode ?
       AKS.Analytics.AttendanceMobileRecipe.getAccessContext() :
       AKS_createAttendanceServerApi_().getAccessContext();
-    var baseUrl = ScriptApp.getService().getUrl() || "";
+    var baseUrl = recipeMode && options.baseUrl ?
+      String(options.baseUrl) :
+      String(ScriptApp.getService().getUrl() || "");
     var template = HtmlService.createTemplateFromFile(
       "ui/analytics/Attendance"
     );
