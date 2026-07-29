@@ -29,7 +29,7 @@ function doGet(event) {
   }
 
   if (event.parameter && event.parameter.app === "attendance-recipe") {
-    return AKS.Analytics.AttendancePage.render({ recipe: true });
+    return AKS.Analytics.AttendanceRecipePage.render();
   }
 
   if (event.parameter && event.parameter.app === "attendance") {

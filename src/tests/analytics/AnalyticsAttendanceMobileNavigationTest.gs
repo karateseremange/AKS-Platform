@@ -87,10 +87,23 @@ function AKS_testAnalyticsSaisie003_exposesMobilePage_() {
     source.indexOf('id="session-date"') !== -1 &&
     source.indexOf('id="session-list"') !== -1,
     "Le parcours cours puis séance doit être présent.");
+  var deploymentUrl = "https://script.google.com/macros/s/TEST_DEPLOYMENT/exec";
+  var page = AKS_createAttendancePage_(
+    function () {
+      return AKS.Analytics.AttendanceMobileRecipe.getAccessContext();
+    },
+    function () {
+      return deploymentUrl;
+    },
+    true
+  );
+  var viewModel = page.getViewModel();
   AKS_assertAnalyticsSaisie003_(
-    source.indexOf('href="?app=admin"') !== -1 &&
-    source.indexOf("Retour au Centre de pilotage") !== -1,
-    "La saisie des présences doit permettre le retour au Centre de pilotage.");
+    source.indexOf("viewModel.navigation.homeTarget") !== -1 &&
+    source.indexOf('href="?app=admin"') === -1 &&
+    source.indexOf("Retour au Centre de pilotage") !== -1 &&
+    viewModel.navigation.homeTarget === deploymentUrl + "?app=admin",
+    "Le retour doit utiliser l'URL absolue du déploiement vers le Centre de pilotage.");
 }
 
 function AKS_testAnalyticsSaisie003_hasAccessibleFeedback_() {
