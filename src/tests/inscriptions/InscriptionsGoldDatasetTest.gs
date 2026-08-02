@@ -45,7 +45,11 @@ function AKS_testInscriptionsGold_allocatesUniqueCanonicalIdentifiers_() {
   assertEquals_("INS-2026-000001", result.ids[2]);
   assertEquals_("IMP-2026-000002", result.ids[3]);
   assertEquals_("IMP-2026-000003", result.ids[4]);
-  assertEquals_(["A", "B", "A", "B", "A"], result.lockOrder, "Les demandes concurrentes doivent être sérialisées sous verrou.");
+  assertEquals_(
+    '["A","B","A","B","A"]',
+    JSON.stringify(result.lockOrder),
+    "Les demandes concurrentes doivent être sérialisées sous verrou."
+  );
 }
 
 function AKS_testInscriptionsGold_minimizesQuestionnaireSante_() {
