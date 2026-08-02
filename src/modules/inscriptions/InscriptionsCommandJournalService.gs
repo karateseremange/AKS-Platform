@@ -18,6 +18,10 @@ AKS.Inscriptions.createCommandJournalService = function (options) {
   var clock = options.clock || function () { return new Date(); };
   var SCHEMA_VERSION = "inscriptions-command/1.0";
   var MAX_ATTEMPTS = 3;
+  var ACTION_CAPABILITIES = {
+    DOSSIER_CREATE: "INSCRIPTIONS_WRITE",
+    DOSSIER_UPDATE: "INSCRIPTIONS_WRITE"
+  };
   var STATUSES = {
     INTENTION: true,
     EN_COURS: true,
@@ -126,7 +130,7 @@ AKS.Inscriptions.createCommandJournalService = function (options) {
   function validateCommand_(normalized) {
     var targetValid = typeof normalized.target === "string" ? !!normalized.target :
       !!(normalized.target && normalized.target.type && normalized.target.id);
-    if (!normalized.capability || !normalized.action || !normalized.idempotencyKey ||
+    if (!ACTION_CAPABILITIES[normalized.action] || !normalized.idempotencyKey ||
         !normalized.correlationId || !normalized.payloadFingerprint ||
         !normalized.scope.module || !normalized.scope.season || !normalized.scope.section ||
         !targetValid) {
@@ -136,7 +140,10 @@ AKS.Inscriptions.createCommandJournalService = function (options) {
 
   function authorize_(command) {
     ensureDependencies_();
-    access.assertInscriptionsCapability(command.capability, command.scope);
+    access.assertInscriptionsCapability(
+      ACTION_CAPABILITIES[command.action] || "INSCRIPTIONS_WRITE",
+      command.scope
+    );
     var actor = text_(access.getCurrentIdentity()).toLowerCase();
     if (!actor) throw error_("INSCRIPTIONS_IDENTITY_INVALID", "Identité Inscriptions invalide.");
     return actor;
@@ -310,6 +317,9 @@ AKS.Inscriptions.createCommandJournalService = function (options) {
       if (record.attemptCount >= MAX_ATTEMPTS) {
         transition_(record, "ECHEC_FINAL", "INSCRIPTIONS_ATTEMPTS_EXHAUSTED");
         throw error_("INSCRIPTIONS_ATTEMPTS_EXHAUSTED", "Nombre maximal de tentatives atteint.");
+      }
+      if (record.status === "EN_COURS") {
+        record = transition_(record, "ECHEC_RECUPERABLE", "INSCRIPTIONS_RECOVERY_ABSENT");
       }
       return attempt_(record, command, actor);
     }
