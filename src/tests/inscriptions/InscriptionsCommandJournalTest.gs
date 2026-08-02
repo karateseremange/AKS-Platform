@@ -35,10 +35,13 @@ function AKS_inscriptions009Fixture_(overrides) {
   var commits = 0;
   var applied = !!overrides.applied;
   var authorizations = 0;
+  var assertedCapabilities = [];
+  var reconciliations = 0;
   var journal = overrides.journal || AKS_inscriptions009MemoryJournal_();
   var access = overrides.access || {
-    assertInscriptionsCapability: function () {
+    assertInscriptionsCapability: function (capability) {
       authorizations += 1;
+      assertedCapabilities.push(capability);
       if (overrides.deny) {
         var denied = new Error("Refusé."); denied.code = "ACCESS_CAPABILITY_DENIED"; throw denied;
       }
@@ -47,7 +50,10 @@ function AKS_inscriptions009Fixture_(overrides) {
     getCurrentIdentity: function () { return overrides.actor || "operator@example.com"; }
   };
   var repository = overrides.repository || {
-    reconcile: function () { return overrides.reconcile || (applied ? "APPLIED" : "ABSENT"); },
+    reconcile: function () {
+      reconciliations += 1;
+      return overrides.reconcile || (applied ? "APPLIED" : "ABSENT");
+    },
     prepare: function (command) {
       preparedCommands.push(JSON.parse(JSON.stringify(command)));
       return command;
@@ -84,6 +90,8 @@ function AKS_inscriptions009Fixture_(overrides) {
     preparedCommands: preparedCommands,
     commits: function () { return commits; },
     authorizations: function () { return authorizations; },
+    assertedCapabilities: assertedCapabilities,
+    reconciliations: function () { return reconciliations; },
     isApplied: function () { return applied; }
   };
 }
@@ -190,6 +198,12 @@ function AKS_testInscriptions009_authorizesBeforeDetailedValidation_() {
   }, "ACCESS_CAPABILITY_DENIED");
 }
 
+function AKS_testInscriptions009_imposesCapabilityFromAction_() {
+  var fixture = AKS_inscriptions009Fixture_();
+  fixture.service.execute(AKS_inscriptions009Command_({ capability: "INSCRIPTIONS_READ" }));
+  assertEquals_("INSCRIPTIONS_WRITE", fixture.assertedCapabilities[0]);
+}
+
 function AKS_testInscriptions009_resumesIntentionAfterReconstruction_() {
   var journal = AKS_inscriptions009MemoryJournal_();
   var first = AKS_inscriptions009Fixture_({ journal: journal, failAuditResult: "INTENTION" });
@@ -199,6 +213,62 @@ function AKS_testInscriptions009_resumesIntentionAfterReconstruction_() {
   var second = AKS_inscriptions009Fixture_({ journal: journal });
   assertEquals_("CONFIRMEE", second.service.execute(AKS_inscriptions009Command_()).status);
   assertEquals_(1, second.commits());
+}
+
+function AKS_testInscriptions009_resumesRunningBeforeCommit_() {
+  var journal = AKS_inscriptions009MemoryJournal_();
+  var interrupted = AKS_inscriptions009Fixture_({
+    journal: journal,
+    repository: {
+      reconcile: function () { return "ABSENT"; },
+      prepare: function () {
+        var failure = new Error("Interruption avant commit.");
+        failure.code = "INTERRUPTED_BEFORE_COMMIT";
+        throw failure;
+      },
+      commit: function () {},
+      readBack: function () { return {}; },
+      verify: function () { return false; }
+    }
+  });
+  assertThrows_(function () { interrupted.service.execute(AKS_inscriptions009Command_()); },
+    "INTERRUPTED_BEFORE_COMMIT");
+  assertEquals_("EN_COURS", journal.snapshot("cmd-001").status);
+  assertEquals_(1, journal.snapshot("cmd-001").attemptCount);
+
+  var resumed = AKS_inscriptions009Fixture_({ journal: journal, reconcile: "ABSENT" });
+  var result = resumed.service.execute(AKS_inscriptions009Command_());
+  assertEquals_("CONFIRMEE", result.status);
+  assertEquals_(1, resumed.reconciliations());
+  assertEquals_(1, resumed.commits());
+  assertEquals_(2, result.attemptCount);
+}
+
+function AKS_testInscriptions009_deniesRevokedRecoveryBeforeRepository_() {
+  var journal = AKS_inscriptions009MemoryJournal_();
+  var interrupted = AKS_inscriptions009Fixture_({
+    journal: journal,
+    repository: {
+      reconcile: function () { return "ABSENT"; },
+      prepare: function () {
+        var failure = new Error("Interruption avant commit.");
+        failure.code = "INTERRUPTED_BEFORE_COMMIT";
+        throw failure;
+      },
+      commit: function () {},
+      readBack: function () { return {}; },
+      verify: function () { return false; }
+    }
+  });
+  assertThrows_(function () { interrupted.service.execute(AKS_inscriptions009Command_()); },
+    "INTERRUPTED_BEFORE_COMMIT");
+
+  var revoked = AKS_inscriptions009Fixture_({ journal: journal, deny: true });
+  assertThrows_(function () { revoked.service.execute(AKS_inscriptions009Command_()); },
+    "ACCESS_CAPABILITY_DENIED");
+  assertEquals_(0, revoked.reconciliations());
+  assertEquals_(0, revoked.commits());
+  assertEquals_("EN_COURS", journal.snapshot("cmd-001").status);
 }
 
 function AKS_testInscriptions009_reconcilesAppliedBeforeRetry_() {
@@ -312,7 +382,10 @@ function AKS_runInscriptions009Suite() {
     { name: "identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ },
     { name: "refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ },
     { name: "autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ },
+    { name: "capacité imposée par l'action", test: AKS_testInscriptions009_imposesCapabilityFromAction_ },
     { name: "reprise INTENTION reconstruite", test: AKS_testInscriptions009_resumesIntentionAfterReconstruction_ },
+    { name: "reprise EN_COURS avant commit", test: AKS_testInscriptions009_resumesRunningBeforeCommit_ },
+    { name: "droit retiré avant reprise", test: AKS_testInscriptions009_deniesRevokedRecoveryBeforeRepository_ },
     { name: "réconciliation appliquée sans rejeu", test: AKS_testInscriptions009_reconcilesAppliedBeforeRetry_ },
     { name: "reprise absente après reconstruction", test: AKS_testInscriptions009_retriesAbsentAfterReconstruction_ },
     { name: "réconciliation ambiguë refusée", test: AKS_testInscriptions009_rejectsAmbiguousReconciliation_ },
