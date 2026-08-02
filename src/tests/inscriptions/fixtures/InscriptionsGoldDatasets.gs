@@ -120,8 +120,8 @@ AKS.Tests.InscriptionsGoldDatasetsRaw = [
   {
     id: "INS-GOLD-011", version: "1.0", title: "Refus d'accès avant toute lecture du dépôt", operation: "ACCESS_GATE",
     input: { capability: "INSCRIPTIONS_READ", accessAllowed: false, missingCapabilities: ["INSCRIPTIONS_READ", "INSCRIPTIONS_WRITE"] },
-    expected: { status: "PARTIEL", output: { decision: "REFUSE", repositoryReads: 0, missingCapabilities: ["INSCRIPTIONS_READ", "INSCRIPTIONS_WRITE"] } },
-    fingerprint: "138bec58"
+    expected: { status: "REUSSI", output: { decision: "REFUSE", repositoryReads: 0, missingCapabilities: ["INSCRIPTIONS_READ", "INSCRIPTIONS_WRITE"] } },
+    fingerprint: "4801afcc"
   },
   {
     id: "INS-GOLD-012", version: "1.0", title: "Échec de l'audit obligatoire sans commit", operation: "AUDITED_COMMAND",
