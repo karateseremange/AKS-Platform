@@ -51,8 +51,10 @@ AKS_runValidationSuiteV11
 ```
 
 État de référence avant l’incrément Inscriptions : **333/333 tests réussis,
-0 échec**. L’incrément `INSCRIPTIONS-007` ajoute 8 tests purs ; le total attendu
-de **341 tests** doit être confirmé dans Apps Script avant fusion.
+0 échec**. L’incrément `INSCRIPTIONS-007` ajoute 8 tests purs. La suite cumulative
+a été exécutée dans Apps Script le 2 août 2026 sur le commit validé `21ae32f` :
+**341/341 tests réussis, 0 échec**. L’incrément est intégré sur `develop` par la
+PR #85, commit de fusion `d09c85c3e125f8944b3f6aa47ba222fdf3a73b32`.
 
 La publication reste soumise au Quality Gate défini dans `RELEASE-001`.
 
