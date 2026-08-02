@@ -29,7 +29,21 @@ function AKS_createAccessService_(options) {
     ACCESS_MANAGE: true,
     ANALYTICS_PREVIEW: true,
     ANALYTICS_PUBLISH: true,
-    AUDIT_READ: true
+    AUDIT_READ: true,
+    INSCRIPTIONS_READ: true,
+    INSCRIPTIONS_ANALYZE_IMPORT: true,
+    INSCRIPTIONS_CONTROL: true,
+    INSCRIPTIONS_WRITE: true,
+    INSCRIPTIONS_APPLY_IMPORT: true,
+    INSCRIPTIONS_ACTIVATE: true
+  };
+  var INSCRIPTIONS_CAPABILITIES = {
+    INSCRIPTIONS_READ: "OPTIONAL",
+    INSCRIPTIONS_ANALYZE_IMPORT: "FORBIDDEN",
+    INSCRIPTIONS_CONTROL: "OPTIONAL",
+    INSCRIPTIONS_WRITE: "OPTIONAL",
+    INSCRIPTIONS_APPLY_IMPORT: "FORBIDDEN",
+    INSCRIPTIONS_ACTIVATE: "REQUIRED"
   };
   var ROLE_CAPABILITIES = {
     ADMINISTRATEUR: Object.keys(CAPABILITIES),
@@ -51,6 +65,8 @@ function AKS_createAccessService_(options) {
       ? AKS_createScriptAccessRegistryStore_()
       : null);
   var courseProvider = options.courseProvider || { list: function () { return []; } };
+  var inscriptionsCatalogueProvider = options.inscriptionsCatalogueProvider ||
+    { list: function () { return []; } };
   var legacyAdminEmails = options.legacyAdminEmails ||
     (AKS.Config && typeof AKS.Config.getAuthorizedAdminEmails === "function"
       ? AKS.Config.getAuthorizedAdminEmails()
@@ -104,7 +120,10 @@ function AKS_createAccessService_(options) {
     if (!assignment || typeof assignment !== "object") {
       throw error_("ACCESS_REGISTRY_INVALID", "Affectation d'accès invalide.");
     }
+    var module = upper_(assignment.module);
     var normalized = {
+      module: module,
+      section: upper_(assignment.section),
       courseCode: upper_(assignment.courseCode),
       season: String(assignment.season || "").trim(),
       status: upper_(assignment.status),
@@ -113,8 +132,15 @@ function AKS_createAccessService_(options) {
       validFrom: assignment.validFrom || "",
       validUntil: assignment.validUntil || ""
     };
-    if (!normalized.courseCode || !validSeason_(normalized.season) ||
+    if (!validSeason_(normalized.season) ||
         (normalized.status !== "ACTIVE" && normalized.status !== "INACTIVE")) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Affectation d'accès invalide.");
+    }
+    if (module === "INSCRIPTIONS") {
+      if (!normalized.section) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Périmètre Inscriptions invalide.");
+      }
+    } else if (module || normalized.section || !normalized.courseCode) {
       throw error_("ACCESS_REGISTRY_INVALID", "Affectation d'accès invalide.");
     }
     (assignment.extraCapabilities || []).forEach(function (capability) {
@@ -127,8 +153,20 @@ function AKS_createAccessService_(options) {
           normalized.extraCapabilities.indexOf(capability) !== -1) {
         throw error_("ACCESS_REGISTRY_INVALID", "Capacité complémentaire invalide.");
       }
+      if (module === "INSCRIPTIONS") {
+        if (!INSCRIPTIONS_CAPABILITIES[capability] ||
+            INSCRIPTIONS_CAPABILITIES[capability] === "REQUIRED" && !normalized.courseCode ||
+            INSCRIPTIONS_CAPABILITIES[capability] === "FORBIDDEN" && normalized.courseCode) {
+          throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions incohérente.");
+        }
+      } else if (INSCRIPTIONS_CAPABILITIES[capability]) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions hors module.");
+      }
       normalized.extraCapabilities.push(capability);
     });
+    if (module === "INSCRIPTIONS" && normalized.extraCapabilities.length === 0) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions absente.");
+    }
     return normalized;
   }
 
@@ -202,7 +240,7 @@ function AKS_createAccessService_(options) {
   function assignmentCapabilities_(account, courseCode, season, now) {
     var result = {};
     account.assignments.forEach(function (assignment) {
-      if (!activeAt_(assignment, now) ||
+      if (assignment.module === "INSCRIPTIONS" || !activeAt_(assignment, now) ||
           assignment.courseCode !== courseCode ||
           (assignment.season !== "*" && assignment.season !== season)) return;
       assignment.roles.forEach(function (role) {
@@ -216,6 +254,97 @@ function AKS_createAccessService_(options) {
       });
     });
     return result;
+  }
+
+  function inscriptionsCatalogue_() {
+    if (!inscriptionsCatalogueProvider ||
+        typeof inscriptionsCatalogueProvider.list !== "function") {
+      throw error_("ACCESS_SCOPE_INVALID", "Catalogue Inscriptions indisponible.");
+    }
+    var entries = inscriptionsCatalogueProvider.list();
+    if (!Array.isArray(entries)) {
+      throw error_("ACCESS_SCOPE_INVALID", "Catalogue Inscriptions invalide.");
+    }
+    var seen = {};
+    return entries.map(function (entry) {
+      if (!entry || !Array.isArray(entry.courseCodes)) {
+        throw error_("ACCESS_SCOPE_INVALID", "Catalogue Inscriptions invalide.");
+      }
+      var normalized = {
+        season: String(entry.season || "").trim(),
+        section: upper_(entry.section),
+        courseCodes: entry.courseCodes.map(upper_),
+        active: entry.active !== false
+      };
+      var key = normalized.season + "|" + normalized.section;
+      if (!validSeason_(normalized.season) || normalized.season === "*" ||
+          !normalized.section || seen[key] ||
+          normalized.courseCodes.some(function (code, index, values) {
+            return !code || values.indexOf(code) !== index;
+          })) {
+        throw error_("ACCESS_SCOPE_INVALID", "Catalogue Inscriptions invalide.");
+      }
+      seen[key] = true;
+      return normalized;
+    });
+  }
+
+  function resolveInscriptionsScope_(capability, scope) {
+    scope = scope || {};
+    var normalized = {
+      module: upper_(scope.module),
+      season: String(scope.season || "").trim(),
+      section: upper_(scope.section),
+      courseCode: upper_(scope.courseCode)
+    };
+    var courseRule = INSCRIPTIONS_CAPABILITIES[capability];
+    if (!courseRule || normalized.module !== "INSCRIPTIONS" ||
+        !validSeason_(normalized.season) || normalized.season === "*" ||
+        !normalized.section ||
+        courseRule === "REQUIRED" && !normalized.courseCode ||
+        courseRule === "FORBIDDEN" && normalized.courseCode) {
+      throw error_("ACCESS_SCOPE_INVALID", "Périmètre Inscriptions invalide.");
+    }
+    var matches = inscriptionsCatalogue_().filter(function (entry) {
+      return entry.active && entry.season === normalized.season &&
+        entry.section === normalized.section;
+    });
+    if (matches.length !== 1 || normalized.courseCode &&
+        matches[0].courseCodes.indexOf(normalized.courseCode) === -1) {
+      throw error_("ACCESS_SCOPE_INVALID", "Périmètre Inscriptions inconnu.");
+    }
+    return normalized;
+  }
+
+  function inscriptionsAssignmentAllows_(account, assignment, capability, scope, now) {
+    return assignment.module === "INSCRIPTIONS" && activeAt_(assignment, now) &&
+      assignment.roles.some(function (role) {
+        return account.roles.indexOf(role) !== -1;
+      }) &&
+      assignment.extraCapabilities.indexOf(capability) !== -1 &&
+      (assignment.season === "*" || assignment.season === scope.season) &&
+      assignment.section === scope.section &&
+      (!scope.courseCode ? !assignment.courseCode :
+        !assignment.courseCode || assignment.courseCode === scope.courseCode);
+  }
+
+  function assertInscriptionsCapability(capability, scope) {
+    capability = upper_(capability);
+    if (!INSCRIPTIONS_CAPABILITIES[capability]) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Capacité Inscriptions non autorisée.");
+    }
+    var normalizedScope = resolveInscriptionsScope_(capability, scope);
+    var context = context_();
+    if (context.legacyBootstrap ||
+        context.account.roles.indexOf("ADMINISTRATEUR") !== -1) return true;
+    var allowed = context.account.assignments.some(function (assignment) {
+      return inscriptionsAssignmentAllows_(
+        context.account, assignment, capability, normalizedScope, context.now);
+    });
+    if (!allowed) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Opération Inscriptions non autorisée.");
+    }
+    return true;
   }
 
   function resolveCourse_(courseCode, season) {
@@ -341,10 +470,12 @@ function AKS_createAccessService_(options) {
   }
 
   return Object.freeze({
+    getCapabilityCatalogue: function () { return Object.freeze(Object.keys(CAPABILITIES)); },
     getCurrentIdentity: currentIdentity_,
     listAuthorizedCourses: listAuthorizedCourses,
     hasCapability: hasCapability,
     assertCapability: assertCapability,
+    assertInscriptionsCapability: assertInscriptionsCapability,
     getEffectiveAccessContext: effectiveContext,
     saveRegistry: saveRegistry
   });
