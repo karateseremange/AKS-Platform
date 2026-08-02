@@ -367,11 +367,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
-    ,{ name: "INSCRIPTIONS / absence distincte", test: AKS_testInscriptionsGold_distinguishesMissingNoAndInvalid_ }
-    ,{ name: "INSCRIPTIONS / identifiants canoniques", test: AKS_testInscriptionsGold_usesCanonicalIdentifiers_ }
+    ,{ name: "INSCRIPTIONS / catalogue réellement exécuté", test: AKS_testInscriptionsGold_executesValidatedCatalogue_ }
+    ,{ name: "INSCRIPTIONS / identifiants canoniques uniques", test: AKS_testInscriptionsGold_allocatesUniqueCanonicalIdentifiers_ }
     ,{ name: "INSCRIPTIONS / conformité des oracles", test: AKS_testInscriptionsGold_matchesEveryExecutableOracle_ }
-    ,{ name: "INSCRIPTIONS / statuts honnêtes", test: AKS_testInscriptionsGold_reportsPartialAndBlockedHonestly_ }
-    ,{ name: "INSCRIPTIONS / aucune API Google", test: AKS_testInscriptionsGold_callsNoGoogleService_ }
+    ,{ name: "INSCRIPTIONS / Questionnaire santé minimisé", test: AKS_testInscriptionsGold_minimizesQuestionnaireSante_ }
+    ,{ name: "INSCRIPTIONS / fabrique sans API Google", test: AKS_testInscriptionsGold_factoryContainsNoGoogleService_ }
   ]);
 }
 
