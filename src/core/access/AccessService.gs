@@ -316,8 +316,11 @@ function AKS_createAccessService_(options) {
     return normalized;
   }
 
-  function inscriptionsAssignmentAllows_(assignment, capability, scope, now) {
+  function inscriptionsAssignmentAllows_(account, assignment, capability, scope, now) {
     return assignment.module === "INSCRIPTIONS" && activeAt_(assignment, now) &&
+      assignment.roles.some(function (role) {
+        return account.roles.indexOf(role) !== -1;
+      }) &&
       assignment.extraCapabilities.indexOf(capability) !== -1 &&
       (assignment.season === "*" || assignment.season === scope.season) &&
       assignment.section === scope.section &&
@@ -336,7 +339,7 @@ function AKS_createAccessService_(options) {
         context.account.roles.indexOf("ADMINISTRATEUR") !== -1) return true;
     var allowed = context.account.assignments.some(function (assignment) {
       return inscriptionsAssignmentAllows_(
-        assignment, capability, normalizedScope, context.now);
+        context.account, assignment, capability, normalizedScope, context.now);
     });
     if (!allowed) {
       throw error_("ACCESS_CAPABILITY_DENIED", "Opération Inscriptions non autorisée.");
