@@ -61,8 +61,8 @@ function AKS_testInscriptionsGold_minimizesQuestionnaireSante_() {
 function AKS_testInscriptionsGold_matchesEveryExecutableOracle_() {
   var report = AKS.Inscriptions.ReadOnlyEngine.run(AKS.Tests.InscriptionsGoldDatasets);
   assertEquals_(0, report.counts.ECHEC);
-  assertEquals_(12, report.counts.REUSSI);
-  assertEquals_(2, report.counts.PARTIEL);
+  assertEquals_(13, report.counts.REUSSI);
+  assertEquals_(1, report.counts.PARTIEL);
   assertEquals_(2, report.counts.BLOQUE);
   report.details.forEach(function (detail) { assertEquals_(0, detail.differences.length, detail.id); });
 }
