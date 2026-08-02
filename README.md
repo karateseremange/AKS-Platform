@@ -26,7 +26,9 @@ La version stable de production est **AKS Platform V1.2.0**, publiée le
 - AKS Analytics : contrôle des sources Google Sheets, consolidation, indicateurs,
   prévisualisation et publication de rapports PDF dans Google Drive ;
 - gestion des rapports par saison et par cours, dont le cours féminin à partir de
-  2026-2027.
+  2026-2027 ;
+- socle AKS Inscriptions : jeux d’or fictifs et exécution déterministe sans
+  écriture réelle.
 
 ## Organisation
 
@@ -40,7 +42,7 @@ La version stable de production est **AKS Platform V1.2.0**, publiée le
 
 Le Project Book du dépôt `AKS-Platform-ProjectBook` constitue la référence fonctionnelle et documentaire officielle.
 
-## Validation V1.2.0
+## Validation V1.2.0 et développements
 
 Dans Apps Script, exécuter :
 
@@ -48,7 +50,9 @@ Dans Apps Script, exécuter :
 AKS_runValidationSuiteV11
 ```
 
-État validé avant publication : **273/273 tests réussis, 0 échec**.
+État de référence avant l’incrément Inscriptions : **333/333 tests réussis,
+0 échec**. L’incrément `INSCRIPTIONS-007` ajoute 8 tests purs ; le total attendu
+de **341 tests** doit être confirmé dans Apps Script avant fusion.
 
 La publication reste soumise au Quality Gate défini dans `RELEASE-001`.
 
