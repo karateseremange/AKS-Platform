@@ -372,6 +372,24 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS / conformité des oracles", test: AKS_testInscriptionsGold_matchesEveryExecutableOracle_ }
     ,{ name: "INSCRIPTIONS / Questionnaire santé minimisé", test: AKS_testInscriptionsGold_minimizesQuestionnaireSante_ }
     ,{ name: "INSCRIPTIONS / fabrique sans API Google", test: AKS_testInscriptionsGold_factoryContainsNoGoogleService_ }
+    ,{ name: "INSCRIPTIONS-008 / catalogue exact", test: AKS_testInscriptions008_exposesExactCapabilityCatalogue_ }
+    ,{ name: "INSCRIPTIONS-008 / compatibilité Présences", test: AKS_testInscriptions008_preservesAttendanceAssignments_ }
+    ,{ name: "INSCRIPTIONS-008 / aucun octroi implicite", test: AKS_testInscriptions008_grantsNoImplicitRoleCapability_ }
+    ,{ name: "INSCRIPTIONS-008 / capacités séparées", test: AKS_testInscriptions008_separatesExplicitCapabilities_ }
+    ,{ name: "INSCRIPTIONS-008 / six capacités et leurs portées", test: AKS_testInscriptions008_authorizesSixCapabilitiesWithTheirScopes_ }
+    ,{ name: "INSCRIPTIONS-008 / matrice de portée fermée", test: AKS_testInscriptions008_validatesClosedScopeMatrix_ }
+    ,{ name: "INSCRIPTIONS-008 / limites saison section cours", test: AKS_testInscriptions008_honorsSeasonSectionAndCourse_ }
+    ,{ name: "INSCRIPTIONS-008 / périmètres expiré et ambigu", test: AKS_testInscriptions008_rejectsExpiredAndAmbiguousScopes_ }
+    ,{ name: "INSCRIPTIONS-008 / refus avant lecture", test: AKS_testInscriptions008_deniesBeforeRepositoryRead_ }
+    ,{ name: "INSCRIPTIONS-008 / périmètre serveur", test: AKS_testInscriptions008_readsTrustedScopeOnly_ }
+    ,{ name: "INSCRIPTIONS-008 / intention avant commit", test: AKS_testInscriptions008_requiresIntentionBeforeCommit_ }
+    ,{ name: "INSCRIPTIONS-008 / cours obligatoire pour affectation", test: AKS_testInscriptions008_requiresCourseForAssignmentWrite_ }
+    ,{ name: "INSCRIPTIONS-008 / cycle réussi ordonné", test: AKS_testInscriptions008_ordersSuccessfulCommand_ }
+    ,{ name: "INSCRIPTIONS-008 / audit final obligatoire", test: AKS_testInscriptions008_doesNotConfirmWithoutFinalAudit_ }
+    ,{ name: "INSCRIPTIONS-008 / échec de contrôle récupérable", test: AKS_testInscriptions008_recordsRecoverableControlFailure_ }
+    ,{ name: "INSCRIPTIONS-008 / audit minimisé", test: AKS_testInscriptions008_minimizesAuditEvents_ }
+    ,{ name: "INSCRIPTIONS-008 / aucune API Google", test: AKS_testInscriptions008_containsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-008 / INS-GOLD-011 réussi", test: AKS_testInscriptions008_promotesGold011AfterProof_ }
   ]);
 }
 
