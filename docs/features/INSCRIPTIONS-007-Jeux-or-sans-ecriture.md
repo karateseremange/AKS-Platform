@@ -2,7 +2,7 @@
 
 ## Statut
 
-En revue.
+Validé — intégré sur `develop`.
 
 ## Objet
 
@@ -73,6 +73,13 @@ ni déclarés artificiellement ni comptabilisés comme des réussites.
 
 Les huit tests purs corrigés ont été exécutés localement avec succès. Les seize
 oracles produisent 12 réussites, 2 résultats partiels, 2 blocages attendus et
-aucun échec. Le total cumulatif attendu reste de 341 tests. Ce total devra être
-confirmé dans Apps Script avec AKS_runValidationSuiteV11 avant tout changement
-de statut ou fusion.
+aucun échec.
+
+La suite cumulative `AKS_runValidationSuiteV11` a été exécutée dans Apps Script
+le 2 août 2026 sur le commit validé `21ae32f` : **341/341 tests réussis,
+0 échec**. La PR #85 est fusionnée sur `develop` au commit
+`d09c85c3e125f8944b3f6aa47ba222fdf3a73b32`.
+
+Le code du projet Apps Script a été synchronisé pour cette validation. Les tests
+n’ont lu ni écrit aucune donnée métier ou ressource Google réelle, et aucun
+déploiement de production n’a été créé.
