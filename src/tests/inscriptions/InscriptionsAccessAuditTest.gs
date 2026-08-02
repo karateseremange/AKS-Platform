@@ -149,13 +149,24 @@ function AKS_testInscriptions008_grantsNoImplicitRoleCapability_() {
 function AKS_testInscriptions008_separatesExplicitCapabilities_() {
   var access = AKS_inscriptions008Access_({
     registry: AKS_inscriptions008Registry_([
-      AKS_inscriptions008Assignment_(["INSCRIPTIONS_READ"])
+      AKS_inscriptions008Assignment_(["INSCRIPTIONS_ANALYZE_IMPORT"])
     ])
   });
   assertTrue_(access.assertInscriptionsCapability(
-    "INSCRIPTIONS_READ", AKS_inscriptions008Scope_()));
+    "INSCRIPTIONS_ANALYZE_IMPORT", AKS_inscriptions008Scope_()));
   assertThrows_(function () {
-    access.assertInscriptionsCapability("INSCRIPTIONS_WRITE", AKS_inscriptions008Scope_());
+    access.assertInscriptionsCapability("INSCRIPTIONS_APPLY_IMPORT", AKS_inscriptions008Scope_());
+  }, "ACCESS_CAPABILITY_DENIED");
+}
+
+function AKS_testInscriptions008_requiresAssignmentRoleOnAccount_() {
+  var registry = AKS_inscriptions008Registry_([
+    AKS_inscriptions008Assignment_(["INSCRIPTIONS_READ"])
+  ]);
+  registry.accounts[0].roles = ["CONSULTATION"];
+  var access = AKS_inscriptions008Access_({ registry: registry });
+  assertThrows_(function () {
+    access.assertInscriptionsCapability("INSCRIPTIONS_READ", AKS_inscriptions008Scope_());
   }, "ACCESS_CAPABILITY_DENIED");
 }
 
@@ -345,6 +356,7 @@ function AKS_runInscriptions008Suite() {
     { name: "compatibilité Présences", test: AKS_testInscriptions008_preservesAttendanceAssignments_ },
     { name: "aucun octroi implicite", test: AKS_testInscriptions008_grantsNoImplicitRoleCapability_ },
     { name: "capacités séparées", test: AKS_testInscriptions008_separatesExplicitCapabilities_ },
+    { name: "rôle d'affectation porté par le compte", test: AKS_testInscriptions008_requiresAssignmentRoleOnAccount_ },
     { name: "six capacités et leurs portées", test: AKS_testInscriptions008_authorizesSixCapabilitiesWithTheirScopes_ },
     { name: "matrice de portée fermée", test: AKS_testInscriptions008_validatesClosedScopeMatrix_ },
     { name: "limites saison section cours", test: AKS_testInscriptions008_honorsSeasonSectionAndCourse_ },
