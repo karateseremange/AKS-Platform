@@ -399,7 +399,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-009 / identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ }
     ,{ name: "INSCRIPTIONS-009 / refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ }
     ,{ name: "INSCRIPTIONS-009 / autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ }
+    ,{ name: "INSCRIPTIONS-009 / capacité imposée par l'action", test: AKS_testInscriptions009_imposesCapabilityFromAction_ }
     ,{ name: "INSCRIPTIONS-009 / reprise INTENTION reconstruite", test: AKS_testInscriptions009_resumesIntentionAfterReconstruction_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise EN_COURS avant commit", test: AKS_testInscriptions009_resumesRunningBeforeCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / droit retiré avant reprise", test: AKS_testInscriptions009_deniesRevokedRecoveryBeforeRepository_ }
     ,{ name: "INSCRIPTIONS-009 / réconciliation appliquée sans rejeu", test: AKS_testInscriptions009_reconcilesAppliedBeforeRetry_ }
     ,{ name: "INSCRIPTIONS-009 / reprise absente après reconstruction", test: AKS_testInscriptions009_retriesAbsentAfterReconstruction_ }
     ,{ name: "INSCRIPTIONS-009 / réconciliation ambiguë refusée", test: AKS_testInscriptions009_rejectsAmbiguousReconciliation_ }
