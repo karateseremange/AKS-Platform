@@ -31,6 +31,7 @@ function AKS_inscriptions009MemoryJournal_(seed) {
 function AKS_inscriptions009Fixture_(overrides) {
   overrides = overrides || {};
   var events = [];
+  var preparedCommands = [];
   var commits = 0;
   var applied = !!overrides.applied;
   var authorizations = 0;
@@ -47,7 +48,10 @@ function AKS_inscriptions009Fixture_(overrides) {
   };
   var repository = overrides.repository || {
     reconcile: function () { return overrides.reconcile || (applied ? "APPLIED" : "ABSENT"); },
-    prepare: function (command) { return command; },
+    prepare: function (command) {
+      preparedCommands.push(JSON.parse(JSON.stringify(command)));
+      return command;
+    },
     commit: function () {
       commits += 1;
       if (overrides.commitFailure) {
@@ -77,6 +81,7 @@ function AKS_inscriptions009Fixture_(overrides) {
     service: service,
     journal: journal,
     events: events,
+    preparedCommands: preparedCommands,
     commits: function () { return commits; },
     authorizations: function () { return authorizations; },
     isApplied: function () { return applied; }
@@ -127,6 +132,27 @@ function AKS_testInscriptions009_replaysConfirmedWithoutCommit_() {
   assertEquals_("corr-001", replay.correlationId);
   assertEquals_(1, fixture.commits());
   assertEquals_(2, fixture.authorizations());
+}
+
+function AKS_testInscriptions009_reservesIdempotencyKeyOnce_() {
+  var journal = AKS_inscriptions009MemoryJournal_();
+  journal.reserve({ idempotencyKey: "unique-key", version: 1 });
+  assertThrows_(function () {
+    journal.reserve({ idempotencyKey: "unique-key", version: 1 });
+  }, "INSCRIPTIONS_IDEMPOTENCY_CONFLICT");
+}
+
+function AKS_testInscriptions009_rejectsUnknownJournalState_() {
+  var initial = AKS_inscriptions009Fixture_();
+  initial.service.execute(AKS_inscriptions009Command_());
+  var record = initial.journal.snapshot("cmd-001");
+  record.status = "INCONNU";
+  var fixture = AKS_inscriptions009Fixture_({
+    journal: AKS_inscriptions009MemoryJournal_([record])
+  });
+  assertThrows_(function () { fixture.service.execute(AKS_inscriptions009Command_()); },
+    "INSCRIPTIONS_JOURNAL_INVALID");
+  assertEquals_(0, fixture.commits());
 }
 
 function AKS_testInscriptions009_rejectsEveryIdentityConflict_() {
@@ -250,6 +276,7 @@ function AKS_testInscriptions009_preservesCorrelationEverywhere_() {
   var record = fixture.journal.snapshot("cmd-001");
   assertEquals_("corr-001", result.correlationId);
   assertEquals_("corr-001", record.correlationId);
+  assertEquals_("corr-001", fixture.preparedCommands[0].correlationId);
   fixture.events.forEach(function (event) { assertEquals_("corr-001", event.correlationId); });
 }
 
@@ -280,6 +307,8 @@ function AKS_runInscriptions009Suite() {
     { name: "enregistrement versionné minimisé", test: AKS_testInscriptions009_minimizesVersionedRecord_ },
     { name: "cycle nominal unique", test: AKS_testInscriptions009_runsNominalCycleOnce_ },
     { name: "rejeu confirmé sans commit", test: AKS_testInscriptions009_replaysConfirmedWithoutCommit_ },
+    { name: "réservation idempotente unique", test: AKS_testInscriptions009_reservesIdempotencyKeyOnce_ },
+    { name: "état de journal inconnu refusé", test: AKS_testInscriptions009_rejectsUnknownJournalState_ },
     { name: "identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ },
     { name: "refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ },
     { name: "autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ },
