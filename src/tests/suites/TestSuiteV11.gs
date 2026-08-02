@@ -391,6 +391,26 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-008 / audit minimisé", test: AKS_testInscriptions008_minimizesAuditEvents_ }
     ,{ name: "INSCRIPTIONS-008 / aucune API Google", test: AKS_testInscriptions008_containsNoGoogleApi_ }
     ,{ name: "INSCRIPTIONS-008 / INS-GOLD-011 réussi", test: AKS_testInscriptions008_promotesGold011AfterProof_ }
+    ,{ name: "INSCRIPTIONS-009 / enregistrement versionné minimisé", test: AKS_testInscriptions009_minimizesVersionedRecord_ }
+    ,{ name: "INSCRIPTIONS-009 / cycle nominal unique", test: AKS_testInscriptions009_runsNominalCycleOnce_ }
+    ,{ name: "INSCRIPTIONS-009 / rejeu confirmé sans commit", test: AKS_testInscriptions009_replaysConfirmedWithoutCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / réservation idempotente unique", test: AKS_testInscriptions009_reservesIdempotencyKeyOnce_ }
+    ,{ name: "INSCRIPTIONS-009 / état de journal inconnu refusé", test: AKS_testInscriptions009_rejectsUnknownJournalState_ }
+    ,{ name: "INSCRIPTIONS-009 / identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ }
+    ,{ name: "INSCRIPTIONS-009 / refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ }
+    ,{ name: "INSCRIPTIONS-009 / autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ }
+    ,{ name: "INSCRIPTIONS-009 / capacité imposée par l'action", test: AKS_testInscriptions009_imposesCapabilityFromAction_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise INTENTION reconstruite", test: AKS_testInscriptions009_resumesIntentionAfterReconstruction_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise EN_COURS avant commit", test: AKS_testInscriptions009_resumesRunningBeforeCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / droit retiré avant reprise", test: AKS_testInscriptions009_deniesRevokedRecoveryBeforeRepository_ }
+    ,{ name: "INSCRIPTIONS-009 / réconciliation appliquée sans rejeu", test: AKS_testInscriptions009_reconcilesAppliedBeforeRetry_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise absente après reconstruction", test: AKS_testInscriptions009_retriesAbsentAfterReconstruction_ }
+    ,{ name: "INSCRIPTIONS-009 / réconciliation ambiguë refusée", test: AKS_testInscriptions009_rejectsAmbiguousReconciliation_ }
+    ,{ name: "INSCRIPTIONS-009 / échec final à trois tentatives", test: AKS_testInscriptions009_stopsAfterThirdMutationFailure_ }
+    ,{ name: "INSCRIPTIONS-009 / contrôle et audit final obligatoires", test: AKS_testInscriptions009_doesNotConfirmFailedControlOrAudit_ }
+    ,{ name: "INSCRIPTIONS-009 / corrélation de bout en bout", test: AKS_testInscriptions009_preservesCorrelationEverywhere_ }
+    ,{ name: "INSCRIPTIONS-009 / conflit de version optimiste", test: AKS_testInscriptions009_rejectsOptimisticConflict_ }
+    ,{ name: "INSCRIPTIONS-009 / aucune API Google", test: AKS_testInscriptions009_containsNoGoogleApi_ }
   ]);
 }
 
