@@ -394,6 +394,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-009 / enregistrement versionné minimisé", test: AKS_testInscriptions009_minimizesVersionedRecord_ }
     ,{ name: "INSCRIPTIONS-009 / cycle nominal unique", test: AKS_testInscriptions009_runsNominalCycleOnce_ }
     ,{ name: "INSCRIPTIONS-009 / rejeu confirmé sans commit", test: AKS_testInscriptions009_replaysConfirmedWithoutCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / réservation idempotente unique", test: AKS_testInscriptions009_reservesIdempotencyKeyOnce_ }
+    ,{ name: "INSCRIPTIONS-009 / état de journal inconnu refusé", test: AKS_testInscriptions009_rejectsUnknownJournalState_ }
     ,{ name: "INSCRIPTIONS-009 / identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ }
     ,{ name: "INSCRIPTIONS-009 / refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ }
     ,{ name: "INSCRIPTIONS-009 / autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ }
