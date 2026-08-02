@@ -191,7 +191,7 @@ AKS.Inscriptions.createReadOnlyEngine = function () {
 
   function accessGate_(input, dependencies) {
     var access = dependencies.authorize(input.capability);
-    if (!access.allowed) return { status: "PARTIEL", output: { decision: "REFUSE", repositoryReads: dependencies.repository.readCount(), missingCapabilities: input.missingCapabilities } };
+    if (!access.allowed) return { status: "REUSSI", output: { decision: "REFUSE", repositoryReads: dependencies.repository.readCount(), missingCapabilities: input.missingCapabilities } };
     dependencies.repository.read();
     return { status: "REUSSI", output: { decision: "AUTORISE", repositoryReads: dependencies.repository.readCount(), missingCapabilities: [] } };
   }
