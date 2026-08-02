@@ -376,6 +376,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-008 / compatibilité Présences", test: AKS_testInscriptions008_preservesAttendanceAssignments_ }
     ,{ name: "INSCRIPTIONS-008 / aucun octroi implicite", test: AKS_testInscriptions008_grantsNoImplicitRoleCapability_ }
     ,{ name: "INSCRIPTIONS-008 / capacités séparées", test: AKS_testInscriptions008_separatesExplicitCapabilities_ }
+    ,{ name: "INSCRIPTIONS-008 / rôle d'affectation porté par le compte", test: AKS_testInscriptions008_requiresAssignmentRoleOnAccount_ }
     ,{ name: "INSCRIPTIONS-008 / six capacités et leurs portées", test: AKS_testInscriptions008_authorizesSixCapabilitiesWithTheirScopes_ }
     ,{ name: "INSCRIPTIONS-008 / matrice de portée fermée", test: AKS_testInscriptions008_validatesClosedScopeMatrix_ }
     ,{ name: "INSCRIPTIONS-008 / limites saison section cours", test: AKS_testInscriptions008_honorsSeasonSectionAndCourse_ }
