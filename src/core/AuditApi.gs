@@ -26,6 +26,17 @@ function AKS_createDefaultAuditService_() {
     return Session.getEffectiveUser().getEmail();
   }
 
+  function authorizeActor_(actorType, actorId) {
+    if (actorType !== "ADMIN") return true;
+    if (!AKS.Admin || !AKS.Admin.Access ||
+        typeof AKS.Admin.Access.assertAuthorized !== "function") return false;
+    try {
+      return AKS.Admin.Access.assertAuthorized(actorId) === actorId;
+    } catch (failure) {
+      return false;
+    }
+  }
+
   return AKS_createAuditService_({
     config: configuration,
     gateway: Object.freeze({
@@ -39,6 +50,7 @@ function AKS_createDefaultAuditService_() {
     }),
     lock: LockService.getScriptLock(),
     resolveActor: activeIdentity_,
+    authorizeActor: authorizeActor_,
     resolveTechnicalActor: technicalIdentity_,
     idProvider: function () { return Utilities.getUuid(); },
     technicalLogger: function (event) {

@@ -30,7 +30,14 @@ function AKS_createAuditCatalogs_() {
       "INSCRIPTIONS_ATTEMPTS_EXHAUSTED", "INSCRIPTIONS_RECOVERY_ABSENT",
       "INSCRIPTIONS_RECONCILIATION_AMBIGUOUS", "UNEXPECTED_ERROR"
     ]),
-    criticalities: frozenSet_(["CRITICAL", "STANDARD"])
+    criticalities: frozenSet_(["CRITICAL", "STANDARD"]),
+    metadataSchemas: Object.freeze({
+      DOSSIER_CREATE: frozenSet_(["attemptCount", "status"]),
+      DOSSIER_UPDATE: frozenSet_(["attemptCount", "status"])
+    }),
+    metadataStatuses: frozenSet_([
+      "INTENTION", "EN_COURS", "CONFIRMEE", "ECHEC_RECUPERABLE", "ECHEC_FINAL"
+    ])
   });
 }
 

@@ -417,12 +417,15 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
     ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
     ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
-    ,{ name: "AUDIT-001 / métadonnée sensible masquée", test: AKS_testAudit001_masksSensitiveMetadata_ }
+    ,{ name: "AUDIT-001 / schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ }
     ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
     ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }
     ,{ name: "AUDIT-001 / motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ }
     ,{ name: "AUDIT-001 / production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ }
     ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
+    ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
+    ,{ name: "AUDIT-001 / administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ }
+    ,{ name: "AUDIT-001 / cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ }
     ,{ name: "AUDIT-001 / en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ }
     ,{ name: "AUDIT-001 / configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ }
     ,{ name: "AUDIT-001 / configuration non explicite refusée", test: AKS_testAudit001_rejectsNonExplicitConfiguration_ }

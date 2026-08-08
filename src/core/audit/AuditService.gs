@@ -17,12 +17,12 @@ function AKS_createAuditService_(options) {
   var gateway = options.gateway;
   var lock = options.lock;
   var resolveActor = options.resolveActor;
+  var authorizeActor = options.authorizeActor;
   var resolveTechnicalActor = options.resolveTechnicalActor;
   var clock = options.clock || function () { return new Date(); };
   var idProvider = options.idProvider;
   var technicalLogger = options.technicalLogger || function () {};
   var lockTimeoutMs = Number(options.lockTimeoutMs || 5000);
-  var sensitiveKeyPattern = /(password|secret|token|authorization|cookie|signature|medical|health|questionnaire|response|email|phone|address|payment)/i;
 
   function error_(code, message) {
     var failure = new Error(message);
@@ -39,7 +39,8 @@ function AKS_createAuditService_(options) {
         typeof config.resolve !== "function" || !gateway ||
         methods.some(function (method) { return typeof gateway[method] !== "function"; }) ||
         !lock || typeof lock.tryLock !== "function" || typeof lock.releaseLock !== "function" ||
-        typeof resolveActor !== "function" || typeof resolveTechnicalActor !== "function" ||
+        typeof resolveActor !== "function" || typeof authorizeActor !== "function" ||
+        typeof resolveTechnicalActor !== "function" ||
         typeof idProvider !== "function" || !isFinite(lockTimeoutMs) ||
         lockTimeoutMs < 1000 || lockTimeoutMs > 30000) {
       throw error_("AUDIT_REQUIRED", "Le service d'audit commun est indisponible.");
@@ -100,7 +101,7 @@ function AKS_createAuditService_(options) {
       throw error_("AUDIT_RECIPE_REQUIRED", "Une ressource d'audit de recette est obligatoire.");
     }
     if (!resourceId || text_(gateway.getResourceId()) !== resourceId ||
-        !/RECETTE/i.test(text_(gateway.getResourceName()))) {
+        upper_(gateway.getResourceName()) !== "AKS AUDIT RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "La ressource d'audit n'est pas une recette autorisée.");
     }
     if (schemaVersion !== catalogs.schemaVersion ||
@@ -127,45 +128,47 @@ function AKS_createAuditService_(options) {
     return normalized;
   }
 
-  function canonicalizeMetadataValue_(value, key) {
-    if (typeof value === "undefined" || typeof value === "function" ||
-        (typeof value === "number" && !isFinite(value))) {
-      throw error_("AUDIT_EVENT_INVALID", "Métadonnée d'audit non conforme.");
-    }
-    if (value instanceof Date) {
-      if (isNaN(value.getTime())) throw error_("AUDIT_EVENT_INVALID", "Date d'audit invalide.");
-      return value.toISOString();
-    }
-    if (value === null || typeof value === "string" || typeof value === "boolean" ||
-        typeof value === "number") return value;
-    if (typeof value !== "object") {
-      throw error_("AUDIT_EVENT_INVALID", "Type de métadonnée d'audit interdit.");
-    }
-    if (Array.isArray(value)) {
-      return value.map(function (item) { return canonicalizeMetadataValue_(item, key); });
-    }
-    var normalized = {};
-    Object.keys(value).sort().forEach(function (childKey) {
-      normalized[childKey] = sensitiveKeyPattern.test(childKey)
-        ? "[MASQUÉ]"
-        : canonicalizeMetadataValue_(value[childKey], childKey);
-    });
-    return normalized;
-  }
-
-  function metadataJson_(metadata) {
+  function metadataJson_(action, metadata) {
     if (metadata === null || typeof metadata === "undefined") return "{}";
     if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
       throw error_("AUDIT_EVENT_INVALID", "Les métadonnées d'audit doivent être un objet.");
     }
-    return JSON.stringify(canonicalizeMetadataValue_(metadata));
+    var schema = catalogs.metadataSchemas && catalogs.metadataSchemas[action];
+    if (!schema) {
+      throw error_("AUDIT_EVENT_INVALID", "Schéma de métadonnées d'audit absent.");
+    }
+    var normalized = {};
+    Object.keys(metadata).sort().forEach(function (key) {
+      var value = metadata[key];
+      if (!schema[key]) {
+        throw error_("AUDIT_EVENT_INVALID", "Métadonnée d'audit interdite.");
+      }
+      if (key === "attemptCount") {
+        if (typeof value !== "number" || !isFinite(value) ||
+            Math.floor(value) !== value || value < 0 || value > 999) {
+          throw error_("AUDIT_EVENT_INVALID", "Nombre de tentatives d'audit invalide.");
+        }
+        normalized[key] = value;
+      } else if (key === "status") {
+        value = upper_(value);
+        if (!catalogs.metadataStatuses[value]) {
+          throw error_("AUDIT_EVENT_INVALID", "Statut de métadonnée d'audit invalide.");
+        }
+        normalized[key] = value;
+      }
+    });
+    return JSON.stringify(normalized);
   }
 
   function actorId_(actorType) {
     var candidate = actorType === "USER" || actorType === "ADMIN"
       ? resolveActor(actorType)
       : resolveTechnicalActor(actorType);
-    return identifier_(String(candidate || "").toLowerCase(), true);
+    var actorId = identifier_(String(candidate || "").toLowerCase(), true);
+    if (authorizeActor(actorType, actorId) !== true) {
+      throw error_("AUDIT_EVENT_INVALID", "Acteur d'audit non autorisé.");
+    }
+    return actorId;
   }
 
   function technicalActor_() {
@@ -180,17 +183,18 @@ function AKS_createAuditService_(options) {
   function normalizeEvent_(event) {
     event = event || {};
     var actorType = requiredCatalog_(event.actorType, catalogs.actorTypes);
+    var action = requiredCatalog_(event.action, catalogs.actions);
     requiredCatalog_(event.criticality, catalogs.criticalities);
     return Object.freeze({
       actorType: actorType,
-      action: requiredCatalog_(event.action, catalogs.actions),
+      action: action,
       module: requiredCatalog_(event.module, catalogs.modules),
       targetType: requiredCatalog_(event.targetType, catalogs.targetTypes),
       targetId: identifier_(event.targetId, false),
       result: requiredCatalog_(event.result, catalogs.results),
       reasonCode: reasonCode_(event.reasonCode),
       correlationId: identifier_(event.correlationId, true),
-      metadataJson: metadataJson_(event.metadata)
+      metadataJson: metadataJson_(action, event.metadata)
     });
   }
 

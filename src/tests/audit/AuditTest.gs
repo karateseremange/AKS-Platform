@@ -54,7 +54,9 @@ function AKS_audit001Fixture_(overrides) {
   var idIndex = 0;
   var dates = [
     new Date("2026-09-01T10:00:00.000Z"),
-    new Date("2026-09-01T10:00:00.001Z")
+    new Date("2026-09-01T10:00:00.001Z"),
+    new Date("2026-09-01T10:00:00.002Z"),
+    new Date("2026-09-01T10:00:00.003Z")
   ];
   var gateway = overrides.gateway || {
     getResourceId: function () { return overrides.resourceId || "audit-recipe-001"; },
@@ -83,6 +85,7 @@ function AKS_audit001Fixture_(overrides) {
       releaseLock: function () { releases += 1; }
     },
     resolveActor: overrides.resolveActor || function () { return "admin@example.com"; },
+    authorizeActor: overrides.authorizeActor || function () { return true; },
     resolveTechnicalActor: overrides.resolveTechnicalActor || function () {
       return "system.audit@example.com";
     },
@@ -162,26 +165,28 @@ function AKS_testAudit001_usesServerTimestamps_() {
 
 function AKS_testAudit001_serializesMetadataDeterministically_() {
   var proof = AKS_audit001Fixture_().service.record(AKS_audit001Event_({
-    metadata: { z: 1, nested: { b: false, a: true }, a: [2, 1] }
+    metadata: { status: "confirmee", attemptCount: 2 }
   }));
-  assertEquals_(
-    '{"a":[2,1],"nested":{"a":true,"b":false},"z":1}',
-    proof.metadata_json
-  );
+  assertEquals_('{"attemptCount":2,"status":"CONFIRMEE"}', proof.metadata_json);
 }
 
-function AKS_testAudit001_masksSensitiveMetadata_() {
-  var proof = AKS_audit001Fixture_().service.record(AKS_audit001Event_({
-    metadata: { apiToken: "forbidden", status: "CONFIRMEE" }
-  }));
-  assertEquals_('{"apiToken":"[MASQUÉ]","status":"CONFIRMEE"}', proof.metadata_json);
-  assertTrue_(proof.metadata_json.indexOf("forbidden") === -1);
+function AKS_testAudit001_rejectsMetadataOutsideClosedSchema_() {
+  var fixture = AKS_audit001Fixture_();
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({
+      metadata: {
+        note: "jean@example.com",
+        comment: "questionnaire médical positif"
+      }
+    }));
+  }, "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
 }
 
 function AKS_testAudit001_rejectsInvalidMetadataValue_() {
   var fixture = AKS_audit001Fixture_();
   assertThrows_(function () {
-    fixture.service.record(AKS_audit001Event_({ metadata: { count: Infinity } }));
+    fixture.service.record(AKS_audit001Event_({ metadata: { attemptCount: Infinity } }));
   }, "AUDIT_EVENT_INVALID");
 }
 
@@ -214,6 +219,43 @@ function AKS_testAudit001_rejectsResourceMismatch_() {
   var fixture = AKS_audit001Fixture_({ resourceId: "other-resource" });
   assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
     "AUDIT_RECIPE_REQUIRED");
+}
+
+function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
+  ["AKS Audit NON-RECETTE", "PRODUCTION_RECETTE_ARCHIVE"].forEach(function (name) {
+    var fixture = AKS_audit001Fixture_({ resourceName: name });
+    assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+      "AUDIT_RECIPE_REQUIRED");
+    assertEquals_(0, fixture.lockAttempts());
+  });
+}
+
+function AKS_testAudit001_rejectsUnauthorizedAdminActor_() {
+  var fixture = AKS_audit001Fixture_({
+    authorizeActor: function (actorType, actorId) {
+      return actorType !== "ADMIN" || actorId === "authorized@example.com";
+    }
+  });
+  assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+    "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_persistsCorrelatedCompleteCycle_() {
+  var fixture = AKS_audit001Fixture_();
+  var intention = fixture.service.record(AKS_audit001Event_({
+    result: "INTENTION",
+    metadata: { status: "INTENTION", attemptCount: 1 }
+  }));
+  var success = fixture.service.record(AKS_audit001Event_({
+    result: "REUSSI",
+    metadata: { status: "CONFIRMEE", attemptCount: 1 }
+  }));
+  assertEquals_(2, fixture.rows.length);
+  assertEquals_(intention.correlation_id, success.correlation_id);
+  assertEquals_(intention.target_id, success.target_id);
+  assertEquals_("INTENTION", intention.result);
+  assertEquals_("REUSSI", success.result);
 }
 
 function AKS_testAudit001_rejectsHeaderMismatch_() {
@@ -349,12 +391,15 @@ function AKS_runAudit001Tests() {
     { name: "identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ },
     { name: "horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ },
     { name: "JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ },
-    { name: "métadonnée sensible masquée", test: AKS_testAudit001_masksSensitiveMetadata_ },
+    { name: "schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ },
     { name: "valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ },
     { name: "catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ },
     { name: "motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ },
     { name: "production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ },
     { name: "ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ },
+    { name: "marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ },
+    { name: "administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ },
+    { name: "cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ },
     { name: "en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ },
     { name: "configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ },
     { name: "configuration non explicite refusée", test: AKS_testAudit001_rejectsNonExplicitConfiguration_ },
