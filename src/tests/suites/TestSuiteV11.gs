@@ -411,6 +411,31 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-009 / corrélation de bout en bout", test: AKS_testInscriptions009_preservesCorrelationEverywhere_ }
     ,{ name: "INSCRIPTIONS-009 / conflit de version optimiste", test: AKS_testInscriptions009_rejectsOptimisticConflict_ }
     ,{ name: "INSCRIPTIONS-009 / aucune API Google", test: AKS_testInscriptions009_containsNoGoogleApi_ }
+    ,{ name: "AUDIT-001 / catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ }
+    ,{ name: "AUDIT-001 / configuration technique", test: AKS_testAudit001_registersTechnicalConfiguration_ }
+    ,{ name: "AUDIT-001 / preuve complète relue", test: AKS_testAudit001_persistsAndRereadsCompleteProof_ }
+    ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
+    ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
+    ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
+    ,{ name: "AUDIT-001 / métadonnée sensible masquée", test: AKS_testAudit001_masksSensitiveMetadata_ }
+    ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
+    ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }
+    ,{ name: "AUDIT-001 / motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ }
+    ,{ name: "AUDIT-001 / production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ }
+    ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
+    ,{ name: "AUDIT-001 / en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ }
+    ,{ name: "AUDIT-001 / configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ }
+    ,{ name: "AUDIT-001 / configuration non explicite refusée", test: AKS_testAudit001_rejectsNonExplicitConfiguration_ }
+    ,{ name: "AUDIT-001 / standard sans dégradation", test: AKS_testAudit001_persistsStandardWithoutDegradation_ }
+    ,{ name: "AUDIT-001 / verrou indisponible refusé", test: AKS_testAudit001_rejectsUnavailableLock_ }
+    ,{ name: "AUDIT-001 / verrou libéré après panne", test: AKS_testAudit001_releasesLockAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / identifiant dupliqué refusé", test: AKS_testAudit001_rejectsDuplicateIdentifier_ }
+    ,{ name: "AUDIT-001 / preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ }
+    ,{ name: "AUDIT-001 / preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ }
+    ,{ name: "AUDIT-001 / port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ }
+    ,{ name: "AUDIT-001 / adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ }
+    ,{ name: "AUDIT-001 / onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ }
+    ,{ name: "AUDIT-001 / service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ }
   ]);
 }
 
