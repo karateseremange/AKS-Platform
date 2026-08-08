@@ -411,6 +411,38 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-009 / corrélation de bout en bout", test: AKS_testInscriptions009_preservesCorrelationEverywhere_ }
     ,{ name: "INSCRIPTIONS-009 / conflit de version optimiste", test: AKS_testInscriptions009_rejectsOptimisticConflict_ }
     ,{ name: "INSCRIPTIONS-009 / aucune API Google", test: AKS_testInscriptions009_containsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-010 / schéma exact", test: AKS_testInscriptions010_exposesExactSchema_ }
+    ,{ name: "INSCRIPTIONS-010 / recette exacte", test: AKS_testInscriptions010_acceptsExactRecipe_ }
+    ,{ name: "INSCRIPTIONS-010 / production refusée avant mutation", test: AKS_testInscriptions010_rejectsNonRecipeBeforeMutation_ }
+    ,{ name: "INSCRIPTIONS-010 / ressource incohérente", test: AKS_testInscriptions010_rejectsResourceMismatch_ }
+    ,{ name: "INSCRIPTIONS-010 / onglet inattendu", test: AKS_testInscriptions010_rejectsUnexpectedSheet_ }
+    ,{ name: "INSCRIPTIONS-010 / en-têtes figés", test: AKS_testInscriptions010_rejectsHeaderDrift_ }
+    ,{ name: "INSCRIPTIONS-010 / fuseau physique figé", test: AKS_testInscriptions010_rejectsSpreadsheetTimezoneDrift_ }
+    ,{ name: "INSCRIPTIONS-010 / métadonnée inconnue", test: AKS_testInscriptions010_rejectsUnknownMetadata_ }
+    ,{ name: "INSCRIPTIONS-010 / métadonnée dupliquée", test: AKS_testInscriptions010_rejectsDuplicateMetadata_ }
+    ,{ name: "INSCRIPTIONS-010 / audit commun persistant", test: AKS_testInscriptions010_requiresPersistentCommonAudit_ }
+    ,{ name: "INSCRIPTIONS-010 / journal projeté", test: AKS_testInscriptions010_loadsProjectedJournal_ }
+    ,{ name: "INSCRIPTIONS-010 / réservation unique verrouillée", test: AKS_testInscriptions010_reservesOnceUnderLock_ }
+    ,{ name: "INSCRIPTIONS-010 / réservation altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalReservation_ }
+    ,{ name: "INSCRIPTIONS-010 / doublon de journal", test: AKS_testInscriptions010_rejectsDuplicateJournalRows_ }
+    ,{ name: "INSCRIPTIONS-010 / mise à jour versionnée", test: AKS_testInscriptions010_updatesExpectedJournalVersion_ }
+    ,{ name: "INSCRIPTIONS-010 / mise à jour altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalUpdate_ }
+    ,{ name: "INSCRIPTIONS-010 / auteurs techniques distincts", test: AKS_testInscriptions010_preservesCreatedByOnUpdate_ }
+    ,{ name: "INSCRIPTIONS-010 / version périmée", test: AKS_testInscriptions010_rejectsStaleJournalVersion_ }
+    ,{ name: "INSCRIPTIONS-010 / identité de journal immuable", test: AKS_testInscriptions010_rejectsJournalIdentityChange_ }
+    ,{ name: "INSCRIPTIONS-010 / état inconnu", test: AKS_testInscriptions010_rejectsInvalidJournalState_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence globale monotone", test: AKS_testInscriptions010_allocatesMonotoneGlobalSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / acteur de séquence injecté", test: AKS_testInscriptions010_usesInjectedSequenceActor_ }
+    ,{ name: "INSCRIPTIONS-010 / écriture de séquence altérée", test: AKS_testInscriptions010_rejectsAlteredSequenceWrite_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence saisonnière", test: AKS_testInscriptions010_formatsSeasonSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence import typée", test: AKS_testInscriptions010_formatsTypedImportSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / portée de séquence invalide", test: AKS_testInscriptions010_rejectsInvalidSequenceScope_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence dupliquée", test: AKS_testInscriptions010_rejectsDuplicateSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / verrou indisponible", test: AKS_testInscriptions010_rejectsLockTimeoutWithoutMutation_ }
+    ,{ name: "INSCRIPTIONS-010 / échec avant verrou", test: AKS_testInscriptions010_releasesLockAfterWriteFailure_ }
+    ,{ name: "INSCRIPTIONS-010 / noyau sans API Google", test: AKS_testInscriptions010_automaticCoreContainsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-010 / recette hors suite automatique", test: AKS_testInscriptions010_recipeFunctionsStayOutOfAutomaticSuite_ }
+    ,{ name: "INSCRIPTIONS-010 / configuration contrôlée", test: AKS_testInscriptions010_registersControlledConfiguration_ }
   ]);
 }
 
