@@ -34,6 +34,11 @@ function AKS_createConfigurationService_(registry, valueProvider, clock) {
   }
 
   function validateValue_(definition, value) {
+    if (definition.type === "enum") {
+      return typeof value === "string" &&
+        Array.isArray(definition.allowedValues) &&
+        definition.allowedValues.indexOf(value) !== -1;
+    }
     if (definition.type === "string" || definition.type === "resourceId") {
       return typeof value === "string";
     }
