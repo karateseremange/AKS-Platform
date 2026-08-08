@@ -211,6 +211,13 @@ AKS.Inscriptions.createRecipePersistenceService = function (options) {
     return text_(row[2]) === key;
   }
 
+  function samePersistedRow_(actual, expected) {
+    return Array.isArray(actual) && Array.isArray(expected) &&
+      actual.length === expected.length && expected.every(function (value, index) {
+        return actual[index] === value;
+      });
+  }
+
   function validateCommandRecord_(record) {
     record = record || {};
     var version = positiveInteger_(record.version, false);
@@ -290,9 +297,12 @@ AKS.Inscriptions.createRecipePersistenceService = function (options) {
           throw error_("INSCRIPTIONS_IDEMPOTENCY_CONFLICT", "Clé idempotente déjà réservée.");
         }
         var actor = technicalActor_();
-        gateway.appendRow("Commandes", commandToRow_(normalized, actor, actor));
+        var candidateRow = commandToRow_(normalized, actor, actor);
+        gateway.appendRow("Commandes", candidateRow);
         var persisted = findCommand_(commandRows_(), normalized.idempotencyKey);
-        if (!persisted) throw error_("INSCRIPTIONS_JOURNAL_INVALID", "Réservation non persistée.");
+        if (!persisted || !samePersistedRow_(persisted.row, candidateRow)) {
+          throw error_("INSCRIPTIONS_JOURNAL_INVALID", "Réservation persistée incohérente.");
+        }
         return clone_(rowToCommand_(persisted.row));
       });
     },
@@ -313,9 +323,11 @@ AKS.Inscriptions.createRecipePersistenceService = function (options) {
         if (!sameCommandIdentity_(found.row, candidateRow)) {
           throw error_("INSCRIPTIONS_IDEMPOTENCY_CONFLICT", "Identité de commande Inscriptions incohérente.");
         }
-        gateway.updateRow("Commandes", found.rowNumber,
-          candidateRow);
+        gateway.updateRow("Commandes", found.rowNumber, candidateRow);
         var persisted = findCommand_(commandRows_(), normalized.idempotencyKey);
+        if (!persisted || !samePersistedRow_(persisted.row, candidateRow)) {
+          throw error_("INSCRIPTIONS_JOURNAL_INVALID", "Mise à jour persistée incohérente.");
+        }
         return clone_(rowToCommand_(persisted.row));
       });
     }
@@ -337,11 +349,10 @@ AKS.Inscriptions.createRecipePersistenceService = function (options) {
   }
 
   var sequences = Object.freeze({
-    allocate: function (sequenceType, scopeKey, actor) {
-      var normalizedActor = text_(actor).toLowerCase();
-      if (!normalizedActor) throw error_("INSCRIPTIONS_IDENTITY_INVALID", "Acteur technique invalide.");
+    allocate: function (sequenceType, scopeKey) {
       return withLock_(function () {
         var sequence = validateSequence_(sequenceType, scopeKey);
+        var normalizedActor = technicalActor_();
         var rows = gateway.readRows("Sequences");
         assertHeaders_("Sequences", rows);
         var matches = [];
@@ -364,17 +375,19 @@ AKS.Inscriptions.createRecipePersistenceService = function (options) {
           }
           nextValue = currentValue + 1;
           nextVersion = currentVersion + 1;
-          gateway.updateRow("Sequences", matches[0].rowNumber,
-            [sequence.type, sequence.scope, nextValue, nextVersion, now, normalizedActor]);
+        }
+        var candidateRow = [
+          sequence.type, sequence.scope, nextValue, nextVersion, now, normalizedActor
+        ];
+        if (matches.length) {
+          gateway.updateRow("Sequences", matches[0].rowNumber, candidateRow);
         } else {
-          gateway.appendRow("Sequences",
-            [sequence.type, sequence.scope, nextValue, nextVersion, now, normalizedActor]);
+          gateway.appendRow("Sequences", candidateRow);
         }
         var persisted = gateway.readRows("Sequences").slice(1).filter(function (row) {
           return upper_(row[0]) === sequence.type && upper_(row[1]) === sequence.scope;
         });
-        if (persisted.length !== 1 || Number(persisted[0][2]) !== nextValue ||
-            Number(persisted[0][3]) !== nextVersion) {
+        if (persisted.length !== 1 || !samePersistedRow_(persisted[0], candidateRow)) {
           throw error_("INSCRIPTIONS_SEQUENCE_CONFLICT", "Séquence Inscriptions non vérifiée.");
         }
         return Object.freeze({
