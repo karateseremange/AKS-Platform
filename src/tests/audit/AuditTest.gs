@@ -5,7 +5,7 @@ function AKS_audit001Headers_() {
 function AKS_audit001Config_(overrides) {
   var values = {
     "audit.environment": "RECETTE",
-    "audit.spreadsheetId": "audit-recipe-001",
+    "audit.spreadsheetId": "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789",
     "audit.schemaVersion": "aks-audit/1.0"
   };
   Object.keys(overrides || {}).forEach(function (key) { values[key] = overrides[key]; });
@@ -59,7 +59,9 @@ function AKS_audit001Fixture_(overrides) {
     new Date("2026-09-01T10:00:00.003Z")
   ];
   var gateway = overrides.gateway || {
-    getResourceId: function () { return overrides.resourceId || "audit-recipe-001"; },
+    getResourceId: function () {
+      return overrides.resourceId || "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789";
+    },
     getResourceName: function () { return overrides.resourceName || "AKS Audit RECETTE"; },
     getHeaders: function () {
       return (overrides.headers || AKS_audit001Headers_()).slice();
@@ -241,6 +243,51 @@ function AKS_testAudit001_rejectsUnauthorizedAdminActor_() {
   assertEquals_(0, fixture.rows.length);
 }
 
+function AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_() {
+  var authorize = AKS_createDefaultAuditActorAuthorizer_(
+    { assertAuthorized: function (actorId) { return actorId; } },
+    function () { return "system.audit@example.com"; }
+  );
+  assertEquals_(false, authorize("USER", "member@example.com"));
+  assertEquals_(true, authorize("ADMIN", "admin@example.com"));
+  assertEquals_(true, authorize("SYSTEM", "system.audit@example.com"));
+  assertEquals_(false, authorize("SYSTEM", "other-system@example.com"));
+}
+
+function AKS_testAudit001_rejectsPersonalTargetIdentifier_() {
+  var fixture = AKS_audit001Fixture_();
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({ targetId: "jean@example.com" }));
+  }, "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_rejectsPersonalCorrelationIdentifier_() {
+  var fixture = AKS_audit001Fixture_();
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({ correlationId: "jean@example.com" }));
+  }, "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_() {
+  var registry = AKS_createPlatformParameterRegistry_();
+  var configuration = AKS_createConfigurationService_(registry, {
+    has: function (key) { return key === "audit.spreadsheetId"; },
+    get: function () { return "x"; }
+  });
+  assertThrows_(function () { configuration.resolve("audit.spreadsheetId"); },
+    "CONFIG001_INVALID_VALUE");
+
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.spreadsheetId": "x" },
+    resourceId: "x"
+  });
+  assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+    "AUDIT_RECIPE_REQUIRED");
+  assertEquals_(0, fixture.lockAttempts());
+}
+
 function AKS_testAudit001_persistsCorrelatedCompleteCycle_() {
   var fixture = AKS_audit001Fixture_();
   var intention = fixture.service.record(AKS_audit001Event_({
@@ -354,7 +401,7 @@ function AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_() {
     appendRow: function (row) { rows.push(row.slice()); }
   };
   var gateway = AKS_createAuditSheetsGateway_({
-    getId: function () { return "audit-recipe-001"; },
+    getId: function () { return "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"; },
     getName: function () { return "AKS Audit RECETTE"; },
     getSheetByName: function () { return sheet; }
   });
@@ -399,6 +446,10 @@ function AKS_runAudit001Tests() {
     { name: "ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ },
     { name: "marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ },
     { name: "administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ },
+    { name: "utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ },
+    { name: "cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ },
+    { name: "corrélation personnelle refusée", test: AKS_testAudit001_rejectsPersonalCorrelationIdentifier_ },
+    { name: "identifiant Google invalide refusé", test: AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_ },
     { name: "cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ },
     { name: "en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ },
     { name: "configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ },

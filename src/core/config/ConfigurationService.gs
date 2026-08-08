@@ -39,8 +39,12 @@ function AKS_createConfigurationService_(registry, valueProvider, clock) {
         Array.isArray(definition.allowedValues) &&
         definition.allowedValues.indexOf(value) !== -1;
     }
-    if (definition.type === "string" || definition.type === "resourceId") {
+    if (definition.type === "string") {
       return typeof value === "string";
+    }
+    if (definition.type === "resourceId") {
+      return typeof value === "string" &&
+        /^[A-Za-z0-9_-]{20,128}$/.test(value);
     }
     if (definition.type === "email") {
       return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

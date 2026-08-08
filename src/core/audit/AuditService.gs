@@ -100,7 +100,8 @@ function AKS_createAuditService_(options) {
     if (environment !== "RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "Une ressource d'audit de recette est obligatoire.");
     }
-    if (!resourceId || text_(gateway.getResourceId()) !== resourceId ||
+    if (!googleResourceId_(resourceId) ||
+        text_(gateway.getResourceId()) !== resourceId ||
         upper_(gateway.getResourceName()) !== "AKS AUDIT RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "La ressource d'audit n'est pas une recette autorisée.");
     }
@@ -124,6 +125,28 @@ function AKS_createAuditService_(options) {
     if ((!normalized && required) ||
         (normalized && !/^[A-Za-z0-9@._:-]{1,160}$/.test(normalized))) {
       throw error_("AUDIT_EVENT_INVALID", "Identifiant d'audit non conforme.");
+    }
+    return normalized;
+  }
+
+  function googleResourceId_(value) {
+    return /^[A-Za-z0-9_-]{20,128}$/.test(text_(value));
+  }
+
+  function targetId_(targetType, value) {
+    var normalized = text_(value);
+    if (!normalized) return "";
+    if (targetType === "DOSSIER" && /^INS-[0-9]{4}-[0-9]{6}$/.test(normalized)) {
+      return normalized;
+    }
+    throw error_("AUDIT_EVENT_INVALID", "Identifiant de ressource d'audit non conforme.");
+  }
+
+  function correlationId_(value, required) {
+    var normalized = text_(value);
+    if ((!normalized && required) ||
+        (normalized && !/^corr-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(normalized))) {
+      throw error_("AUDIT_EVENT_INVALID", "Identifiant de corrélation d'audit non conforme.");
     }
     return normalized;
   }
@@ -185,15 +208,16 @@ function AKS_createAuditService_(options) {
     var actorType = requiredCatalog_(event.actorType, catalogs.actorTypes);
     var action = requiredCatalog_(event.action, catalogs.actions);
     requiredCatalog_(event.criticality, catalogs.criticalities);
+    var targetType = requiredCatalog_(event.targetType, catalogs.targetTypes);
     return Object.freeze({
       actorType: actorType,
       action: action,
       module: requiredCatalog_(event.module, catalogs.modules),
-      targetType: requiredCatalog_(event.targetType, catalogs.targetTypes),
-      targetId: identifier_(event.targetId, false),
+      targetType: targetType,
+      targetId: targetId_(targetType, event.targetId),
       result: requiredCatalog_(event.result, catalogs.results),
       reasonCode: reasonCode_(event.reasonCode),
-      correlationId: identifier_(event.correlationId, true),
+      correlationId: correlationId_(event.correlationId, true),
       metadataJson: metadataJson_(action, event.metadata)
     });
   }
@@ -239,7 +263,7 @@ function AKS_createAuditService_(options) {
         eventType: "audit.persistence.failure",
         message: "Échec contrôlé de la persistance d'audit.",
         outcome: "failure",
-        correlationId: identifier_(correlationId, false),
+        correlationId: correlationId_(correlationId, false),
         context: { code: failure && failure.code ? failure.code : "AUDIT_PERSISTENCE_FAILED" }
       });
     } catch (ignored) {}

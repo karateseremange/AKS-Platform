@@ -425,6 +425,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
     ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
     ,{ name: "AUDIT-001 / administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ }
+    ,{ name: "AUDIT-001 / utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ }
+    ,{ name: "AUDIT-001 / cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ }
+    ,{ name: "AUDIT-001 / corrélation personnelle refusée", test: AKS_testAudit001_rejectsPersonalCorrelationIdentifier_ }
+    ,{ name: "AUDIT-001 / identifiant Google invalide refusé", test: AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_ }
     ,{ name: "AUDIT-001 / cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ }
     ,{ name: "AUDIT-001 / en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ }
     ,{ name: "AUDIT-001 / configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ }

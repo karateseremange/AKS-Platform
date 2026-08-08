@@ -26,16 +26,10 @@ function AKS_createDefaultAuditService_() {
     return Session.getEffectiveUser().getEmail();
   }
 
-  function authorizeActor_(actorType, actorId) {
-    if (actorType !== "ADMIN") return true;
-    if (!AKS.Admin || !AKS.Admin.Access ||
-        typeof AKS.Admin.Access.assertAuthorized !== "function") return false;
-    try {
-      return AKS.Admin.Access.assertAuthorized(actorId) === actorId;
-    } catch (failure) {
-      return false;
-    }
-  }
+  var authorizeActor_ = AKS_createDefaultAuditActorAuthorizer_(
+    AKS.Admin && AKS.Admin.Access,
+    technicalIdentity_
+  );
 
   return AKS_createAuditService_({
     config: configuration,
@@ -57,6 +51,31 @@ function AKS_createDefaultAuditService_() {
       if (AKS.Logging && typeof AKS.Logging.emit === "function") AKS.Logging.emit(event);
     }
   });
+}
+
+function AKS_createDefaultAuditActorAuthorizer_(adminAccess, resolveTechnicalIdentity) {
+  function normalized_(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  return function (actorType, actorId) {
+    actorId = normalized_(actorId);
+    if (!actorId) return false;
+    if (actorType === "ADMIN") {
+      if (!adminAccess || typeof adminAccess.assertAuthorized !== "function") return false;
+      try {
+        return normalized_(adminAccess.assertAuthorized(actorId)) === actorId;
+      } catch (failure) {
+        return false;
+      }
+    }
+    if (actorType === "USER") return false;
+    if (actorType === "SERVICE" || actorType === "SYSTEM") {
+      return typeof resolveTechnicalIdentity === "function" &&
+        normalized_(resolveTechnicalIdentity()) === actorId;
+    }
+    return false;
+  };
 }
 
 var AKS_AUDIT_CATALOGS_ = AKS_getAuditCatalogs_();
