@@ -164,22 +164,35 @@ function AKS_createAudit001Recipe_(ports) {
   }
 
   function restoreConfig_(changed) {
-    var conflicts = changed.filter(function (entry) {
-      return propertyStore.getProperty(entry.key) !== entry.temporary;
+    var conflicts = [];
+    var restoreFailures = [];
+    changed.slice().reverse().forEach(function (entry) {
+      if (propertyStore.getProperty(entry.key) !== entry.temporary) {
+        conflicts.push(entry.key);
+        return;
+      }
+      try {
+        if (entry.previous === null || typeof entry.previous === "undefined") {
+          propertyStore.deleteProperty(entry.key);
+        } else {
+          propertyStore.setProperty(entry.key, entry.previous);
+        }
+      } catch (restoreFailure) {
+        restoreFailures.push(entry.key);
+      }
     });
     if (conflicts.length > 0) {
       throw failure_(
         "AUDIT_RECIPE_CONFIG_CONFLICT",
-        "La configuration d'audit a changé pendant la recette ; restauration automatique refusée."
+        "La configuration d'audit a changé pendant la recette ; seules les valeurs non conflictuelles ont été restaurées."
       );
     }
-    changed.slice().reverse().forEach(function (entry) {
-      if (entry.previous === null || typeof entry.previous === "undefined") {
-        propertyStore.deleteProperty(entry.key);
-      } else {
-        propertyStore.setProperty(entry.key, entry.previous);
-      }
-    });
+    if (restoreFailures.length > 0) {
+      throw failure_(
+        "AUDIT_RECIPE_CONFIG_RESTORE_FAILED",
+        "La restauration de la configuration d'audit a échoué."
+      );
+    }
   }
 
   function event_(result, status, correlationId) {

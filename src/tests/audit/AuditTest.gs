@@ -643,6 +643,31 @@ function AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_() {
   assertEquals_("concurrent-change", fixture.values[key]);
 }
 
+function AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_() {
+  var keys = [
+    "AKS_CONFIG_VALUE.audit.environment",
+    "AKS_CONFIG_VALUE.audit.spreadsheetId",
+    "AKS_CONFIG_VALUE.audit.schemaVersion"
+  ];
+  var previous = {};
+  keys.forEach(function (key, index) {
+    previous[key] = "{\"previous\":" + (index + 1) + "}";
+  });
+  keys.forEach(function (conflictKey) {
+    var fixture = AKS_audit001RecipeFixture_({
+      concurrentConfigKey: conflictKey,
+      initialConfig: previous
+    });
+    assertThrows_(function () { fixture.recipe.run(); }, "AUDIT_RECIPE_CONFIG_CONFLICT");
+    keys.forEach(function (key) {
+      assertEquals_(
+        key === conflictKey ? "concurrent-change" : previous[key],
+        fixture.values[key]
+      );
+    });
+  });
+}
+
 function AKS_runAudit001Tests() {
   return AKS_runNamedTestSuite_("AUDIT-001 — audit persistant commun", [
     { name: "catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ },
@@ -687,5 +712,6 @@ function AKS_runAudit001Tests() {
     ,{ name: "recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
     ,{ name: "recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
     ,{ name: "recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
+    ,{ name: "recette restauration partielle après conflit", test: AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_ }
   ]);
 }
