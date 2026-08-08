@@ -102,7 +102,7 @@ function AKS_createAuditService_(options) {
     }
     if (!googleResourceId_(resourceId) ||
         text_(gateway.getResourceId()) !== resourceId ||
-        upper_(gateway.getResourceName()) !== "AKS AUDIT RECETTE") {
+        text_(gateway.getResourceName()) !== "AKS Audit RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "La ressource d'audit n'est pas une recette autorisée.");
     }
     if (schemaVersion !== catalogs.schemaVersion ||
@@ -163,7 +163,7 @@ function AKS_createAuditService_(options) {
     var normalized = {};
     Object.keys(metadata).sort().forEach(function (key) {
       var value = metadata[key];
-      if (!schema[key]) {
+      if (!Object.prototype.hasOwnProperty.call(schema, key)) {
         throw error_("AUDIT_EVENT_INVALID", "Métadonnée d'audit interdite.");
       }
       if (key === "attemptCount") {
@@ -254,6 +254,10 @@ function AKS_createAuditService_(options) {
   }
 
   function logFailure_(failure, correlationId) {
+    var safeCorrelationId = "";
+    try {
+      safeCorrelationId = correlationId_(correlationId, false);
+    } catch (ignoredCorrelation) {}
     try {
       technicalLogger({
         level: "ERROR",
@@ -263,7 +267,7 @@ function AKS_createAuditService_(options) {
         eventType: "audit.persistence.failure",
         message: "Échec contrôlé de la persistance d'audit.",
         outcome: "failure",
-        correlationId: correlationId_(correlationId, false),
+        correlationId: safeCorrelationId,
         context: { code: failure && failure.code ? failure.code : "AUDIT_PERSISTENCE_FAILED" }
       });
     } catch (ignored) {}

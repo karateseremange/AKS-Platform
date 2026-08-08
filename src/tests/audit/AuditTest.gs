@@ -182,6 +182,11 @@ function AKS_testAudit001_rejectsMetadataOutsideClosedSchema_() {
       }
     }));
   }, "AUDIT_EVENT_INVALID");
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({
+      metadata: { constructor: "jean@example.com" }
+    }));
+  }, "AUDIT_EVENT_INVALID");
   assertEquals_(0, fixture.rows.length);
 }
 
@@ -224,12 +229,13 @@ function AKS_testAudit001_rejectsResourceMismatch_() {
 }
 
 function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
-  ["AKS Audit NON-RECETTE", "PRODUCTION_RECETTE_ARCHIVE"].forEach(function (name) {
+  ["AKS Audit NON-RECETTE", "PRODUCTION_RECETTE_ARCHIVE", "  aks audit recette  "]
+    .forEach(function (name) {
     var fixture = AKS_audit001Fixture_({ resourceName: name });
     assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
       "AUDIT_RECIPE_REQUIRED");
     assertEquals_(0, fixture.lockAttempts());
-  });
+    });
 }
 
 function AKS_testAudit001_rejectsUnauthorizedAdminActor_() {
@@ -268,6 +274,8 @@ function AKS_testAudit001_rejectsPersonalCorrelationIdentifier_() {
     fixture.service.record(AKS_audit001Event_({ correlationId: "jean@example.com" }));
   }, "AUDIT_EVENT_INVALID");
   assertEquals_(0, fixture.rows.length);
+  assertEquals_(1, fixture.logged.length);
+  assertEquals_("", fixture.logged[0].correlationId);
 }
 
 function AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_() {
@@ -430,6 +438,13 @@ function AKS_testAudit001_domainServiceContainsNoGoogleApi_() {
     });
 }
 
+function AKS_testAudit001_requiresNoInscriptionsAuditService_() {
+  var source = AKS_createAuditService_.toString();
+  assertTrue_(source.indexOf("AKS.Inscriptions") === -1,
+    "Le service commun ne doit dépendre d'aucun audit propre à Inscriptions.");
+  assertTrue_(AKS.Core.Audit && typeof AKS.Core.Audit.record === "function");
+}
+
 function AKS_runAudit001Tests() {
   return AKS_runNamedTestSuite_("AUDIT-001 — audit persistant commun", [
     { name: "catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ },
@@ -463,6 +478,7 @@ function AKS_runAudit001Tests() {
     { name: "port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ },
     { name: "adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ },
     { name: "onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ },
-    { name: "service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ }
+    { name: "service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ },
+    { name: "aucun audit propre à Inscriptions", test: AKS_testAudit001_requiresNoInscriptionsAuditService_ }
   ]);
 }
