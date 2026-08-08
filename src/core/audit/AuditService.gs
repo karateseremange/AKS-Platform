@@ -51,6 +51,10 @@ function AKS_createAuditService_(options) {
     return String(value === null || typeof value === "undefined" ? "" : value).trim();
   }
 
+  function rawText_(value) {
+    return String(value === null || typeof value === "undefined" ? "" : value);
+  }
+
   function upper_(value) {
     return text_(value).toUpperCase();
   }
@@ -85,7 +89,7 @@ function AKS_createAuditService_(options) {
         "Configuration d'audit non explicite."
       );
     }
-    return text_(resolved.value);
+    return rawText_(resolved.value);
   }
 
   function sameTexts_(actual, expected) {
@@ -94,15 +98,15 @@ function AKS_createAuditService_(options) {
   }
 
   function assertSupport_() {
-    var environment = upper_(configuredValue_("audit.environment"));
+    var environment = configuredValue_("audit.environment");
     var resourceId = configuredValue_("audit.spreadsheetId");
     var schemaVersion = configuredValue_("audit.schemaVersion");
     if (environment !== "RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "Une ressource d'audit de recette est obligatoire.");
     }
     if (!googleResourceId_(resourceId) ||
-        text_(gateway.getResourceId()) !== resourceId ||
-        text_(gateway.getResourceName()) !== "AKS Audit RECETTE") {
+        rawText_(gateway.getResourceId()) !== resourceId ||
+        rawText_(gateway.getResourceName()) !== "AKS Audit RECETTE") {
       throw error_("AUDIT_RECIPE_REQUIRED", "La ressource d'audit n'est pas une recette autorisée.");
     }
     if (schemaVersion !== catalogs.schemaVersion ||
@@ -130,7 +134,7 @@ function AKS_createAuditService_(options) {
   }
 
   function googleResourceId_(value) {
-    return /^[A-Za-z0-9_-]{20,128}$/.test(text_(value));
+    return /^[A-Za-z0-9_-]{20,128}$/.test(rawText_(value));
   }
 
   function targetId_(targetType, value) {

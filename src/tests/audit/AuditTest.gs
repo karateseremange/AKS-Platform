@@ -238,6 +238,35 @@ function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
     });
 }
 
+function AKS_testAudit001_rejectsPaddedExactRecipeName_() {
+  var fixture = AKS_audit001Fixture_({ resourceName: "  AKS Audit RECETTE  " });
+  assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+    "AUDIT_RECIPE_REQUIRED");
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_rejectsNonExactRecipeEnvironment_() {
+  ["recette", " RECETTE "].forEach(function (environment) {
+    var fixture = AKS_audit001Fixture_({
+      configValues: { "audit.environment": environment }
+    });
+    assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+      "AUDIT_RECIPE_REQUIRED");
+    assertEquals_(0, fixture.lockAttempts());
+  });
+}
+
+function AKS_testAudit001_rejectsNonExactSchemaVersion_() {
+  ["  aks-audit/1.0  ", "AKS-AUDIT/1.0"].forEach(function (schemaVersion) {
+    var fixture = AKS_audit001Fixture_({
+      configValues: { "audit.schemaVersion": schemaVersion }
+    });
+    assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
+      "AUDIT_SCHEMA_MISMATCH");
+    assertEquals_(0, fixture.lockAttempts());
+  });
+}
+
 function AKS_testAudit001_rejectsUnauthorizedAdminActor_() {
   var fixture = AKS_audit001Fixture_({
     authorizeActor: function (actorType, actorId) {
@@ -460,6 +489,9 @@ function AKS_runAudit001Tests() {
     { name: "production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ },
     { name: "ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ },
     { name: "marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ },
+    { name: "nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ },
+    { name: "environnement recette non exact refusé", test: AKS_testAudit001_rejectsNonExactRecipeEnvironment_ },
+    { name: "version de schéma non exacte refusée", test: AKS_testAudit001_rejectsNonExactSchemaVersion_ },
     { name: "administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ },
     { name: "utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ },
     { name: "cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ },

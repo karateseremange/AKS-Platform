@@ -424,6 +424,9 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ }
     ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
     ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
+    ,{ name: "AUDIT-001 / nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ }
+    ,{ name: "AUDIT-001 / environnement recette non exact refusé", test: AKS_testAudit001_rejectsNonExactRecipeEnvironment_ }
+    ,{ name: "AUDIT-001 / version de schéma non exacte refusée", test: AKS_testAudit001_rejectsNonExactSchemaVersion_ }
     ,{ name: "AUDIT-001 / administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ }
     ,{ name: "AUDIT-001 / utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ }
     ,{ name: "AUDIT-001 / cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ }
