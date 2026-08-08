@@ -411,6 +411,49 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-009 / corrélation de bout en bout", test: AKS_testInscriptions009_preservesCorrelationEverywhere_ }
     ,{ name: "INSCRIPTIONS-009 / conflit de version optimiste", test: AKS_testInscriptions009_rejectsOptimisticConflict_ }
     ,{ name: "INSCRIPTIONS-009 / aucune API Google", test: AKS_testInscriptions009_containsNoGoogleApi_ }
+    ,{ name: "AUDIT-001 / catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ }
+    ,{ name: "AUDIT-001 / configuration technique", test: AKS_testAudit001_registersTechnicalConfiguration_ }
+    ,{ name: "AUDIT-001 / preuve complète relue", test: AKS_testAudit001_persistsAndRereadsCompleteProof_ }
+    ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
+    ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
+    ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
+    ,{ name: "AUDIT-001 / schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ }
+    ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
+    ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }
+    ,{ name: "AUDIT-001 / motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ }
+    ,{ name: "AUDIT-001 / production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ }
+    ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
+    ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
+    ,{ name: "AUDIT-001 / nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ }
+    ,{ name: "AUDIT-001 / environnement recette non exact refusé", test: AKS_testAudit001_rejectsNonExactRecipeEnvironment_ }
+    ,{ name: "AUDIT-001 / version de schéma non exacte refusée", test: AKS_testAudit001_rejectsNonExactSchemaVersion_ }
+    ,{ name: "AUDIT-001 / administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ }
+    ,{ name: "AUDIT-001 / utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ }
+    ,{ name: "AUDIT-001 / cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ }
+    ,{ name: "AUDIT-001 / corrélation personnelle refusée", test: AKS_testAudit001_rejectsPersonalCorrelationIdentifier_ }
+    ,{ name: "AUDIT-001 / identifiant Google invalide refusé", test: AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_ }
+    ,{ name: "AUDIT-001 / cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ }
+    ,{ name: "AUDIT-001 / en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ }
+    ,{ name: "AUDIT-001 / configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ }
+    ,{ name: "AUDIT-001 / configuration non explicite refusée", test: AKS_testAudit001_rejectsNonExplicitConfiguration_ }
+    ,{ name: "AUDIT-001 / standard sans dégradation", test: AKS_testAudit001_persistsStandardWithoutDegradation_ }
+    ,{ name: "AUDIT-001 / verrou indisponible refusé", test: AKS_testAudit001_rejectsUnavailableLock_ }
+    ,{ name: "AUDIT-001 / verrou libéré après panne", test: AKS_testAudit001_releasesLockAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / identifiant dupliqué refusé", test: AKS_testAudit001_rejectsDuplicateIdentifier_ }
+    ,{ name: "AUDIT-001 / preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ }
+    ,{ name: "AUDIT-001 / preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ }
+    ,{ name: "AUDIT-001 / port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ }
+    ,{ name: "AUDIT-001 / adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ }
+    ,{ name: "AUDIT-001 / onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ }
+    ,{ name: "AUDIT-001 / service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ }
+    ,{ name: "AUDIT-001 / aucun audit propre à Inscriptions", test: AKS_testAudit001_requiresNoInscriptionsAuditService_ }
+    ,{ name: "AUDIT-001 / recette cible isolée exacte", test: AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_ }
+    ,{ name: "AUDIT-001 / recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
+    ,{ name: "AUDIT-001 / recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
+    ,{ name: "AUDIT-001 / recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
+    ,{ name: "AUDIT-001 / recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
+    ,{ name: "AUDIT-001 / recette restauration partielle après conflit", test: AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_ }
   ]);
 }
 
