@@ -447,6 +447,12 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ }
     ,{ name: "AUDIT-001 / service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ }
     ,{ name: "AUDIT-001 / aucun audit propre à Inscriptions", test: AKS_testAudit001_requiresNoInscriptionsAuditService_ }
+    ,{ name: "AUDIT-001 / recette cible isolée exacte", test: AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_ }
+    ,{ name: "AUDIT-001 / recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
+    ,{ name: "AUDIT-001 / recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
+    ,{ name: "AUDIT-001 / recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
+    ,{ name: "AUDIT-001 / recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
   ]);
 }
 

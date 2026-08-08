@@ -474,6 +474,175 @@ function AKS_testAudit001_requiresNoInscriptionsAuditService_() {
   assertTrue_(AKS.Core.Audit && typeof AKS.Core.Audit.record === "function");
 }
 
+function AKS_audit001RecipeFixture_(overrides) {
+  overrides = overrides || {};
+  var values = Object.create(null);
+  values.AKS_AUDIT001_RECIPE_SPREADSHEET_ID = "1AuditRecipeSpreadsheetId00001";
+  if (overrides.initialConfig) {
+    Object.keys(overrides.initialConfig).forEach(function (key) {
+      values[key] = overrides.initialConfig[key];
+    });
+  }
+  var headers = AKS_getAuditCatalogs_().headers.slice();
+  var rows = overrides.rows ? overrides.rows.slice() : [headers.slice()];
+  var sheet = {
+    getLastRow: function () { return rows.length; },
+    getLastColumn: function () { return rows.length ? rows[0].length : 0; },
+    getRange: function (row, column, height, width) {
+      return {
+        getDisplayValues: function () {
+          return rows.slice(row - 1, row - 1 + height).map(function (source) {
+            return source.slice(column - 1, column - 1 + width).map(String);
+          });
+        },
+        setValues: function (incoming) {
+          rows[0] = incoming[0].slice();
+        }
+      };
+    }
+  };
+  var spreadsheet = {
+    getId: function () { return "1AuditRecipeSpreadsheetId00001"; },
+    getName: function () { return overrides.name || "AKS Audit RECETTE"; },
+    getSheetByName: function () { return overrides.missingSheet ? null : sheet; },
+    insertSheet: function () {
+      rows.length = 0;
+      return sheet;
+    }
+  };
+  var recorded = [];
+  var configSnapshots = [];
+  var recipe = AKS_createAudit001Recipe_({
+    propertyStore: {
+      getProperty: function (key) {
+        return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null;
+      },
+      setProperty: function (key, value) {
+        if (overrides.failSetKey === key) {
+          var failure = new Error("set failure");
+          failure.code = "RECIPE_PROPERTY_SET_FAILED";
+          throw failure;
+        }
+        values[key] = value;
+      },
+      deleteProperty: function (key) { delete values[key]; }
+    },
+    openSpreadsheet: function () { return spreadsheet; },
+    createAuditService: function () {
+      configSnapshots.push({
+        environment: JSON.parse(values["AKS_CONFIG_VALUE.audit.environment"]).value,
+        spreadsheetId: JSON.parse(values["AKS_CONFIG_VALUE.audit.spreadsheetId"]).value,
+        schemaVersion: JSON.parse(values["AKS_CONFIG_VALUE.audit.schemaVersion"]).value
+      });
+      return {
+        record: function (event) {
+          recorded.push(event);
+          if (overrides.concurrentConfigKey && recorded.length === 1) {
+            values[overrides.concurrentConfigKey] = "concurrent-change";
+          }
+          if (overrides.recordFailure) throw overrides.recordFailure;
+          return {
+            audit_id: "aud-recipe-" + recorded.length,
+            environment: "RECETTE",
+            correlation_id: event.correlationId
+          };
+        }
+      };
+    },
+    resolveActor: function () { return "admin@karate-seremange.fr"; },
+    authorizeActor: function (actor) {
+      return overrides.denied ? "" : actor;
+    },
+    clock: function () { return new Date("2026-08-08T15:00:00.000Z"); },
+    idProvider: function () { return "recipe-uuid-001"; }
+  });
+  return {
+    recipe: recipe,
+    values: values,
+    rows: rows,
+    recorded: recorded,
+    configSnapshots: configSnapshots
+  };
+}
+
+function AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_() {
+  var refused = AKS_audit001RecipeFixture_({ name: "AKS Audit RECETTE " });
+  assertThrows_(function () { refused.recipe.prepare(); }, "AUDIT_RECIPE_TARGET_REFUSED");
+  var accepted = AKS_audit001RecipeFixture_({ missingSheet: true, rows: [] });
+  var result = accepted.recipe.prepare();
+  assertTrue_(result.ok && result.sheetCreated);
+  assertEquals_(16, result.headerCount);
+  assertEquals_(JSON.stringify(AKS_getAuditCatalogs_().headers), JSON.stringify(accepted.rows[0]));
+}
+
+function AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_() {
+  var fixture = AKS_audit001RecipeFixture_({ denied: true });
+  assertThrows_(function () { fixture.recipe.run(); }, "AUDIT_RECIPE_ACCESS_DENIED");
+  assertEquals_(0, fixture.recorded.length);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.environment"));
+}
+
+function AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_() {
+  var oldEnvironment = "{\"legacy\":\"environment\"}";
+  var fixture = AKS_audit001RecipeFixture_({
+    initialConfig: { "AKS_CONFIG_VALUE.audit.environment": oldEnvironment }
+  });
+  var result = fixture.recipe.run();
+  assertTrue_(result.ok && result.configurationRestored);
+  assertEquals_(2, result.persistedProofCount);
+  assertEquals_(2, fixture.recorded.length);
+  assertEquals_(fixture.recorded[0].correlationId, fixture.recorded[1].correlationId);
+  assertEquals_("INTENTION", fixture.recorded[0].result);
+  assertEquals_("REUSSI", fixture.recorded[1].result);
+  assertEquals_("RECETTE", fixture.configSnapshots[0].environment);
+  assertEquals_("1AuditRecipeSpreadsheetId00001", fixture.configSnapshots[0].spreadsheetId);
+  assertEquals_("aks-audit/1.0", fixture.configSnapshots[0].schemaVersion);
+  assertEquals_(oldEnvironment, fixture.values["AKS_CONFIG_VALUE.audit.environment"]);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.spreadsheetId"));
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.schemaVersion"));
+}
+
+function AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_() {
+  var failure = new Error("failure");
+  failure.code = "AUDIT_PERSISTENCE_FAILED";
+  var previous = "{\"previous\":true}";
+  var fixture = AKS_audit001RecipeFixture_({
+    recordFailure: failure,
+    initialConfig: { "AKS_CONFIG_VALUE.audit.schemaVersion": previous }
+  });
+  assertThrows_(function () { fixture.recipe.run(); }, "AUDIT_PERSISTENCE_FAILED");
+  assertEquals_(previous, fixture.values["AKS_CONFIG_VALUE.audit.schemaVersion"]);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.environment"));
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.spreadsheetId"));
+}
+
+function AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_() {
+  var environmentKey = "AKS_CONFIG_VALUE.audit.environment";
+  var schemaKey = "AKS_CONFIG_VALUE.audit.schemaVersion";
+  var previous = "{\"previous\":\"environment\"}";
+  var fixture = AKS_audit001RecipeFixture_({
+    failSetKey: schemaKey,
+    initialConfig: { "AKS_CONFIG_VALUE.audit.environment": previous }
+  });
+  assertThrows_(function () { fixture.recipe.run(); }, "RECIPE_PROPERTY_SET_FAILED");
+  assertEquals_(previous, fixture.values[environmentKey]);
+  assertEquals_(0, fixture.recorded.length);
+}
+
+function AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_() {
+  var key = "AKS_CONFIG_VALUE.audit.environment";
+  var fixture = AKS_audit001RecipeFixture_({
+    concurrentConfigKey: key
+  });
+  assertThrows_(function () { fixture.recipe.run(); }, "AUDIT_RECIPE_CONFIG_CONFLICT");
+  assertEquals_("concurrent-change", fixture.values[key]);
+}
+
 function AKS_runAudit001Tests() {
   return AKS_runNamedTestSuite_("AUDIT-001 — audit persistant commun", [
     { name: "catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ },
@@ -512,5 +681,11 @@ function AKS_runAudit001Tests() {
     { name: "onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ },
     { name: "service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ },
     { name: "aucun audit propre à Inscriptions", test: AKS_testAudit001_requiresNoInscriptionsAuditService_ }
+    ,{ name: "recette cible isolée exacte", test: AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_ }
+    ,{ name: "recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
+    ,{ name: "recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
+    ,{ name: "recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
+    ,{ name: "recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
+    ,{ name: "recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
   ]);
 }
