@@ -44,6 +44,13 @@ function AKS_inscriptions010Fixture_(overrides) {
   var lockAttempts = 0;
   var reads = 0;
   var mutations = [];
+  function persistedRow_(operation, name, row) {
+    var persisted = AKS_inscriptions010Clone_(row);
+    if (typeof overrides.mutatePersistedRow === "function") {
+      persisted = overrides.mutatePersistedRow(operation, name, persisted) || persisted;
+    }
+    return AKS_inscriptions010Clone_(persisted);
+  }
   var gateway = {
     getResourceId: function () { return resourceId; },
     getTimezone: function () { return overrides.timezone || "Europe/Paris"; },
@@ -52,12 +59,12 @@ function AKS_inscriptions010Fixture_(overrides) {
     appendRow: function (name, row) {
       if (overrides.failMutation) throw new Error("mutation failed");
       mutations.push({ type: "append", name: name });
-      tables[name].push(AKS_inscriptions010Clone_(row));
+      tables[name].push(persistedRow_("append", name, row));
     },
     updateRow: function (name, rowNumber, row) {
       if (overrides.failMutation) throw new Error("mutation failed");
       mutations.push({ type: "update", name: name, rowNumber: rowNumber });
-      tables[name][rowNumber - 1] = AKS_inscriptions010Clone_(row);
+      tables[name][rowNumber - 1] = persistedRow_("update", name, row);
     }
   };
   var audit = overrides.audit || {
@@ -205,6 +212,18 @@ function AKS_testInscriptions010_reservesOnceUnderLock_() {
   assertEquals_(2, fixture.tables.Commandes.length);
 }
 
+function AKS_testInscriptions010_rejectsAlteredJournalReservation_() {
+  var fixture = AKS_inscriptions010Fixture_({
+    mutatePersistedRow: function (operation, name, row) {
+      if (operation === "append" && name === "Commandes") row[13] = "EN_COURS";
+      return row;
+    }
+  });
+  assertThrows_(function () {
+    fixture.service.journal.reserve(AKS_inscriptions010Record_());
+  }, "INSCRIPTIONS_JOURNAL_INVALID");
+}
+
 function AKS_testInscriptions010_rejectsDuplicateJournalRows_() {
   var fixture = AKS_inscriptions010Fixture_();
   fixture.service.journal.reserve(AKS_inscriptions010Record_());
@@ -224,6 +243,24 @@ function AKS_testInscriptions010_updatesExpectedJournalVersion_() {
   assertEquals_(2, saved.version);
   assertEquals_("system.recipe@example.com", fixture.tables.Commandes[1][18]);
   assertEquals_("system.recipe@example.com", fixture.tables.Commandes[1][16]);
+}
+
+function AKS_testInscriptions010_rejectsAlteredJournalUpdate_() {
+  var alterUpdates = false;
+  var fixture = AKS_inscriptions010Fixture_({
+    mutatePersistedRow: function (operation, name, row) {
+      if (alterUpdates && operation === "update" && name === "Commandes") row[18] = "other@example.com";
+      return row;
+    }
+  });
+  fixture.service.journal.reserve(AKS_inscriptions010Record_());
+  alterUpdates = true;
+  assertThrows_(function () {
+    fixture.service.journal.save(AKS_inscriptions010Record_({
+      status: "EN_COURS", attemptCount: 1, version: 2,
+      updatedAt: "2026-09-01T10:11:00.000Z"
+    }), 1);
+  }, "INSCRIPTIONS_JOURNAL_INVALID");
 }
 
 function AKS_testInscriptions010_preservesCreatedByOnUpdate_() {
@@ -276,6 +313,26 @@ function AKS_testInscriptions010_allocatesMonotoneGlobalSequence_() {
   assertEquals_("LIC-000001", first.id);
   assertEquals_("LIC-000002", second.id);
   assertEquals_(2, second.version);
+}
+
+function AKS_testInscriptions010_usesInjectedSequenceActor_() {
+  var fixture = AKS_inscriptions010Fixture_({
+    technicalActor: function () { return "trusted.recipe@example.com"; }
+  });
+  fixture.service.sequences.allocate("LICENCIE", "GLOBAL", "forged@example.com");
+  assertEquals_("trusted.recipe@example.com", fixture.tables.Sequences[1][5]);
+}
+
+function AKS_testInscriptions010_rejectsAlteredSequenceWrite_() {
+  var fixture = AKS_inscriptions010Fixture_({
+    mutatePersistedRow: function (operation, name, row) {
+      if (name === "Sequences") row[5] = "other@example.com";
+      return row;
+    }
+  });
+  assertThrows_(function () {
+    fixture.service.sequences.allocate("LICENCIE", "GLOBAL", "forged@example.com");
+  }, "INSCRIPTIONS_SEQUENCE_CONFLICT");
 }
 
 function AKS_testInscriptions010_formatsSeasonSequence_() {
@@ -361,13 +418,17 @@ function AKS_runInscriptions010Suite() {
     { name: "audit commun persistant", test: AKS_testInscriptions010_requiresPersistentCommonAudit_ },
     { name: "journal projeté", test: AKS_testInscriptions010_loadsProjectedJournal_ },
     { name: "réservation unique verrouillée", test: AKS_testInscriptions010_reservesOnceUnderLock_ },
+    { name: "réservation altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalReservation_ },
     { name: "doublon de journal", test: AKS_testInscriptions010_rejectsDuplicateJournalRows_ },
     { name: "mise à jour versionnée", test: AKS_testInscriptions010_updatesExpectedJournalVersion_ },
+    { name: "mise à jour altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalUpdate_ },
     { name: "auteurs techniques distincts", test: AKS_testInscriptions010_preservesCreatedByOnUpdate_ },
     { name: "version périmée", test: AKS_testInscriptions010_rejectsStaleJournalVersion_ },
     { name: "identité de journal immuable", test: AKS_testInscriptions010_rejectsJournalIdentityChange_ },
     { name: "état inconnu", test: AKS_testInscriptions010_rejectsInvalidJournalState_ },
     { name: "séquence globale monotone", test: AKS_testInscriptions010_allocatesMonotoneGlobalSequence_ },
+    { name: "acteur de séquence injecté", test: AKS_testInscriptions010_usesInjectedSequenceActor_ },
+    { name: "écriture de séquence altérée", test: AKS_testInscriptions010_rejectsAlteredSequenceWrite_ },
     { name: "séquence saisonnière", test: AKS_testInscriptions010_formatsSeasonSequence_ },
     { name: "séquence import typée", test: AKS_testInscriptions010_formatsTypedImportSequence_ },
     { name: "portée de séquence invalide", test: AKS_testInscriptions010_rejectsInvalidSequenceScope_ },
