@@ -423,13 +423,17 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "INSCRIPTIONS-010 / audit commun persistant", test: AKS_testInscriptions010_requiresPersistentCommonAudit_ }
     ,{ name: "INSCRIPTIONS-010 / journal projeté", test: AKS_testInscriptions010_loadsProjectedJournal_ }
     ,{ name: "INSCRIPTIONS-010 / réservation unique verrouillée", test: AKS_testInscriptions010_reservesOnceUnderLock_ }
+    ,{ name: "INSCRIPTIONS-010 / réservation altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalReservation_ }
     ,{ name: "INSCRIPTIONS-010 / doublon de journal", test: AKS_testInscriptions010_rejectsDuplicateJournalRows_ }
     ,{ name: "INSCRIPTIONS-010 / mise à jour versionnée", test: AKS_testInscriptions010_updatesExpectedJournalVersion_ }
+    ,{ name: "INSCRIPTIONS-010 / mise à jour altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalUpdate_ }
     ,{ name: "INSCRIPTIONS-010 / auteurs techniques distincts", test: AKS_testInscriptions010_preservesCreatedByOnUpdate_ }
     ,{ name: "INSCRIPTIONS-010 / version périmée", test: AKS_testInscriptions010_rejectsStaleJournalVersion_ }
     ,{ name: "INSCRIPTIONS-010 / identité de journal immuable", test: AKS_testInscriptions010_rejectsJournalIdentityChange_ }
     ,{ name: "INSCRIPTIONS-010 / état inconnu", test: AKS_testInscriptions010_rejectsInvalidJournalState_ }
     ,{ name: "INSCRIPTIONS-010 / séquence globale monotone", test: AKS_testInscriptions010_allocatesMonotoneGlobalSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / acteur de séquence injecté", test: AKS_testInscriptions010_usesInjectedSequenceActor_ }
+    ,{ name: "INSCRIPTIONS-010 / écriture de séquence altérée", test: AKS_testInscriptions010_rejectsAlteredSequenceWrite_ }
     ,{ name: "INSCRIPTIONS-010 / séquence saisonnière", test: AKS_testInscriptions010_formatsSeasonSequence_ }
     ,{ name: "INSCRIPTIONS-010 / séquence import typée", test: AKS_testInscriptions010_formatsTypedImportSequence_ }
     ,{ name: "INSCRIPTIONS-010 / portée de séquence invalide", test: AKS_testInscriptions010_rejectsInvalidSequenceScope_ }
