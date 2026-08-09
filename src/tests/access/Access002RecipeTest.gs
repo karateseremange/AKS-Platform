@@ -149,6 +149,24 @@ function AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_() {
   assertEquals_(false, result.deniedAccess);
 }
 
+function AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_() {
+  var fixture = AKS_access002RecipeFixture_();
+  fixture.recipe.apply();
+  var registry = JSON.parse(fixture.values.AKS_ACCESS_REGISTRY);
+  assertEquals_(1, registry.accounts.length);
+  var manager = registry.accounts[0];
+  assertEquals_("manager@example.com", manager.email);
+  assertEquals_(JSON.stringify(["ADMINISTRATEUR"]), JSON.stringify(manager.roles));
+  assertEquals_(false, manager.roles.indexOf("SUPER_ADMIN") !== -1);
+  assertEquals_(1, manager.assignments.length);
+  var assignment = manager.assignments[0];
+  assertEquals_("ACCESS", assignment.module);
+  assertEquals_("*", assignment.season);
+  assertEquals_(JSON.stringify(["ADMINISTRATEUR"]), JSON.stringify(assignment.roles));
+  assertEquals_(JSON.stringify(["ACCESS_MANAGE"]),
+    JSON.stringify(assignment.extraCapabilities));
+}
+
 function AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_() {
   var fixture = AKS_access002RecipeFixture_();
   fixture.recipe.apply();
@@ -238,6 +256,8 @@ function AKS_runAccess002RecipeSuite() {
       test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ },
     { name: "sauvegarde vérifiée avant mutation",
       test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ },
+    { name: "administrateur amorcé avec ACCESS_MANAGE explicite uniquement",
+      test: AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_ },
     { name: "application idempotente",
       test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ },
     { name: "application concurrente sans effet sur le succès acquis",

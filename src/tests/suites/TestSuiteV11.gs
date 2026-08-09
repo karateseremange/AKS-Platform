@@ -363,6 +363,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-02 / cible recette confirmée", test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ }
     ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
     ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
+    ,{ name: "ACCESS-002-02 / administrateur et ACCESS_MANAGE explicite uniquement", test: AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_ }
     ,{ name: "ACCESS-002-02 / application idempotente", test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ }
     ,{ name: "ACCESS-002-02 / concurrence sérialisée", test: AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_ }
     ,{ name: "ACCESS-002-02 / registre absent restauré", test: AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_ }

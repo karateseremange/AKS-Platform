@@ -179,18 +179,18 @@ function AKS_createAccess002Recipe_(ports) {
         email: settings.manager,
         displayName: "Gestionnaire recette",
         status: "ACTIVE",
-        roles: ["CONSULTATION"],
+        roles: ["ADMINISTRATEUR"],
         assignments: []
       };
       target.accounts.push(manager);
     } else if (manager.status !== "ACTIVE") {
       throw failure_("ACCESS_RECIPE_MANAGER_INACTIVE", "Le gestionnaire de recette existe mais n'est pas actif.");
     }
-    if (manager.roles.indexOf("CONSULTATION") === -1) manager.roles.push("CONSULTATION");
+    if (manager.roles.indexOf("ADMINISTRATEUR") === -1) manager.roles.push("ADMINISTRATEUR");
     if (!hasExplicitManage_(manager)) {
       manager.assignments.push({
         module: "ACCESS", section: "", courseCode: "", season: "*",
-        status: "ACTIVE", roles: ["CONSULTATION"],
+        status: "ACTIVE", roles: ["ADMINISTRATEUR"],
         extraCapabilities: ["ACCESS_MANAGE"], validFrom: "", validUntil: ""
       });
     }
