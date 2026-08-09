@@ -16,6 +16,16 @@ function AKS_createInscriptions010GoogleGateway_(spreadsheet) {
     return sheet;
   }
 
+  function writeRow_(name, rowNumber, row) {
+    var target = sheet_(name);
+    var values = row.slice();
+    var range = target.getRange(rowNumber, 1, 1, values.length);
+    range.setNumberFormats([values.map(function (value) {
+      return typeof value === "string" ? "@" : "0";
+    })]);
+    range.setValues([values]);
+  }
+
   return Object.freeze({
     getResourceId: function () { return spreadsheet.getId(); },
     getTimezone: function () { return spreadsheet.getSpreadsheetTimeZone(); },
@@ -30,10 +40,11 @@ function AKS_createInscriptions010GoogleGateway_(spreadsheet) {
       return target.getRange(1, 1, lastRow, lastColumn).getValues();
     },
     appendRow: function (name, row) {
-      sheet_(name).appendRow(row.slice());
+      var target = sheet_(name);
+      writeRow_(name, target.getLastRow() + 1, row);
     },
     updateRow: function (name, rowNumber, row) {
-      sheet_(name).getRange(rowNumber, 1, 1, row.length).setValues([row.slice()]);
+      writeRow_(name, rowNumber, row);
     }
   });
 }
