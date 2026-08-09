@@ -359,6 +359,17 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-01 / dernier gestionnaire effectif", test: AKS_testAccess002Admin_preservesLastEffectiveManager_ }
     ,{ name: "ACCESS-002-01 / réactivation sans anciennes habilitations", test: AKS_testAccess002Admin_reactivationClearsFormerAssignments_ }
     ,{ name: "ACCESS-002-01 / périmètre historique inactif conservé", test: AKS_testAccess002Admin_preservesInactiveHistoricalScope_ }
+    ,{ name: "ACCESS-002-02 / précontrôle recette sans écriture", test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ }
+    ,{ name: "ACCESS-002-02 / cible recette confirmée", test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ }
+    ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
+    ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
+    ,{ name: "ACCESS-002-02 / application idempotente", test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ }
+    ,{ name: "ACCESS-002-02 / concurrence sérialisée", test: AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_ }
+    ,{ name: "ACCESS-002-02 / registre absent restauré", test: AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_ }
+    ,{ name: "ACCESS-002-02 / sérialisation restaurée", test: AKS_testAccess002Recipe_restoresExactExistingSerialization_ }
+    ,{ name: "ACCESS-002-02 / conflit de restauration", test: AKS_testAccess002Recipe_refusesRestoreAfterConcurrentChange_ }
+    ,{ name: "ACCESS-002-02 / auto-restauration après échec", test: AKS_testAccess002Recipe_autoRestoresWhenDecisionVerificationFails_ }
+    ,{ name: "ACCESS-002-02 / audit final de restauration", test: AKS_testAccess002Recipe_rollsBackFailedFinalRestoreAudit_ }
     ,{ name: "ANALYTICS-SAISIE-003 / refus avant lecture", test: AKS_testAnalyticsSaisie003_deniesBeforeWorkspaceRead_ }
     ,{ name: "ANALYTICS-SAISIE-003 / périmètre invalide", test: AKS_testAnalyticsSaisie003_rejectsInvalidWorkspaceScope_ }
     ,{ name: "ANALYTICS-SAISIE-003 / espace nettoyé", test: AKS_testAnalyticsSaisie003_returnsSafeWorkspace_ }
