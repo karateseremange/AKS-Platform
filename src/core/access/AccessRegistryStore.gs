@@ -19,7 +19,8 @@ function AKS_createAccessRegistryStore_(propertyStore) {
 
   if (!propertyStore ||
       typeof propertyStore.getProperty !== "function" ||
-      typeof propertyStore.setProperty !== "function") {
+      typeof propertyStore.setProperty !== "function" ||
+      typeof propertyStore.deleteProperty !== "function") {
     throw error_("ACCESS_REGISTRY_INVALID", "Support du registre d'accès invalide.");
   }
 
@@ -38,6 +39,10 @@ function AKS_createAccessRegistryStore_(propertyStore) {
 
     save: function (registry) {
       propertyStore.setProperty(KEY, JSON.stringify(registry));
+    },
+
+    clear: function () {
+      propertyStore.deleteProperty(KEY);
     }
   });
 }

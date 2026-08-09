@@ -47,7 +47,8 @@ function AKS_access001Fixture_(overrides) {
     identityProvider: function () { return identity; },
     registryStore: {
       load: function () { return stored; },
-      save: function (registry) { stored = registry; saved = registry; }
+      save: function (registry) { stored = registry; saved = registry; },
+      clear: function () { stored = null; saved = null; }
     },
     courseProvider: { list: function () {
       return [
@@ -57,6 +58,10 @@ function AKS_access001Fixture_(overrides) {
     }},
     legacyAdminEmails: ["legacy@example.com"],
     clock: function () { return new Date("2026-09-01T10:00:00Z"); },
+    registryLock: {
+      tryLock: function () { return true; },
+      releaseLock: function () {}
+    },
     audit: { record: function (event) { auditEvents.push(event); } }
   });
   return {

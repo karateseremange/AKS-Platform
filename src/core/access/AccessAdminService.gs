@@ -4,9 +4,10 @@ AKS.Core = AKS.Core || {};
 /**
  * ACCESS-002 administration boundary.
  *
- * This first boundary is deliberately read-only. Authorization and registry
- * normalization remain server-side in AccessService so no caller can bypass
- * ACCESS_MANAGE or obtain the raw persistent object.
+ * Authorization, validation and registry normalization remain server-side in
+ * AccessService so no caller can bypass ACCESS_MANAGE or obtain the raw
+ * persistent object. Writes use an optimistic revision supplied by the last
+ * administrative read.
  */
 function AKS_createAccessAdminService_(options) {
   "use strict";
@@ -16,7 +17,8 @@ function AKS_createAccessAdminService_(options) {
     (typeof AKS_createAccessService_ === "function" ? AKS_createAccessService_() : null);
 
   if (!accessService ||
-      typeof accessService.readRegistryForAdministration !== "function") {
+      typeof accessService.readRegistryForAdministration !== "function" ||
+      typeof accessService.updateRegistryForAdministration !== "function") {
     var failure = new Error("Service d'administration des accès indisponible.");
     failure.code = "ACCESS_ADMIN_UNAVAILABLE";
     throw failure;
@@ -25,6 +27,10 @@ function AKS_createAccessAdminService_(options) {
   return Object.freeze({
     readRegistry: function () {
       return accessService.readRegistryForAdministration();
+    },
+
+    updateRegistry: function (command) {
+      return accessService.updateRegistryForAdministration(command);
     }
   });
 }
