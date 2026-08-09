@@ -99,7 +99,10 @@ function AKS_access002RecipeInitialRegistryRaw_() {
     schemaVersion: "access/1.0",
     accounts: [{
       email: "admin@example.com", displayName: "Administrateur recette",
-      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: [],
+      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "ACCESS", season: "*", status: "ACTIVE",
+        roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+      }],
       updatedAt: "2026-08-09T10:00:00.000Z", updatedBy: "admin@example.com"
     }]
   });
@@ -126,7 +129,10 @@ function AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_() {
     schemaVersion: "access/1.0",
     accounts: [{
       email: "admin@example.com", status: "ACTIVE",
-      roles: ["ADMINISTRATEUR"], assignments: []
+      roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "ACCESS", season: "*", status: "ACTIVE",
+        roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+      }]
     }, {
       email: "denied@example.com", status: "ACTIVE",
       roles: ["ADMINISTRATEUR"], assignments: []
@@ -147,6 +153,52 @@ function AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_() {
   assertEquals_(true, result.backupVerified);
   assertEquals_(true, result.managerAccess);
   assertEquals_(false, result.deniedAccess);
+}
+
+function AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_() {
+  var fixture = AKS_access002RecipeFixture_();
+  fixture.recipe.apply();
+  var registry = JSON.parse(fixture.values.AKS_ACCESS_REGISTRY);
+  assertEquals_(1, registry.accounts.length);
+  var manager = registry.accounts[0];
+  assertEquals_("manager@example.com", manager.email);
+  assertEquals_(JSON.stringify(["ADMINISTRATEUR"]), JSON.stringify(manager.roles));
+  assertEquals_(false, manager.roles.indexOf("SUPER_ADMIN") !== -1);
+  assertEquals_(1, manager.assignments.length);
+  var assignment = manager.assignments[0];
+  assertEquals_("ACCESS", assignment.module);
+  assertEquals_("*", assignment.season);
+  assertEquals_(JSON.stringify(["ADMINISTRATEUR"]), JSON.stringify(assignment.roles));
+  assertEquals_(JSON.stringify(["ACCESS_MANAGE"]),
+    JSON.stringify(assignment.extraCapabilities));
+}
+
+function AKS_testAccess002Recipe_grantsNoImplicitAdministratorCapability_() {
+  var fixture = AKS_access002RecipeFixture_();
+  fixture.recipe.apply();
+  var registry = JSON.parse(fixture.values.AKS_ACCESS_REGISTRY);
+  var access = AKS_createAccessService_({
+    identityProvider: function () { return "manager@example.com"; },
+    registryStore: { load: function () { return registry; } },
+    courseProvider: { list: function () {
+      return [{ code: "BABY", season: "2026-2027", active: true }];
+    }},
+    inscriptionsCatalogueProvider: { list: function () {
+      return [{
+        season: "2026-2027", section: "MINEURS",
+        courseCodes: ["BABY"], active: true
+      }];
+    }},
+    legacyAdminEmails: ["manager@example.com"],
+    clock: function () { return new Date("2026-09-01T10:00:00.000Z"); }
+  });
+  assertTrue_(access.assertAdministrativeCapability("ACCESS_MANAGE"));
+  assertTrue_(!access.hasCapability("ATTENDANCE_READ", "BABY", "2026-2027"));
+  assertThrows_(function () {
+    access.assertInscriptionsCapability("INSCRIPTIONS_READ", {
+      module: "INSCRIPTIONS", season: "2026-2027", section: "MINEURS"
+    });
+  }, "ACCESS_CAPABILITY_DENIED");
 }
 
 function AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_() {
@@ -238,6 +290,10 @@ function AKS_runAccess002RecipeSuite() {
       test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ },
     { name: "sauvegarde vérifiée avant mutation",
       test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ },
+    { name: "administrateur amorcé avec ACCESS_MANAGE explicite uniquement",
+      test: AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_ },
+    { name: "rôle administrateur sans capacité implicite",
+      test: AKS_testAccess002Recipe_grantsNoImplicitAdministratorCapability_ },
     { name: "application idempotente",
       test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ },
     { name: "application concurrente sans effet sur le succès acquis",

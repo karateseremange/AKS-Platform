@@ -252,7 +252,10 @@ function AKS_testAudit001_persistsAccessServiceCycleEndToEnd_() {
     schemaVersion: "access/1.0",
     accounts: [{
       email: "admin@example.com", displayName: "Gestionnaire",
-      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: []
+      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "ACCESS", season: "*", status: "ACTIVE",
+        roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+      }]
     }, {
       email: "teacher@example.com", displayName: "Professeur",
       status: "ACTIVE", roles: ["PROFESSEUR"], assignments: []

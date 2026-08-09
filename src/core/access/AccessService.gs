@@ -47,7 +47,7 @@ function AKS_createAccessService_(options) {
     INSCRIPTIONS_ACTIVATE: "REQUIRED"
   };
   var ROLE_CAPABILITIES = {
-    ADMINISTRATEUR: Object.keys(CAPABILITIES),
+    ADMINISTRATEUR: [],
     PROFESSEUR: [
       "COURSE_LIST", "SESSION_LIST", "ATTENDANCE_READ", "SESSION_CREATE",
       "ATTENDANCE_WRITE_DRAFT", "SESSION_CLOSE"
@@ -464,8 +464,7 @@ function AKS_createAccessService_(options) {
     }
     var normalizedScope = resolveInscriptionsScope_(capability, scope);
     var context = context_();
-    if (context.legacyBootstrap ||
-        context.account.roles.indexOf("ADMINISTRATEUR") !== -1) return true;
+    if (context.legacyBootstrap) return true;
     var allowed = context.account.assignments.some(function (assignment) {
       return inscriptionsAssignmentAllows_(
         context.account, assignment, capability, normalizedScope, context.now);
@@ -525,7 +524,6 @@ function AKS_createAccessService_(options) {
     if (capability !== "ACCESS_MANAGE") return false;
     if (context.legacyBootstrap) return true;
     if (!context.account) return false;
-    if (context.account.roles.indexOf("ADMINISTRATEUR") !== -1) return true;
     return context.account.assignments.some(function (assignment) {
       return assignment.module === "ACCESS" && activeAt_(assignment, context.now) &&
         assignment.roles.some(function (role) {
@@ -860,8 +858,7 @@ function AKS_createAccessService_(options) {
   }
 
   function capabilitiesFor_(context, courseCode, season) {
-    if (context.legacyBootstrap ||
-        context.account.roles.indexOf("ADMINISTRATEUR") !== -1) {
+    if (context.legacyBootstrap) {
       return CAPABILITIES;
     }
     return assignmentCapabilities_(context.account, courseCode, season, context.now);
