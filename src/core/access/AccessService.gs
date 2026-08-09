@@ -27,6 +27,7 @@ function AKS_createAccessService_(options) {
     SESSION_CLOSE: true,
     ATTENDANCE_CORRECT_CLOSED: true,
     ACCESS_MANAGE: true,
+    ANALYTICS_READ: true,
     ANALYTICS_PREVIEW: true,
     ANALYTICS_PUBLISH: true,
     AUDIT_READ: true,

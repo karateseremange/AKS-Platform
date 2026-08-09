@@ -364,6 +364,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
     ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
+    ,{ name: "ACCESS-002-01 / capacités Analytics indépendantes", test: AKS_testAccess002Catalogue_exposesIndependentAnalyticsCapabilities_ }
+    ,{ name: "ACCESS-002-01 / compatibilité access/1.0", test: AKS_testAccess002Catalogue_preservesAccess10Compatibility_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
