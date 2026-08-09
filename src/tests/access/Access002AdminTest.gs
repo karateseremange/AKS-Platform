@@ -93,6 +93,12 @@ function AKS_access002AdminFixture_(overrides) {
         auditEvents.push(JSON.parse(JSON.stringify(event)));
         return { auditId: "audit-" + auditAttempt };
       },
+      recordUnderExistingLock: function (event) {
+        if (lockAttempts !== lockReleases + 1) {
+          throw new Error("Le verrou partagé n'est pas détenu.");
+        }
+        return this.record(event);
+      },
       isPersistentRecipeAudit: function () {
         return overrides.persistentAudit !== false;
       }
@@ -212,6 +218,7 @@ function AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_() {
   });
   assertEquals_(2, fixture.auditEvents.length);
   assertEquals_("INTENTION", fixture.auditEvents[0].result);
+  assertEquals_("ADMIN", fixture.auditEvents[0].actorType);
   assertEquals_("REUSSI", fixture.auditEvents[1].result);
   assertEquals_(fixture.auditEvents[0].correlationId, fixture.auditEvents[1].correlationId);
   assertEquals_("ACCESS_REGISTRY", fixture.auditEvents[0].targetType);
@@ -262,6 +269,7 @@ function AKS_testAccess002Admin_auditsRefusalWithoutWrite_() {
   }, "ACCESS_CAPABILITY_DENIED");
   assertEquals_(0, fixture.writes());
   assertEquals_(1, fixture.auditEvents.length);
+  assertEquals_("USER", fixture.auditEvents[0].actorType);
   assertEquals_("REFUSE", fixture.auditEvents[0].result);
   assertEquals_("ACCESS_CAPABILITY_DENIED", fixture.auditEvents[0].reasonCode);
 }

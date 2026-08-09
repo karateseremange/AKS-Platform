@@ -225,12 +225,13 @@ function AKS_createAuditService_(options) {
     return JSON.stringify(normalized);
   }
 
-  function actorId_(actorType) {
+  function actorId_(event) {
+    var actorType = event.actorType;
     var candidate = actorType === "USER" || actorType === "ADMIN"
       ? resolveActor(actorType)
       : resolveTechnicalActor(actorType);
     var actorId = identifier_(String(candidate || "").toLowerCase(), true);
-    if (authorizeActor(actorType, actorId) !== true) {
+    if (authorizeActor(actorType, actorId, event) !== true) {
       throw error_("AUDIT_EVENT_INVALID", "Acteur d'audit non autorisé.");
     }
     return actorId;
@@ -274,7 +275,7 @@ function AKS_createAuditService_(options) {
       occurredAt,
       support.environment,
       event.actorType,
-      actorId_(event.actorType),
+      actorId_(event),
       event.action,
       event.module,
       event.targetType,
@@ -315,14 +316,18 @@ function AKS_createAuditService_(options) {
     } catch (ignored) {}
   }
 
-  function record(event) {
+  function persist_(event, lockAlreadyHeld) {
     assertDependencies_();
     var correlationId = event && event.correlationId;
     try {
       var normalizedEvent = normalizeEvent_(event);
       var support = assertSupport_();
-      if (lock.tryLock(lockTimeoutMs) !== true) {
-        throw error_("AUDIT_LOCK_TIMEOUT", "Le verrou d'audit est indisponible.");
+      if (lockAlreadyHeld) {
+        if (typeof lock.hasLock !== "function" || lock.hasLock() !== true) {
+          throw error_("AUDIT_LOCK_REQUIRED", "Le verrou d'audit partagé n'est pas détenu.");
+        }
+      } else if (lock.tryLock(lockTimeoutMs) !== true) {
+          throw error_("AUDIT_LOCK_TIMEOUT", "Le verrou d'audit est indisponible.");
       }
       try {
         support = assertSupport_();
@@ -342,7 +347,7 @@ function AKS_createAuditService_(options) {
         }
         return rowToProof_(persistedRow);
       } finally {
-        lock.releaseLock();
+        if (!lockAlreadyHeld) lock.releaseLock();
       }
     } catch (failure) {
       if (!failure || !failure.code) {
@@ -353,9 +358,18 @@ function AKS_createAuditService_(options) {
     }
   }
 
+  function record(event) {
+    return persist_(event, false);
+  }
+
+  function recordUnderExistingLock(event) {
+    return persist_(event, true);
+  }
+
   assertDependencies_();
   return Object.freeze({
     record: record,
+    recordUnderExistingLock: recordUnderExistingLock,
     isPersistentRecipeAudit: function () { return true; },
     getSchema: function () {
       return Object.freeze({

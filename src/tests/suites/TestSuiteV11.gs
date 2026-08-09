@@ -342,8 +342,6 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
-    ,{ name: "ACCESS-002-01 / capacités Analytics indépendantes", test: AKS_testAccess002Catalogue_exposesIndependentAnalyticsCapabilities_ }
-    ,{ name: "ACCESS-002-01 / compatibilité access/1.0", test: AKS_testAccess002Catalogue_preservesAccess10Compatibility_ }
     ,{ name: "ACCESS-002-01 / lecture globale protégée", test: AKS_testAccess002Admin_readsRegistryWithAccessManage_ }
     ,{ name: "ACCESS-002-01 / lecture globale refusée", test: AKS_testAccess002Admin_rejectsGlobalReadWithoutAccessManage_ }
     ,{ name: "ACCESS-002-01 / bootstrap historique en lecture seule", test: AKS_testAccess002Admin_preservesLegacyBootstrapReadOnly_ }

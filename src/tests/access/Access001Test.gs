@@ -43,6 +43,10 @@ function AKS_access001Fixture_(overrides) {
     ? overrides.identity : "teacher@example.com";
   var saved = null;
   var auditEvents = [];
+  function recordAudit_(event) {
+    auditEvents.push(event);
+    return { persisted: true };
+  }
   var service = AKS_createAccessService_({
     identityProvider: function () { return identity; },
     registryStore: {
@@ -63,7 +67,8 @@ function AKS_access001Fixture_(overrides) {
       releaseLock: function () {}
     },
     audit: {
-      record: function (event) { auditEvents.push(event); return { persisted: true }; },
+      record: recordAudit_,
+      recordUnderExistingLock: recordAudit_,
       isPersistentRecipeAudit: function () { return true; }
     },
     correlationIdProvider: function () { return "corr-access-001"; }

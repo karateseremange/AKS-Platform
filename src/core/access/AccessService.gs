@@ -660,6 +660,7 @@ function AKS_createAccessService_(options) {
 
   function assertPersistentAudit_() {
     if (!audit || typeof audit.record !== "function" ||
+        typeof audit.recordUnderExistingLock !== "function" ||
         typeof audit.isPersistentRecipeAudit !== "function" ||
         audit.isPersistentRecipeAudit() !== true) {
       throw error_("ACCESS_AUDIT_REQUIRED", "Audit persistant des accès indisponible.");
@@ -706,12 +707,12 @@ function AKS_createAccessService_(options) {
   }
 
   function recordRegistryAudit_(actor, correlationId, result, reasonCode,
-      before, proposed, after, restored) {
+      before, proposed, after, restored, lockAlreadyHeld) {
     assertPersistentAudit_();
     var proof;
     try {
-      proof = audit.record({
-        actorType: "ADMIN",
+      var event = {
+        actorType: result === "REFUSE" ? "USER" : "ADMIN",
         actor: actor,
         action: "ACCESS_REGISTRY_UPDATE",
         module: "ACCESS",
@@ -722,7 +723,10 @@ function AKS_createAccessService_(options) {
         reasonCode: reasonCode || "",
         correlationId: correlationId,
         metadata: auditMetadata_(before, proposed, after, actor, restored)
-      });
+      };
+      proof = lockAlreadyHeld
+        ? audit.recordUnderExistingLock(event)
+        : audit.record(event);
     } catch (auditFailure) {
       throw error_("ACCESS_AUDIT_REQUIRED", "Preuve d'audit des accès indisponible.");
     }
@@ -732,12 +736,13 @@ function AKS_createAccessService_(options) {
     return proof;
   }
 
-  function recordRefusal_(actor, correlationId, failure, before, proposed) {
+  function recordRefusal_(actor, correlationId, failure, before, proposed,
+      lockAlreadyHeld) {
     try {
       recordRegistryAudit_(
         actor, correlationId, "REFUSE",
         failure && failure.code ? failure.code : "UNEXPECTED_ERROR",
-        before, proposed || before, before, false
+        before, proposed || before, before, false, lockAlreadyHeld
       );
     } catch (ignoredAuditFailure) {}
   }
@@ -781,11 +786,11 @@ function AKS_createAccessService_(options) {
         proposed = stampChanges_(proposed, current, actor, now);
         assertActiveManagerRemains_(proposed, now);
       } catch (validationFailure) {
-        recordRefusal_(actor, correlationId, validationFailure, current, proposed);
+        recordRefusal_(actor, correlationId, validationFailure, current, proposed, true);
         throw validationFailure;
       }
       recordRegistryAudit_(
-        actor, correlationId, "INTENTION", "", current, proposed, proposed, false
+        actor, correlationId, "INTENTION", "", current, proposed, proposed, false, true
       );
       try {
         persistRegistryAtomically_(proposed, current);
@@ -793,21 +798,21 @@ function AKS_createAccessService_(options) {
         try {
           recordRegistryAudit_(
             actor, correlationId, "ECHEC", persistenceFailure.code,
-            current, proposed, current, true
+            current, proposed, current, true, true
           );
         } catch (ignoredAuditFailure) {}
         throw persistenceFailure;
       }
       try {
         recordRegistryAudit_(
-          actor, correlationId, "REUSSI", "", current, proposed, proposed, false
+          actor, correlationId, "REUSSI", "", current, proposed, proposed, false, true
         );
       } catch (successAuditFailure) {
         restoreRegistry_(current);
         try {
           recordRegistryAudit_(
             actor, correlationId, "ECHEC", "ACCESS_AUDIT_REQUIRED",
-            current, proposed, current, true
+            current, proposed, current, true, true
           );
         } catch (ignoredFinalAuditFailure) {}
         throw error_("ACCESS_AUDIT_REQUIRED", "Preuve finale des accès indisponible.");
