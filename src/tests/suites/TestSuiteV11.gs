@@ -342,6 +342,23 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ACCESS-002-01 / lecture globale protégée", test: AKS_testAccess002Admin_readsRegistryWithAccessManage_ }
+    ,{ name: "ACCESS-002-01 / lecture globale refusée", test: AKS_testAccess002Admin_rejectsGlobalReadWithoutAccessManage_ }
+    ,{ name: "ACCESS-002-01 / bootstrap historique en lecture seule", test: AKS_testAccess002Admin_preservesLegacyBootstrapReadOnly_ }
+    ,{ name: "ACCESS-002-01 / vue défensive immuable", test: AKS_testAccess002Admin_returnsImmutableDefensiveView_ }
+    ,{ name: "ACCESS-002-01 / écriture atomique et métadonnées serveur", test: AKS_testAccess002Admin_writesAtomicallyWithServerMetadata_ }
+    ,{ name: "ACCESS-002-01 / audit persistant avant après corrélé", test: AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_ }
+    ,{ name: "ACCESS-002-01 / audit persistant obligatoire avant mutation", test: AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_ }
+    ,{ name: "ACCESS-002-01 / restauration après échec de preuve finale", test: AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_ }
+    ,{ name: "ACCESS-002-01 / refus audité sans écriture", test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_ }
+    ,{ name: "ACCESS-002-01 / écriture refusée avant verrou", test: AKS_testAccess002Admin_rejectsWriteBeforeLockWithoutAccessManage_ }
+    ,{ name: "ACCESS-002-01 / validation stricte avant verrou", test: AKS_testAccess002Admin_rejectsInvalidIdentityDatesAndScope_ }
+    ,{ name: "ACCESS-002-01 / conflit de révision", test: AKS_testAccess002Admin_rejectsConcurrentRevision_ }
+    ,{ name: "ACCESS-002-01 / restauration après échec de vérification", test: AKS_testAccess002Admin_restoresPreviousRegistryAfterVerificationFailure_ }
+    ,{ name: "ACCESS-002-01 / verrou indisponible", test: AKS_testAccess002Admin_rejectsUnavailableLockWithoutWrite_ }
+    ,{ name: "ACCESS-002-01 / dernier gestionnaire effectif", test: AKS_testAccess002Admin_preservesLastEffectiveManager_ }
+    ,{ name: "ACCESS-002-01 / réactivation sans anciennes habilitations", test: AKS_testAccess002Admin_reactivationClearsFormerAssignments_ }
+    ,{ name: "ACCESS-002-01 / périmètre historique inactif conservé", test: AKS_testAccess002Admin_preservesInactiveHistoricalScope_ }
     ,{ name: "ANALYTICS-SAISIE-003 / refus avant lecture", test: AKS_testAnalyticsSaisie003_deniesBeforeWorkspaceRead_ }
     ,{ name: "ANALYTICS-SAISIE-003 / périmètre invalide", test: AKS_testAnalyticsSaisie003_rejectsInvalidWorkspaceScope_ }
     ,{ name: "ANALYTICS-SAISIE-003 / espace nettoyé", test: AKS_testAnalyticsSaisie003_returnsSafeWorkspace_ }
@@ -364,6 +381,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
     ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
+    ,{ name: "ACCESS-002-01 / capacités Analytics indépendantes", test: AKS_testAccess002Catalogue_exposesIndependentAnalyticsCapabilities_ }
+    ,{ name: "ACCESS-002-01 / compatibilité access/1.0", test: AKS_testAccess002Catalogue_preservesAccess10Compatibility_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
@@ -449,6 +468,9 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
     ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
     ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
+    ,{ name: "AUDIT-001 / preuve registre ACCESS minimisée", test: AKS_testAudit001_persistsMinimizedAccessRegistryProof_ }
+    ,{ name: "AUDIT-001 / métadonnées ACCESS invalides refusées", test: AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_ }
+    ,{ name: "AUDIT-001 / cycle ACCESS persistant de bout en bout", test: AKS_testAudit001_persistsAccessServiceCycleEndToEnd_ }
     ,{ name: "AUDIT-001 / schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ }
     ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
     ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }

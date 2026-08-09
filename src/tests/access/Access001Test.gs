@@ -43,11 +43,16 @@ function AKS_access001Fixture_(overrides) {
     ? overrides.identity : "teacher@example.com";
   var saved = null;
   var auditEvents = [];
+  function recordAudit_(event) {
+    auditEvents.push(event);
+    return { persisted: true };
+  }
   var service = AKS_createAccessService_({
     identityProvider: function () { return identity; },
     registryStore: {
       load: function () { return stored; },
-      save: function (registry) { stored = registry; saved = registry; }
+      save: function (registry) { stored = registry; saved = registry; },
+      clear: function () { stored = null; saved = null; }
     },
     courseProvider: { list: function () {
       return [
@@ -57,7 +62,16 @@ function AKS_access001Fixture_(overrides) {
     }},
     legacyAdminEmails: ["legacy@example.com"],
     clock: function () { return new Date("2026-09-01T10:00:00Z"); },
-    audit: { record: function (event) { auditEvents.push(event); } }
+    registryLock: {
+      tryLock: function () { return true; },
+      releaseLock: function () {}
+    },
+    audit: {
+      record: recordAudit_,
+      recordUnderExistingLock: recordAudit_,
+      isPersistentRecipeAudit: function () { return true; }
+    },
+    correlationIdProvider: function () { return "corr-access-001"; }
   });
   return {
     service: service,
@@ -188,8 +202,10 @@ function AKS_testAccess001_savesAndAuditsRegistry_() {
     }]
   });
   assertTrue_(fixture.saved() !== null, "Le registre validé doit être persisté.");
-  assertEquals_(1, fixture.auditEvents.length);
+  assertEquals_(2, fixture.auditEvents.length);
   assertEquals_("ACCESS_REGISTRY_UPDATE", fixture.auditEvents[0].action);
+  assertEquals_("INTENTION", fixture.auditEvents[0].result);
+  assertEquals_("REUSSI", fixture.auditEvents[1].result);
 }
 
 function AKS_testAccess001_rejectsUnauthorizedRegistryWrite_() {

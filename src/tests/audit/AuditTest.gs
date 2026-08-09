@@ -50,6 +50,7 @@ function AKS_audit001Fixture_(overrides) {
   var rows = [];
   var releases = 0;
   var lockAttempts = 0;
+  var lockHeld = false;
   var logged = [];
   var idIndex = 0;
   var dates = [
@@ -83,8 +84,13 @@ function AKS_audit001Fixture_(overrides) {
     config: overrides.config || AKS_audit001Config_(overrides.configValues),
     gateway: gateway,
     lock: overrides.lock || {
-      tryLock: function () { lockAttempts += 1; return overrides.lockAvailable !== false; },
-      releaseLock: function () { releases += 1; }
+      tryLock: function () {
+        lockAttempts += 1;
+        lockHeld = overrides.lockAvailable !== false;
+        return lockHeld;
+      },
+      hasLock: function () { return lockHeld; },
+      releaseLock: function () { releases += 1; lockHeld = false; }
     },
     resolveActor: overrides.resolveActor || function () { return "admin@example.com"; },
     authorizeActor: overrides.authorizeActor || function () { return true; },
@@ -170,6 +176,123 @@ function AKS_testAudit001_serializesMetadataDeterministically_() {
     metadata: { status: "confirmee", attemptCount: 2 }
   }));
   assertEquals_('{"attemptCount":2,"status":"CONFIRMEE"}', proof.metadata_json);
+}
+
+function AKS_testAudit001_persistsMinimizedAccessRegistryProof_() {
+  var proof = AKS_audit001Fixture_().service.record(AKS_audit001Event_({
+    action: "ACCESS_REGISTRY_UPDATE",
+    module: "ACCESS",
+    targetType: "ACCESS_REGISTRY",
+    targetId: "AKS_ACCESS_REGISTRY",
+    result: "REUSSI",
+    correlationId: "corr-access-audit-001",
+    metadata: {
+      beforeRevision: "access-rev/1-a-b-c",
+      proposedRevision: "access-rev/1-d-e-f",
+      afterRevision: "access-rev/1-d-e-f",
+      changedAccountIds: ["teacher@example.com"],
+      changedCount: 1,
+      selfModification: false,
+      restored: false
+    }
+  }));
+  assertEquals_("ACCESS_REGISTRY_UPDATE", proof.action);
+  assertEquals_("ACCESS", proof.module);
+  assertEquals_("AKS_ACCESS_REGISTRY", proof.target_id);
+  assertEquals_(
+    '{"afterRevision":"access-rev/1-d-e-f","beforeRevision":"access-rev/1-a-b-c",' +
+    '"changedAccountIds":["teacher@example.com"],"changedCount":1,' +
+    '"proposedRevision":"access-rev/1-d-e-f","restored":false,' +
+    '"selfModification":false}',
+    proof.metadata_json
+  );
+}
+
+function AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_() {
+  var fixture = AKS_audit001Fixture_();
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({
+      action: "ACCESS_REGISTRY_UPDATE",
+      module: "ACCESS",
+      targetType: "ACCESS_REGISTRY",
+      targetId: "AKS_ACCESS_REGISTRY",
+      metadata: {
+        beforeRevision: "access-rev/1-a-b-c",
+        proposedRevision: "access-rev/1-d-e-f",
+        afterRevision: "access-rev/1-d-e-f",
+        changedAccountIds: ["teacher@example.com"],
+        changedCount: 2,
+        selfModification: false,
+        restored: false
+      }
+    }));
+  }, "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_persistsAccessServiceCycleEndToEnd_() {
+  var sharedLockHeld = false;
+  var sharedLockAttempts = 0;
+  var sharedLockReleases = 0;
+  var sharedLock = {
+    tryLock: function () {
+      sharedLockAttempts += 1;
+      if (sharedLockHeld) return false;
+      sharedLockHeld = true;
+      return true;
+    },
+    hasLock: function () { return sharedLockHeld; },
+    releaseLock: function () {
+      sharedLockReleases += 1;
+      sharedLockHeld = false;
+    }
+  };
+  var auditFixture = AKS_audit001Fixture_({ lock: sharedLock });
+  var registry = {
+    schemaVersion: "access/1.0",
+    accounts: [{
+      email: "admin@example.com", displayName: "Gestionnaire",
+      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: []
+    }, {
+      email: "teacher@example.com", displayName: "Professeur",
+      status: "ACTIVE", roles: ["PROFESSEUR"], assignments: []
+    }]
+  };
+  var access = AKS_createAccessService_({
+    identityProvider: function () { return "admin@example.com"; },
+    registryStore: {
+      load: function () { return registry; },
+      save: function (next) { registry = next; },
+      clear: function () { registry = null; }
+    },
+    courseProvider: { list: function () { return []; } },
+    legacyAdminEmails: [],
+    clock: function () { return new Date("2026-09-01T10:00:00.000Z"); },
+    registryLock: sharedLock,
+    correlationIdProvider: function () { return "corr-access-end-to-end"; },
+    audit: auditFixture.service
+  });
+  var view = access.readRegistryForAdministration();
+  var next = {
+    schemaVersion: view.schemaVersion,
+    accounts: JSON.parse(JSON.stringify(view.accounts))
+  };
+  next.accounts[1].displayName = "Professeur modifié";
+  var result = access.updateRegistryForAdministration({
+    expectedRevision: view.revision,
+    registry: next
+  });
+  assertEquals_("corr-access-end-to-end", result.correlationId);
+  assertEquals_(2, auditFixture.rows.length);
+  assertEquals_("INTENTION", auditFixture.rows[0][10]);
+  assertEquals_("REUSSI", auditFixture.rows[1][10]);
+  assertEquals_("ACCESS", auditFixture.rows[0][7]);
+  assertEquals_(auditFixture.rows[0][12], auditFixture.rows[1][12]);
+  assertEquals_(1, sharedLockAttempts,
+    "Le cycle ACCESS ne doit acquérir le verrou de script qu'une fois.");
+  assertEquals_(1, sharedLockReleases,
+    "Seul le propriétaire du verrou partagé doit le libérer.");
+  assertEquals_(false, sharedLockHeld);
 }
 
 function AKS_testAudit001_rejectsMetadataOutsideClosedSchema_() {
@@ -279,12 +402,30 @@ function AKS_testAudit001_rejectsUnauthorizedAdminActor_() {
 }
 
 function AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_() {
+  var accessChecks = 0;
   var authorize = AKS_createDefaultAuditActorAuthorizer_(
-    { assertAuthorized: function (actorId) { return actorId; } },
-    function () { return "system.audit@example.com"; }
+    { assertAuthorized: function (actorId) {
+      if (actorId !== "admin@example.com") throw new Error("refus historique");
+      return actorId;
+    } },
+    function () { return "system.audit@example.com"; },
+    function () {
+      return {
+        getCurrentIdentity: function () { return "manager@example.com"; },
+        assertAdministrativeCapability: function (capability) {
+          accessChecks += 1;
+          return capability === "ACCESS_MANAGE";
+        }
+      };
+    }
   );
   assertEquals_(false, authorize("USER", "member@example.com"));
+  assertEquals_(true, authorize("USER", "member@example.com", {
+    action: "ACCESS_REGISTRY_UPDATE", result: "REFUSE"
+  }));
   assertEquals_(true, authorize("ADMIN", "admin@example.com"));
+  assertEquals_(true, authorize("ADMIN", "manager@example.com"));
+  assertEquals_(1, accessChecks);
   assertEquals_(true, authorize("SYSTEM", "system.audit@example.com"));
   assertEquals_(false, authorize("SYSTEM", "other-system@example.com"));
 }
@@ -419,6 +560,7 @@ function AKS_testAudit001_returnsDeeplyImmutableProof_() {
 
 function AKS_testAudit001_exposesPersistentCommonPort_() {
   assertTrue_(AKS.Core.Audit && typeof AKS.Core.Audit.record === "function");
+  assertTrue_(typeof AKS.Core.Audit.recordUnderExistingLock === "function");
   assertEquals_(true, AKS.Core.Audit.isPersistentRecipeAudit());
   assertEquals_(16, AKS.Core.Audit.getSchema().headers.length);
 }
@@ -676,6 +818,9 @@ function AKS_runAudit001Tests() {
     { name: "identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ },
     { name: "horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ },
     { name: "JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ },
+    { name: "preuve ACCESS minimisée", test: AKS_testAudit001_persistsMinimizedAccessRegistryProof_ },
+    { name: "métadonnées ACCESS invalides refusées", test: AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_ },
+    { name: "cycle ACCESS persistant de bout en bout", test: AKS_testAudit001_persistsAccessServiceCycleEndToEnd_ },
     { name: "schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ },
     { name: "valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ },
     { name: "catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ },

@@ -27,6 +27,7 @@ function AKS_createAccessService_(options) {
     SESSION_CLOSE: true,
     ATTENDANCE_CORRECT_CLOSED: true,
     ACCESS_MANAGE: true,
+    ANALYTICS_READ: true,
     ANALYTICS_PREVIEW: true,
     ANALYTICS_PUBLISH: true,
     AUDIT_READ: true,
@@ -72,7 +73,13 @@ function AKS_createAccessService_(options) {
       ? AKS.Config.getAuthorizedAdminEmails()
       : []);
   var clock = options.clock || function () { return new Date(); };
-  var audit = options.audit || { record: function () {} };
+  var audit = options.audit ||
+    (AKS.Core && AKS.Core.Audit ? AKS.Core.Audit : null);
+  var correlationIdProvider = options.correlationIdProvider || function () {
+    return "corr-access-" + Utilities.getUuid();
+  };
+  var registryLock = options.registryLock || null;
+  var LOCK_TIMEOUT_MS = 30000;
 
   function error_(code, message) {
     var failure = new Error(message);
@@ -84,8 +91,22 @@ function AKS_createAccessService_(options) {
     return String(value || "").trim().toLowerCase();
   }
 
+  function validEmail_(email) {
+    return email.length <= 254 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   function upper_(value) {
     return String(value || "").trim().toUpperCase();
+  }
+
+  function immutableCopy_(value) {
+    function freeze_(entry) {
+      if (!entry || typeof entry !== "object" || Object.isFrozen(entry)) return entry;
+      Object.keys(entry).forEach(function (key) { freeze_(entry[key]); });
+      return Object.freeze(entry);
+    }
+    return freeze_(JSON.parse(JSON.stringify(value)));
   }
 
   function validSeason_(season) {
@@ -93,6 +114,26 @@ function AKS_createAccessService_(options) {
       /^\d{4}-\d{4}$/.test(season) &&
       Number(season.slice(5)) === Number(season.slice(0, 4)) + 1
     );
+  }
+
+  function normalizeDate_(value) {
+    var date = String(value || "").trim();
+    if (!date) return "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Date d'accès invalide.");
+    }
+    var parsed = new Date(date + "T00:00:00.000Z");
+    if (isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Date d'accès invalide.");
+    }
+    return date;
+  }
+
+  function validatePeriod_(record) {
+    if (record.validFrom && record.validUntil &&
+        record.validFrom > record.validUntil) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Période d'accès incohérente.");
+    }
   }
 
   function activeAt_(record, now) {
@@ -129,8 +170,8 @@ function AKS_createAccessService_(options) {
       status: upper_(assignment.status),
       roles: uniqueKnownValues_(assignment.roles, ROLES),
       extraCapabilities: [],
-      validFrom: assignment.validFrom || "",
-      validUntil: assignment.validUntil || ""
+      validFrom: normalizeDate_(assignment.validFrom),
+      validUntil: normalizeDate_(assignment.validUntil)
     };
     if (!validSeason_(normalized.season) ||
         (normalized.status !== "ACTIVE" && normalized.status !== "INACTIVE")) {
@@ -167,6 +208,7 @@ function AKS_createAccessService_(options) {
     if (module === "INSCRIPTIONS" && normalized.extraCapabilities.length === 0) {
       throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions absente.");
     }
+    validatePeriod_(normalized);
     return normalized;
   }
 
@@ -178,7 +220,7 @@ function AKS_createAccessService_(options) {
     var emails = {};
     var accounts = registry.accounts.map(function (account) {
       var email = normalizeEmail_(account && account.email);
-      if (!email || emails[email]) {
+      if (!validEmail_(email) || emails[email]) {
         throw error_("ACCESS_REGISTRY_INVALID", "Compte d'accès absent ou dupliqué.");
       }
       emails[email] = true;
@@ -191,12 +233,37 @@ function AKS_createAccessService_(options) {
         displayName: String(account.displayName || "").trim(),
         status: status,
         roles: uniqueKnownValues_(account.roles, ROLES),
-        assignments: (account.assignments || []).map(normalizeAssignment_),
-        validFrom: account.validFrom || "",
-        validUntil: account.validUntil || ""
+        assignments: Array.isArray(account.assignments)
+          ? account.assignments.map(normalizeAssignment_) : (function () {
+            throw error_("ACCESS_REGISTRY_INVALID", "Affectations de compte invalides.");
+          }()),
+        validFrom: normalizeDate_(account.validFrom),
+        validUntil: normalizeDate_(account.validUntil),
+        updatedAt: String(account.updatedAt || "").trim(),
+        updatedBy: normalizeEmail_(account.updatedBy)
       };
+    }).map(function (account) {
+      validatePeriod_(account);
+      return account;
     });
     return { schemaVersion: SCHEMA_VERSION, accounts: accounts };
+  }
+
+  function canonicalRegistry_(registry) {
+    return JSON.stringify(registry === null ? null : registry);
+  }
+
+  function revisionFor_(registry) {
+    var text = canonicalRegistry_(registry);
+    var first = 2166136261;
+    var second = 5381;
+    for (var index = 0; index < text.length; index += 1) {
+      first ^= text.charCodeAt(index);
+      first = Math.imul(first, 16777619);
+      second = ((second << 5) + second) ^ text.charCodeAt(index);
+    }
+    return "access-rev/1-" + text.length.toString(36) + "-" +
+      (first >>> 0).toString(36) + "-" + (second >>> 0).toString(36);
   }
 
   function courses_() {
@@ -209,6 +276,47 @@ function AKS_createAccessService_(options) {
         season: String(course.season || "").trim(),
         active: course.active !== false
       };
+    });
+  }
+
+  function validateRegistryScopes_(registry, now) {
+    var courseCatalogue = courses_();
+    var courseKeys = {};
+    courseCatalogue.forEach(function (course) {
+      var key = course.code + "|" + course.season;
+      if (!course.code || !validSeason_(course.season) || course.season === "*" ||
+          courseKeys[key]) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Catalogue des cours invalide.");
+      }
+      courseKeys[key] = true;
+    });
+    var inscriptionsCatalogue = null;
+    registry.accounts.forEach(function (account) {
+      account.assignments.forEach(function (assignment) {
+        if (!activeAt_(account, now) || !activeAt_(assignment, now)) return;
+        if (assignment.module === "INSCRIPTIONS") {
+          if (inscriptionsCatalogue === null) {
+            inscriptionsCatalogue = inscriptionsCatalogue_();
+          }
+          var inscriptionsMatches = inscriptionsCatalogue.filter(function (entry) {
+            return (assignment.season === "*" || entry.season === assignment.season) &&
+              entry.section === assignment.section &&
+              (!assignment.courseCode ||
+                entry.courseCodes.indexOf(assignment.courseCode) !== -1);
+          });
+          if (inscriptionsMatches.length === 0) {
+            throw error_("ACCESS_REGISTRY_INVALID", "Périmètre Inscriptions inconnu.");
+          }
+          return;
+        }
+        var courseMatches = courseCatalogue.filter(function (course) {
+          return course.code === assignment.courseCode &&
+            (assignment.season === "*" || course.season === assignment.season);
+        });
+        if (courseMatches.length === 0) {
+          throw error_("ACCESS_REGISTRY_INVALID", "Cours ou saison inconnu.");
+        }
+      });
     });
   }
 
@@ -373,11 +481,352 @@ function AKS_createAccessService_(options) {
       if (!legacyAdministrator_(email)) {
         throw error_("ACCESS_DENIED", "Opération non autorisée.");
       }
-      return { email: email, legacyBootstrap: true, account: null, now: now };
+      return {
+        email: email,
+        legacyBootstrap: true,
+        account: null,
+        registry: null,
+        now: now
+      };
     }
     var account = accountFor_(registry, email, now);
     if (!account) throw error_("ACCESS_DENIED", "Opération non autorisée.");
-    return { email: email, legacyBootstrap: false, account: account, now: now };
+    return {
+      email: email,
+      legacyBootstrap: false,
+      account: account,
+      registry: registry,
+      now: now
+    };
+  }
+
+  function administrativeCapabilityAllowed_(context, capability) {
+    return capability === "ACCESS_MANAGE" && (
+      context.legacyBootstrap ||
+      context.account.roles.indexOf("ADMINISTRATEUR") !== -1
+    );
+  }
+
+  function assertAdministrativeCapability(capability) {
+    capability = upper_(capability);
+    var context = context_();
+    if (!administrativeCapabilityAllowed_(context, capability)) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    }
+    return true;
+  }
+
+  function readRegistryForAdministration() {
+    var context = context_();
+    if (!administrativeCapabilityAllowed_(context, "ACCESS_MANAGE")) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    }
+    return immutableCopy_({
+      schemaVersion: SCHEMA_VERSION,
+      accounts: context.registry === null ? [] : context.registry.accounts,
+      bootstrap: context.registry === null,
+      revision: revisionFor_(context.registry)
+    });
+  }
+
+  function now_() {
+    var now = clock();
+    if (!(now instanceof Date) || isNaN(now.getTime())) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Horloge d'autorisation invalide.");
+    }
+    return now;
+  }
+
+  function acquireRegistryLock_() {
+    var lock = registryLock;
+    if (!lock && typeof LockService !== "undefined" &&
+        LockService && typeof LockService.getScriptLock === "function") {
+      lock = LockService.getScriptLock();
+    }
+    if (!lock || typeof lock.tryLock !== "function" ||
+        typeof lock.releaseLock !== "function") {
+      throw error_("ACCESS_REGISTRY_LOCK_UNAVAILABLE", "Verrou du registre indisponible.");
+    }
+    if (!lock.tryLock(LOCK_TIMEOUT_MS)) {
+      throw error_("ACCESS_REGISTRY_LOCK_UNAVAILABLE", "Registre momentanément indisponible.");
+    }
+    return lock;
+  }
+
+  function authorizeRegistryWrite_(registry, actor, now) {
+    if (registry === null) {
+      if (!legacyAdministrator_(actor)) {
+        throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+      }
+      return;
+    }
+    var actorAccount = accountFor_(registry, actor, now);
+    var context = {
+      legacyBootstrap: false,
+      account: actorAccount
+    };
+    if (!actorAccount ||
+        !administrativeCapabilityAllowed_(context, "ACCESS_MANAGE")) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    }
+  }
+
+  function businessAccount_(account) {
+    var copy = JSON.parse(JSON.stringify(account));
+    delete copy.updatedAt;
+    delete copy.updatedBy;
+    return copy;
+  }
+
+  function stampChanges_(proposed, current, actor, now) {
+    var currentByEmail = {};
+    (current ? current.accounts : []).forEach(function (account) {
+      currentByEmail[account.email] = account;
+    });
+    proposed.accounts.forEach(function (account) {
+      var previous = currentByEmail[account.email];
+      var unchanged = previous &&
+        JSON.stringify(businessAccount_(previous)) ===
+          JSON.stringify(businessAccount_(account));
+      if (unchanged) {
+        account.updatedAt = previous.updatedAt;
+        account.updatedBy = previous.updatedBy;
+      } else {
+        account.updatedAt = now.toISOString();
+        account.updatedBy = actor;
+      }
+      if (previous && previous.status === "INACTIVE" && account.status === "ACTIVE" &&
+          account.assignments.length !== 0) {
+        throw error_(
+          "ACCESS_REGISTRY_INVALID",
+          "Une réactivation doit repartir sans ancienne habilitation."
+        );
+      }
+    });
+    return proposed;
+  }
+
+  function assertActiveManagerRemains_(registry, now) {
+    var managers = registry.accounts.filter(function (account) {
+      return activeAt_(account, now) && administrativeCapabilityAllowed_({
+        legacyBootstrap: false,
+        account: account
+      }, "ACCESS_MANAGE");
+    });
+    if (managers.length === 0) {
+      throw error_(
+        "ACCESS_LAST_MANAGER_REQUIRED",
+        "Un gestionnaire d'accès actif est obligatoire."
+      );
+    }
+  }
+
+  function restoreRegistry_(previous) {
+    try {
+      if (previous === null) {
+        if (!registryStore || typeof registryStore.clear !== "function") {
+          throw error_("ACCESS_REGISTRY_RESTORE_FAILED", "Restauration du registre impossible.");
+        }
+        registryStore.clear();
+      } else {
+        registryStore.save(previous);
+      }
+      var restored = loadedRegistry_();
+      if (canonicalRegistry_(restored) !== canonicalRegistry_(previous)) {
+        throw error_("ACCESS_REGISTRY_RESTORE_FAILED", "Restauration du registre incomplète.");
+      }
+    } catch (failure) {
+      if (failure && failure.code === "ACCESS_REGISTRY_RESTORE_FAILED") throw failure;
+      throw error_("ACCESS_REGISTRY_RESTORE_FAILED", "Restauration du registre impossible.");
+    }
+  }
+
+  function persistRegistryAtomically_(proposed, previous) {
+    if (!registryStore || typeof registryStore.save !== "function") {
+      throw error_("ACCESS_REGISTRY_INVALID", "Registre d'accès indisponible.");
+    }
+    try {
+      registryStore.save(proposed);
+      var persisted = loadedRegistry_();
+      if (canonicalRegistry_(persisted) !== canonicalRegistry_(proposed)) {
+        throw error_("ACCESS_REGISTRY_WRITE_FAILED", "Vérification du registre impossible.");
+      }
+    } catch (failure) {
+      restoreRegistry_(previous);
+      if (failure && failure.code === "ACCESS_REGISTRY_WRITE_FAILED") throw failure;
+      throw error_("ACCESS_REGISTRY_WRITE_FAILED", "Écriture du registre impossible.");
+    }
+  }
+
+  function assertPersistentAudit_() {
+    if (!audit || typeof audit.record !== "function" ||
+        typeof audit.recordUnderExistingLock !== "function" ||
+        typeof audit.isPersistentRecipeAudit !== "function" ||
+        audit.isPersistentRecipeAudit() !== true) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Audit persistant des accès indisponible.");
+    }
+  }
+
+  function correlationId_() {
+    var correlationId = String(correlationIdProvider() || "").trim();
+    if (!/^corr-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(correlationId)) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Corrélation d'audit des accès invalide.");
+    }
+    return correlationId;
+  }
+
+  function changedAccountIds_(before, after) {
+    var beforeByEmail = {};
+    var afterByEmail = {};
+    (before ? before.accounts : []).forEach(function (account) {
+      beforeByEmail[account.email] = businessAccount_(account);
+    });
+    (after ? after.accounts : []).forEach(function (account) {
+      afterByEmail[account.email] = businessAccount_(account);
+    });
+    var emails = {};
+    Object.keys(beforeByEmail).forEach(function (email) { emails[email] = true; });
+    Object.keys(afterByEmail).forEach(function (email) { emails[email] = true; });
+    return Object.keys(emails).filter(function (email) {
+      return JSON.stringify(beforeByEmail[email] || null) !==
+        JSON.stringify(afterByEmail[email] || null);
+    }).sort();
+  }
+
+  function auditMetadata_(before, proposed, after, actor, restored) {
+    var changed = changedAccountIds_(before, proposed);
+    return {
+      beforeRevision: revisionFor_(before),
+      proposedRevision: revisionFor_(proposed),
+      afterRevision: revisionFor_(after),
+      changedAccountIds: changed,
+      changedCount: changed.length,
+      selfModification: changed.indexOf(actor) !== -1,
+      restored: restored === true
+    };
+  }
+
+  function recordRegistryAudit_(actor, correlationId, result, reasonCode,
+      before, proposed, after, restored, lockAlreadyHeld) {
+    assertPersistentAudit_();
+    var proof;
+    try {
+      var event = {
+        actorType: result === "REFUSE" ? "USER" : "ADMIN",
+        actor: actor,
+        action: "ACCESS_REGISTRY_UPDATE",
+        module: "ACCESS",
+        criticality: "CRITICAL",
+        targetType: "ACCESS_REGISTRY",
+        targetId: "AKS_ACCESS_REGISTRY",
+        result: result,
+        reasonCode: reasonCode || "",
+        correlationId: correlationId,
+        metadata: auditMetadata_(before, proposed, after, actor, restored)
+      };
+      proof = lockAlreadyHeld
+        ? audit.recordUnderExistingLock(event)
+        : audit.record(event);
+    } catch (auditFailure) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Preuve d'audit des accès indisponible.");
+    }
+    if (proof === false || proof === null || typeof proof === "undefined") {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Preuve d'audit des accès indisponible.");
+    }
+    return proof;
+  }
+
+  function recordRefusal_(actor, correlationId, failure, before, proposed,
+      lockAlreadyHeld) {
+    try {
+      recordRegistryAudit_(
+        actor, correlationId, "REFUSE",
+        failure && failure.code ? failure.code : "UNEXPECTED_ERROR",
+        before, proposed || before, before, false, lockAlreadyHeld
+      );
+    } catch (ignoredAuditFailure) {}
+  }
+
+  function updateRegistryForAdministration(command) {
+    var actor = currentIdentity_();
+    assertPersistentAudit_();
+    var correlationId = correlationId_();
+    var authorizationTime = now_();
+    var initial = loadedRegistry_();
+    var proposed = null;
+    try {
+      authorizeRegistryWrite_(initial, actor, authorizationTime);
+      if (!command || typeof command !== "object" ||
+          typeof command.expectedRevision !== "string" ||
+          !command.expectedRevision.trim() || !command.registry) {
+        throw error_("ACCESS_COMMAND_INVALID", "Commande de modification invalide.");
+      }
+      proposed = normalizeRegistry_(command.registry);
+      validateRegistryScopes_(proposed, authorizationTime);
+    } catch (failure) {
+      recordRefusal_(actor, correlationId, failure, initial, proposed);
+      throw failure;
+    }
+    var lock;
+    try {
+      lock = acquireRegistryLock_();
+    } catch (lockFailure) {
+      recordRefusal_(actor, correlationId, lockFailure, initial, proposed);
+      throw lockFailure;
+    }
+    try {
+      var current = loadedRegistry_();
+      var now = now_();
+      try {
+        authorizeRegistryWrite_(current, actor, now);
+        if (command.expectedRevision !== revisionFor_(current)) {
+          throw error_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+        }
+        validateRegistryScopes_(proposed, now);
+        proposed = stampChanges_(proposed, current, actor, now);
+        assertActiveManagerRemains_(proposed, now);
+      } catch (validationFailure) {
+        recordRefusal_(actor, correlationId, validationFailure, current, proposed, true);
+        throw validationFailure;
+      }
+      recordRegistryAudit_(
+        actor, correlationId, "INTENTION", "", current, proposed, proposed, false, true
+      );
+      try {
+        persistRegistryAtomically_(proposed, current);
+      } catch (persistenceFailure) {
+        try {
+          recordRegistryAudit_(
+            actor, correlationId, "ECHEC", persistenceFailure.code,
+            current, proposed, current, true, true
+          );
+        } catch (ignoredAuditFailure) {}
+        throw persistenceFailure;
+      }
+      try {
+        recordRegistryAudit_(
+          actor, correlationId, "REUSSI", "", current, proposed, proposed, false, true
+        );
+      } catch (successAuditFailure) {
+        restoreRegistry_(current);
+        try {
+          recordRegistryAudit_(
+            actor, correlationId, "ECHEC", "ACCESS_AUDIT_REQUIRED",
+            current, proposed, current, true, true
+          );
+        } catch (ignoredFinalAuditFailure) {}
+        throw error_("ACCESS_AUDIT_REQUIRED", "Preuve finale des accès indisponible.");
+      }
+      return immutableCopy_({
+        schemaVersion: SCHEMA_VERSION,
+        accounts: proposed.accounts,
+        bootstrap: false,
+        revision: revisionFor_(proposed),
+        correlationId: correlationId
+      });
+    } finally {
+      lock.releaseLock();
+    }
   }
 
   function capabilitiesFor_(context, courseCode, season) {
@@ -437,36 +886,20 @@ function AKS_createAccessService_(options) {
   }
 
   function saveRegistry(registry) {
-    var actor = currentIdentity_();
-    var normalized = normalizeRegistry_(registry);
-    var now = clock();
-    var activeAdministrators = normalized.accounts.filter(function (account) {
-      return activeAt_(account, now) &&
-        account.roles.indexOf("ADMINISTRATEUR") !== -1;
-    });
-    if (activeAdministrators.length === 0) {
-      throw error_("ACCESS_REGISTRY_INVALID", "Un administrateur actif est obligatoire.");
-    }
     var current = loadedRegistry_();
-    if (current !== null) {
-      var actorAccount = accountFor_(current, actor, now);
-      if (!actorAccount || actorAccount.roles.indexOf("ADMINISTRATEUR") === -1) {
-        throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    var result;
+    try {
+      result = updateRegistryForAdministration({
+        expectedRevision: revisionFor_(current),
+        registry: registry
+      });
+    } catch (failure) {
+      if (failure && failure.code === "ACCESS_LAST_MANAGER_REQUIRED") {
+        throw error_("ACCESS_REGISTRY_INVALID", "Un administrateur actif est obligatoire.");
       }
-    } else if (!legacyAdministrator_(actor)) {
-      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+      throw failure;
     }
-    if (!registryStore || typeof registryStore.save !== "function") {
-      throw error_("ACCESS_REGISTRY_INVALID", "Registre d'accès indisponible.");
-    }
-    registryStore.save(normalized);
-    audit.record({
-      action: "ACCESS_REGISTRY_UPDATE",
-      actor: actor,
-      result: "SUCCESS",
-      schemaVersion: SCHEMA_VERSION
-    });
-    return normalized;
+    return immutableCopy_({ schemaVersion: result.schemaVersion, accounts: result.accounts });
   }
 
   return Object.freeze({
@@ -476,6 +909,9 @@ function AKS_createAccessService_(options) {
     hasCapability: hasCapability,
     assertCapability: assertCapability,
     assertInscriptionsCapability: assertInscriptionsCapability,
+    assertAdministrativeCapability: assertAdministrativeCapability,
+    readRegistryForAdministration: readRegistryForAdministration,
+    updateRegistryForAdministration: updateRegistryForAdministration,
     getEffectiveAccessContext: effectiveContext,
     saveRegistry: saveRegistry
   });
