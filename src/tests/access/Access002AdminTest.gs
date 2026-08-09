@@ -56,6 +56,8 @@ function AKS_access002AdminFixture_(overrides) {
   var lockAttempts = 0;
   var lockReleases = 0;
   var saveAttempt = 0;
+  var auditAttempt = 0;
+  var auditEvents = [];
   var access = AKS_createAccessService_({
     identityProvider: function () {
       return overrides.identity || "admin@example.com";
@@ -81,6 +83,20 @@ function AKS_access002AdminFixture_(overrides) {
     }},
     legacyAdminEmails: overrides.legacyAdminEmails || [],
     clock: function () { return new Date("2026-09-01T10:00:00Z"); },
+    correlationIdProvider: function () { return "corr-access-002-01"; },
+    audit: {
+      record: function (event) {
+        auditAttempt += 1;
+        if (overrides.failAuditAt === auditAttempt) {
+          throw new Error("Panne d'audit injectée.");
+        }
+        auditEvents.push(JSON.parse(JSON.stringify(event)));
+        return { auditId: "audit-" + auditAttempt };
+      },
+      isPersistentRecipeAudit: function () {
+        return overrides.persistentAudit !== false;
+      }
+    },
     registryLock: {
       tryLock: function (timeout) {
         lockAttempts += 1;
@@ -98,6 +114,7 @@ function AKS_access002AdminFixture_(overrides) {
     clears: function () { return clears; },
     lockAttempts: function () { return lockAttempts; },
     lockReleases: function () { return lockReleases; },
+    auditEvents: auditEvents,
     registry: function () { return registry; }
   };
 }
@@ -182,7 +199,71 @@ function AKS_testAccess002Admin_writesAtomicallyWithServerMetadata_() {
   assertEquals_("2026-09-01T10:00:00.000Z", result.accounts[1].updatedAt);
   assertEquals_("admin@example.com", result.accounts[1].updatedBy);
   assertTrue_(result.revision !== before.revision);
+  assertEquals_("corr-access-002-01", result.correlationId);
   assertTrue_(Object.isFrozen(result));
+}
+
+function AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_() {
+  var fixture = AKS_access002AdminFixture_();
+  var before = fixture.service.readRegistry();
+  fixture.service.updateRegistry({
+    expectedRevision: before.revision,
+    registry: AKS_access002UpdatedRegistry_(before)
+  });
+  assertEquals_(2, fixture.auditEvents.length);
+  assertEquals_("INTENTION", fixture.auditEvents[0].result);
+  assertEquals_("REUSSI", fixture.auditEvents[1].result);
+  assertEquals_(fixture.auditEvents[0].correlationId, fixture.auditEvents[1].correlationId);
+  assertEquals_("ACCESS_REGISTRY", fixture.auditEvents[0].targetType);
+  assertEquals_("teacher@example.com",
+    fixture.auditEvents[0].metadata.changedAccountIds[0]);
+  assertTrue_(fixture.auditEvents[0].metadata.beforeRevision !==
+    fixture.auditEvents[0].metadata.proposedRevision);
+  assertEquals_(fixture.auditEvents[1].metadata.proposedRevision,
+    fixture.auditEvents[1].metadata.afterRevision);
+}
+
+function AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_() {
+  var fixture = AKS_access002AdminFixture_({ persistentAudit: false });
+  var before = fixture.service.readRegistry();
+  assertThrows_(function () {
+    fixture.service.updateRegistry({
+      expectedRevision: before.revision,
+      registry: AKS_access002UpdatedRegistry_(before)
+    });
+  }, "ACCESS_AUDIT_REQUIRED");
+  assertEquals_(0, fixture.lockAttempts());
+  assertEquals_(0, fixture.writes());
+}
+
+function AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_() {
+  var fixture = AKS_access002AdminFixture_({ failAuditAt: 2 });
+  var before = fixture.service.readRegistry();
+  assertThrows_(function () {
+    fixture.service.updateRegistry({
+      expectedRevision: before.revision,
+      registry: AKS_access002UpdatedRegistry_(before)
+    });
+  }, "ACCESS_AUDIT_REQUIRED");
+  assertEquals_(2, fixture.writes());
+  assertEquals_("", fixture.registry().accounts[1].displayName);
+  assertEquals_(2, fixture.auditEvents.length);
+  assertEquals_("INTENTION", fixture.auditEvents[0].result);
+  assertEquals_("ECHEC", fixture.auditEvents[1].result);
+  assertEquals_(true, fixture.auditEvents[1].metadata.restored);
+  assertEquals_(fixture.auditEvents[1].metadata.beforeRevision,
+    fixture.auditEvents[1].metadata.afterRevision);
+}
+
+function AKS_testAccess002Admin_auditsRefusalWithoutWrite_() {
+  var fixture = AKS_access002AdminFixture_({ identity: "teacher@example.com" });
+  assertThrows_(function () {
+    fixture.service.updateRegistry({ expectedRevision: "forbidden", registry: {} });
+  }, "ACCESS_CAPABILITY_DENIED");
+  assertEquals_(0, fixture.writes());
+  assertEquals_(1, fixture.auditEvents.length);
+  assertEquals_("REFUSE", fixture.auditEvents[0].result);
+  assertEquals_("ACCESS_CAPABILITY_DENIED", fixture.auditEvents[0].reasonCode);
 }
 
 function AKS_testAccess002Admin_rejectsWriteBeforeLockWithoutAccessManage_() {
@@ -363,6 +444,22 @@ function AKS_runAccess002AdminSuite() {
     {
       name: "écriture atomique et métadonnées serveur",
       test: AKS_testAccess002Admin_writesAtomicallyWithServerMetadata_
+    },
+    {
+      name: "audit persistant avant après corrélé",
+      test: AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_
+    },
+    {
+      name: "audit persistant obligatoire avant mutation",
+      test: AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_
+    },
+    {
+      name: "restauration après échec de preuve finale",
+      test: AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_
+    },
+    {
+      name: "refus audité sans écriture",
+      test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_
     },
     {
       name: "écriture refusée avant verrou",

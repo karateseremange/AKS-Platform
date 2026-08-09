@@ -62,7 +62,11 @@ function AKS_access001Fixture_(overrides) {
       tryLock: function () { return true; },
       releaseLock: function () {}
     },
-    audit: { record: function (event) { auditEvents.push(event); } }
+    audit: {
+      record: function (event) { auditEvents.push(event); return { persisted: true }; },
+      isPersistentRecipeAudit: function () { return true; }
+    },
+    correlationIdProvider: function () { return "corr-access-001"; }
   });
   return {
     service: service,
@@ -193,8 +197,10 @@ function AKS_testAccess001_savesAndAuditsRegistry_() {
     }]
   });
   assertTrue_(fixture.saved() !== null, "Le registre validé doit être persisté.");
-  assertEquals_(1, fixture.auditEvents.length);
+  assertEquals_(2, fixture.auditEvents.length);
   assertEquals_("ACCESS_REGISTRY_UPDATE", fixture.auditEvents[0].action);
+  assertEquals_("INTENTION", fixture.auditEvents[0].result);
+  assertEquals_("REUSSI", fixture.auditEvents[1].result);
 }
 
 function AKS_testAccess001_rejectsUnauthorizedRegistryWrite_() {

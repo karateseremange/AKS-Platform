@@ -349,6 +349,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-01 / bootstrap historique en lecture seule", test: AKS_testAccess002Admin_preservesLegacyBootstrapReadOnly_ }
     ,{ name: "ACCESS-002-01 / vue défensive immuable", test: AKS_testAccess002Admin_returnsImmutableDefensiveView_ }
     ,{ name: "ACCESS-002-01 / écriture atomique et métadonnées serveur", test: AKS_testAccess002Admin_writesAtomicallyWithServerMetadata_ }
+    ,{ name: "ACCESS-002-01 / audit persistant avant après corrélé", test: AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_ }
+    ,{ name: "ACCESS-002-01 / audit persistant obligatoire avant mutation", test: AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_ }
+    ,{ name: "ACCESS-002-01 / restauration après échec de preuve finale", test: AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_ }
+    ,{ name: "ACCESS-002-01 / refus audité sans écriture", test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_ }
     ,{ name: "ACCESS-002-01 / écriture refusée avant verrou", test: AKS_testAccess002Admin_rejectsWriteBeforeLockWithoutAccessManage_ }
     ,{ name: "ACCESS-002-01 / validation stricte avant verrou", test: AKS_testAccess002Admin_rejectsInvalidIdentityDatesAndScope_ }
     ,{ name: "ACCESS-002-01 / conflit de révision", test: AKS_testAccess002Admin_rejectsConcurrentRevision_ }
@@ -466,6 +470,9 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
     ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
     ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
+    ,{ name: "AUDIT-001 / preuve registre ACCESS minimisée", test: AKS_testAudit001_persistsMinimizedAccessRegistryProof_ }
+    ,{ name: "AUDIT-001 / métadonnées ACCESS invalides refusées", test: AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_ }
+    ,{ name: "AUDIT-001 / cycle ACCESS persistant de bout en bout", test: AKS_testAudit001_persistsAccessServiceCycleEndToEnd_ }
     ,{ name: "AUDIT-001 / schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ }
     ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
     ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }

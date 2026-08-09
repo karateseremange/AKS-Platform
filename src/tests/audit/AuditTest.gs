@@ -172,6 +172,105 @@ function AKS_testAudit001_serializesMetadataDeterministically_() {
   assertEquals_('{"attemptCount":2,"status":"CONFIRMEE"}', proof.metadata_json);
 }
 
+function AKS_testAudit001_persistsMinimizedAccessRegistryProof_() {
+  var proof = AKS_audit001Fixture_().service.record(AKS_audit001Event_({
+    action: "ACCESS_REGISTRY_UPDATE",
+    module: "ACCESS",
+    targetType: "ACCESS_REGISTRY",
+    targetId: "AKS_ACCESS_REGISTRY",
+    result: "REUSSI",
+    correlationId: "corr-access-audit-001",
+    metadata: {
+      beforeRevision: "access-rev/1-a-b-c",
+      proposedRevision: "access-rev/1-d-e-f",
+      afterRevision: "access-rev/1-d-e-f",
+      changedAccountIds: ["teacher@example.com"],
+      changedCount: 1,
+      selfModification: false,
+      restored: false
+    }
+  }));
+  assertEquals_("ACCESS_REGISTRY_UPDATE", proof.action);
+  assertEquals_("ACCESS", proof.module);
+  assertEquals_("AKS_ACCESS_REGISTRY", proof.target_id);
+  assertEquals_(
+    '{"afterRevision":"access-rev/1-d-e-f","beforeRevision":"access-rev/1-a-b-c",' +
+    '"changedAccountIds":["teacher@example.com"],"changedCount":1,' +
+    '"proposedRevision":"access-rev/1-d-e-f","restored":false,' +
+    '"selfModification":false}',
+    proof.metadata_json
+  );
+}
+
+function AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_() {
+  var fixture = AKS_audit001Fixture_();
+  assertThrows_(function () {
+    fixture.service.record(AKS_audit001Event_({
+      action: "ACCESS_REGISTRY_UPDATE",
+      module: "ACCESS",
+      targetType: "ACCESS_REGISTRY",
+      targetId: "AKS_ACCESS_REGISTRY",
+      metadata: {
+        beforeRevision: "access-rev/1-a-b-c",
+        proposedRevision: "access-rev/1-d-e-f",
+        afterRevision: "access-rev/1-d-e-f",
+        changedAccountIds: ["teacher@example.com"],
+        changedCount: 2,
+        selfModification: false,
+        restored: false
+      }
+    }));
+  }, "AUDIT_EVENT_INVALID");
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_persistsAccessServiceCycleEndToEnd_() {
+  var auditFixture = AKS_audit001Fixture_();
+  var registry = {
+    schemaVersion: "access/1.0",
+    accounts: [{
+      email: "admin@example.com", displayName: "Gestionnaire",
+      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: []
+    }, {
+      email: "teacher@example.com", displayName: "Professeur",
+      status: "ACTIVE", roles: ["PROFESSEUR"], assignments: []
+    }]
+  };
+  var access = AKS_createAccessService_({
+    identityProvider: function () { return "admin@example.com"; },
+    registryStore: {
+      load: function () { return registry; },
+      save: function (next) { registry = next; },
+      clear: function () { registry = null; }
+    },
+    courseProvider: { list: function () { return []; } },
+    legacyAdminEmails: [],
+    clock: function () { return new Date("2026-09-01T10:00:00.000Z"); },
+    registryLock: {
+      tryLock: function () { return true; },
+      releaseLock: function () {}
+    },
+    correlationIdProvider: function () { return "corr-access-end-to-end"; },
+    audit: auditFixture.service
+  });
+  var view = access.readRegistryForAdministration();
+  var next = {
+    schemaVersion: view.schemaVersion,
+    accounts: JSON.parse(JSON.stringify(view.accounts))
+  };
+  next.accounts[1].displayName = "Professeur modifié";
+  var result = access.updateRegistryForAdministration({
+    expectedRevision: view.revision,
+    registry: next
+  });
+  assertEquals_("corr-access-end-to-end", result.correlationId);
+  assertEquals_(2, auditFixture.rows.length);
+  assertEquals_("INTENTION", auditFixture.rows[0][10]);
+  assertEquals_("REUSSI", auditFixture.rows[1][10]);
+  assertEquals_("ACCESS", auditFixture.rows[0][7]);
+  assertEquals_(auditFixture.rows[0][12], auditFixture.rows[1][12]);
+}
+
 function AKS_testAudit001_rejectsMetadataOutsideClosedSchema_() {
   var fixture = AKS_audit001Fixture_();
   assertThrows_(function () {

@@ -73,7 +73,11 @@ function AKS_createAccessService_(options) {
       ? AKS.Config.getAuthorizedAdminEmails()
       : []);
   var clock = options.clock || function () { return new Date(); };
-  var audit = options.audit || { record: function () {} };
+  var audit = options.audit ||
+    (AKS.Core && AKS.Core.Audit ? AKS.Core.Audit : null);
+  var correlationIdProvider = options.correlationIdProvider || function () {
+    return "corr-access-" + Utilities.getUuid();
+  };
   var registryLock = options.registryLock || null;
   var LOCK_TIMEOUT_MS = 30000;
 
@@ -654,34 +658,166 @@ function AKS_createAccessService_(options) {
     }
   }
 
+  function assertPersistentAudit_() {
+    if (!audit || typeof audit.record !== "function" ||
+        typeof audit.isPersistentRecipeAudit !== "function" ||
+        audit.isPersistentRecipeAudit() !== true) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Audit persistant des accès indisponible.");
+    }
+  }
+
+  function correlationId_() {
+    var correlationId = String(correlationIdProvider() || "").trim();
+    if (!/^corr-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(correlationId)) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Corrélation d'audit des accès invalide.");
+    }
+    return correlationId;
+  }
+
+  function changedAccountIds_(before, after) {
+    var beforeByEmail = {};
+    var afterByEmail = {};
+    (before ? before.accounts : []).forEach(function (account) {
+      beforeByEmail[account.email] = businessAccount_(account);
+    });
+    (after ? after.accounts : []).forEach(function (account) {
+      afterByEmail[account.email] = businessAccount_(account);
+    });
+    var emails = {};
+    Object.keys(beforeByEmail).forEach(function (email) { emails[email] = true; });
+    Object.keys(afterByEmail).forEach(function (email) { emails[email] = true; });
+    return Object.keys(emails).filter(function (email) {
+      return JSON.stringify(beforeByEmail[email] || null) !==
+        JSON.stringify(afterByEmail[email] || null);
+    }).sort();
+  }
+
+  function auditMetadata_(before, proposed, after, actor, restored) {
+    var changed = changedAccountIds_(before, proposed);
+    return {
+      beforeRevision: revisionFor_(before),
+      proposedRevision: revisionFor_(proposed),
+      afterRevision: revisionFor_(after),
+      changedAccountIds: changed,
+      changedCount: changed.length,
+      selfModification: changed.indexOf(actor) !== -1,
+      restored: restored === true
+    };
+  }
+
+  function recordRegistryAudit_(actor, correlationId, result, reasonCode,
+      before, proposed, after, restored) {
+    assertPersistentAudit_();
+    var proof;
+    try {
+      proof = audit.record({
+        actorType: "ADMIN",
+        actor: actor,
+        action: "ACCESS_REGISTRY_UPDATE",
+        module: "ACCESS",
+        criticality: "CRITICAL",
+        targetType: "ACCESS_REGISTRY",
+        targetId: "AKS_ACCESS_REGISTRY",
+        result: result,
+        reasonCode: reasonCode || "",
+        correlationId: correlationId,
+        metadata: auditMetadata_(before, proposed, after, actor, restored)
+      });
+    } catch (auditFailure) {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Preuve d'audit des accès indisponible.");
+    }
+    if (proof === false || proof === null || typeof proof === "undefined") {
+      throw error_("ACCESS_AUDIT_REQUIRED", "Preuve d'audit des accès indisponible.");
+    }
+    return proof;
+  }
+
+  function recordRefusal_(actor, correlationId, failure, before, proposed) {
+    try {
+      recordRegistryAudit_(
+        actor, correlationId, "REFUSE",
+        failure && failure.code ? failure.code : "UNEXPECTED_ERROR",
+        before, proposed || before, before, false
+      );
+    } catch (ignoredAuditFailure) {}
+  }
+
   function updateRegistryForAdministration(command) {
     var actor = currentIdentity_();
+    assertPersistentAudit_();
+    var correlationId = correlationId_();
     var authorizationTime = now_();
-    authorizeRegistryWrite_(loadedRegistry_(), actor, authorizationTime);
-    if (!command || typeof command !== "object" ||
-        typeof command.expectedRevision !== "string" ||
-        !command.expectedRevision.trim() || !command.registry) {
-      throw error_("ACCESS_COMMAND_INVALID", "Commande de modification invalide.");
+    var initial = loadedRegistry_();
+    var proposed = null;
+    try {
+      authorizeRegistryWrite_(initial, actor, authorizationTime);
+      if (!command || typeof command !== "object" ||
+          typeof command.expectedRevision !== "string" ||
+          !command.expectedRevision.trim() || !command.registry) {
+        throw error_("ACCESS_COMMAND_INVALID", "Commande de modification invalide.");
+      }
+      proposed = normalizeRegistry_(command.registry);
+      validateRegistryScopes_(proposed, authorizationTime);
+    } catch (failure) {
+      recordRefusal_(actor, correlationId, failure, initial, proposed);
+      throw failure;
     }
-    var proposed = normalizeRegistry_(command.registry);
-    validateRegistryScopes_(proposed, authorizationTime);
-    var lock = acquireRegistryLock_();
+    var lock;
+    try {
+      lock = acquireRegistryLock_();
+    } catch (lockFailure) {
+      recordRefusal_(actor, correlationId, lockFailure, initial, proposed);
+      throw lockFailure;
+    }
     try {
       var current = loadedRegistry_();
       var now = now_();
-      authorizeRegistryWrite_(current, actor, now);
-      if (command.expectedRevision !== revisionFor_(current)) {
-        throw error_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+      try {
+        authorizeRegistryWrite_(current, actor, now);
+        if (command.expectedRevision !== revisionFor_(current)) {
+          throw error_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+        }
+        validateRegistryScopes_(proposed, now);
+        proposed = stampChanges_(proposed, current, actor, now);
+        assertActiveManagerRemains_(proposed, now);
+      } catch (validationFailure) {
+        recordRefusal_(actor, correlationId, validationFailure, current, proposed);
+        throw validationFailure;
       }
-      validateRegistryScopes_(proposed, now);
-      proposed = stampChanges_(proposed, current, actor, now);
-      assertActiveManagerRemains_(proposed, now);
-      persistRegistryAtomically_(proposed, current);
+      recordRegistryAudit_(
+        actor, correlationId, "INTENTION", "", current, proposed, proposed, false
+      );
+      try {
+        persistRegistryAtomically_(proposed, current);
+      } catch (persistenceFailure) {
+        try {
+          recordRegistryAudit_(
+            actor, correlationId, "ECHEC", persistenceFailure.code,
+            current, proposed, current, true
+          );
+        } catch (ignoredAuditFailure) {}
+        throw persistenceFailure;
+      }
+      try {
+        recordRegistryAudit_(
+          actor, correlationId, "REUSSI", "", current, proposed, proposed, false
+        );
+      } catch (successAuditFailure) {
+        restoreRegistry_(current);
+        try {
+          recordRegistryAudit_(
+            actor, correlationId, "ECHEC", "ACCESS_AUDIT_REQUIRED",
+            current, proposed, current, true
+          );
+        } catch (ignoredFinalAuditFailure) {}
+        throw error_("ACCESS_AUDIT_REQUIRED", "Preuve finale des accès indisponible.");
+      }
       return immutableCopy_({
         schemaVersion: SCHEMA_VERSION,
         accounts: proposed.accounts,
         bootstrap: false,
-        revision: revisionFor_(proposed)
+        revision: revisionFor_(proposed),
+        correlationId: correlationId
       });
     } finally {
       lock.releaseLock();
@@ -745,7 +881,6 @@ function AKS_createAccessService_(options) {
   }
 
   function saveRegistry(registry) {
-    var actor = currentIdentity_();
     var current = loadedRegistry_();
     var result;
     try {
@@ -759,12 +894,6 @@ function AKS_createAccessService_(options) {
       }
       throw failure;
     }
-    audit.record({
-      action: "ACCESS_REGISTRY_UPDATE",
-      actor: actor,
-      result: "SUCCESS",
-      schemaVersion: SCHEMA_VERSION
-    });
     return immutableCopy_({ schemaVersion: result.schemaVersion, accounts: result.accounts });
   }
 
