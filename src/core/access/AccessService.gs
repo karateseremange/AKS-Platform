@@ -177,7 +177,11 @@ function AKS_createAccessService_(options) {
         (normalized.status !== "ACTIVE" && normalized.status !== "INACTIVE")) {
       throw error_("ACCESS_REGISTRY_INVALID", "Affectation d'accès invalide.");
     }
-    if (module === "INSCRIPTIONS") {
+    if (module === "ACCESS") {
+      if (normalized.season !== "*" || normalized.section || normalized.courseCode) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Périmètre ACCESS invalide.");
+      }
+    } else if (module === "INSCRIPTIONS") {
       if (!normalized.section) {
         throw error_("ACCESS_REGISTRY_INVALID", "Périmètre Inscriptions invalide.");
       }
@@ -188,13 +192,17 @@ function AKS_createAccessService_(options) {
       capability = upper_(capability);
       if (!CAPABILITIES[capability] ||
           capability === "ATTENDANCE_CORRECT_CLOSED" ||
-          capability === "ACCESS_MANAGE" ||
+          (capability === "ACCESS_MANAGE" && module !== "ACCESS") ||
           capability === "ANALYTICS_PUBLISH" ||
           capability === "AUDIT_READ" ||
           normalized.extraCapabilities.indexOf(capability) !== -1) {
         throw error_("ACCESS_REGISTRY_INVALID", "Capacité complémentaire invalide.");
       }
-      if (module === "INSCRIPTIONS") {
+      if (module === "ACCESS") {
+        if (capability !== "ACCESS_MANAGE") {
+          throw error_("ACCESS_REGISTRY_INVALID", "Capacité ACCESS incohérente.");
+        }
+      } else if (module === "INSCRIPTIONS") {
         if (!INSCRIPTIONS_CAPABILITIES[capability] ||
             INSCRIPTIONS_CAPABILITIES[capability] === "REQUIRED" && !normalized.courseCode ||
             INSCRIPTIONS_CAPABILITIES[capability] === "FORBIDDEN" && normalized.courseCode) {
@@ -205,6 +213,11 @@ function AKS_createAccessService_(options) {
       }
       normalized.extraCapabilities.push(capability);
     });
+    if (module === "ACCESS" &&
+        (normalized.extraCapabilities.length !== 1 ||
+          normalized.extraCapabilities[0] !== "ACCESS_MANAGE")) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Capacité ACCESS absente.");
+    }
     if (module === "INSCRIPTIONS" && normalized.extraCapabilities.length === 0) {
       throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions absente.");
     }
@@ -294,6 +307,14 @@ function AKS_createAccessService_(options) {
     registry.accounts.forEach(function (account) {
       account.assignments.forEach(function (assignment) {
         if (!activeAt_(account, now) || !activeAt_(assignment, now)) return;
+        if (assignment.module === "ACCESS") {
+          if (!assignment.roles.some(function (role) {
+            return account.roles.indexOf(role) !== -1;
+          })) {
+            throw error_("ACCESS_REGISTRY_INVALID", "Rôle ACCESS non détenu.");
+          }
+          return;
+        }
         if (assignment.module === "INSCRIPTIONS") {
           if (inscriptionsCatalogue === null) {
             inscriptionsCatalogue = inscriptionsCatalogue_();
@@ -501,10 +522,17 @@ function AKS_createAccessService_(options) {
   }
 
   function administrativeCapabilityAllowed_(context, capability) {
-    return capability === "ACCESS_MANAGE" && (
-      context.legacyBootstrap ||
-      context.account.roles.indexOf("ADMINISTRATEUR") !== -1
-    );
+    if (capability !== "ACCESS_MANAGE") return false;
+    if (context.legacyBootstrap) return true;
+    if (!context.account) return false;
+    if (context.account.roles.indexOf("ADMINISTRATEUR") !== -1) return true;
+    return context.account.assignments.some(function (assignment) {
+      return assignment.module === "ACCESS" && activeAt_(assignment, context.now) &&
+        assignment.roles.some(function (role) {
+          return context.account.roles.indexOf(role) !== -1;
+        }) &&
+        assignment.extraCapabilities.indexOf("ACCESS_MANAGE") !== -1;
+    });
   }
 
   function assertAdministrativeCapability(capability) {
@@ -563,7 +591,8 @@ function AKS_createAccessService_(options) {
     var actorAccount = accountFor_(registry, actor, now);
     var context = {
       legacyBootstrap: false,
-      account: actorAccount
+      account: actorAccount,
+      now: now
     };
     if (!actorAccount ||
         !administrativeCapabilityAllowed_(context, "ACCESS_MANAGE")) {
@@ -610,7 +639,8 @@ function AKS_createAccessService_(options) {
     var managers = registry.accounts.filter(function (account) {
       return activeAt_(account, now) && administrativeCapabilityAllowed_({
         legacyBootstrap: false,
-        account: account
+        account: account,
+        now: now
       }, "ACCESS_MANAGE");
     });
     if (managers.length === 0) {

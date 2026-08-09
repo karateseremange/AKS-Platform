@@ -383,6 +383,13 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
     ,{ name: "ACCESS-002-01 / capacités Analytics indépendantes", test: AKS_testAccess002Catalogue_exposesIndependentAnalyticsCapabilities_ }
     ,{ name: "ACCESS-002-01 / compatibilité access/1.0", test: AKS_testAccess002Catalogue_preservesAccess10Compatibility_ }
+    ,{ name: "ACCESS-002-02 / affectation transverse autorisée", test: AKS_testAccess002ExplicitManage_authorizesTransverseAssignment_ }
+    ,{ name: "ACCESS-002-02 / rôle seul refusé", test: AKS_testAccess002ExplicitManage_rejectsRoleWithoutAssignment_ }
+    ,{ name: "ACCESS-002-02 / affectation inactive ou hors période refusée", test: AKS_testAccess002ExplicitManage_rejectsInactiveOrOutOfPeriodAssignment_ }
+    ,{ name: "ACCESS-002-02 / forme transverse invalide refusée", test: AKS_testAccess002ExplicitManage_rejectsInvalidTransverseShape_ }
+    ,{ name: "ACCESS-002-02 / rôle d'affectation non détenu refusé", test: AKS_testAccess002ExplicitManage_rejectsRoleNotHeldByAccount_ }
+    ,{ name: "ACCESS-002-02 / dernier gestionnaire explicite préservé", test: AKS_testAccess002ExplicitManage_preservesLastExplicitManager_ }
+    ,{ name: "ACCESS-002-02 / gestionnaire historique migré vers habilitation explicite", test: AKS_testAccess002ExplicitManage_migratesHistoricalManager_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
