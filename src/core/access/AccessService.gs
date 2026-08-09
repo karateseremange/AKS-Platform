@@ -89,6 +89,15 @@ function AKS_createAccessService_(options) {
     return String(value || "").trim().toUpperCase();
   }
 
+  function immutableCopy_(value) {
+    function freeze_(entry) {
+      if (!entry || typeof entry !== "object" || Object.isFrozen(entry)) return entry;
+      Object.keys(entry).forEach(function (key) { freeze_(entry[key]); });
+      return Object.freeze(entry);
+    }
+    return freeze_(JSON.parse(JSON.stringify(value)));
+  }
+
   function validSeason_(season) {
     return season === "*" || (
       /^\d{4}-\d{4}$/.test(season) &&
@@ -194,7 +203,9 @@ function AKS_createAccessService_(options) {
         roles: uniqueKnownValues_(account.roles, ROLES),
         assignments: (account.assignments || []).map(normalizeAssignment_),
         validFrom: account.validFrom || "",
-        validUntil: account.validUntil || ""
+        validUntil: account.validUntil || "",
+        updatedAt: String(account.updatedAt || "").trim(),
+        updatedBy: normalizeEmail_(account.updatedBy)
       };
     });
     return { schemaVersion: SCHEMA_VERSION, accounts: accounts };
@@ -374,11 +385,51 @@ function AKS_createAccessService_(options) {
       if (!legacyAdministrator_(email)) {
         throw error_("ACCESS_DENIED", "Opération non autorisée.");
       }
-      return { email: email, legacyBootstrap: true, account: null, now: now };
+      return {
+        email: email,
+        legacyBootstrap: true,
+        account: null,
+        registry: null,
+        now: now
+      };
     }
     var account = accountFor_(registry, email, now);
     if (!account) throw error_("ACCESS_DENIED", "Opération non autorisée.");
-    return { email: email, legacyBootstrap: false, account: account, now: now };
+    return {
+      email: email,
+      legacyBootstrap: false,
+      account: account,
+      registry: registry,
+      now: now
+    };
+  }
+
+  function administrativeCapabilityAllowed_(context, capability) {
+    return capability === "ACCESS_MANAGE" && (
+      context.legacyBootstrap ||
+      context.account.roles.indexOf("ADMINISTRATEUR") !== -1
+    );
+  }
+
+  function assertAdministrativeCapability(capability) {
+    capability = upper_(capability);
+    var context = context_();
+    if (!administrativeCapabilityAllowed_(context, capability)) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    }
+    return true;
+  }
+
+  function readRegistryForAdministration() {
+    var context = context_();
+    if (!administrativeCapabilityAllowed_(context, "ACCESS_MANAGE")) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Gestion des accès non autorisée.");
+    }
+    return immutableCopy_({
+      schemaVersion: SCHEMA_VERSION,
+      accounts: context.registry === null ? [] : context.registry.accounts,
+      bootstrap: context.registry === null
+    });
   }
 
   function capabilitiesFor_(context, courseCode, season) {
@@ -477,6 +528,8 @@ function AKS_createAccessService_(options) {
     hasCapability: hasCapability,
     assertCapability: assertCapability,
     assertInscriptionsCapability: assertInscriptionsCapability,
+    assertAdministrativeCapability: assertAdministrativeCapability,
+    readRegistryForAdministration: readRegistryForAdministration,
     getEffectiveAccessContext: effectiveContext,
     saveRegistry: saveRegistry
   });
