@@ -166,7 +166,7 @@ function AKS_recipeInscriptions010_validateSchema(confirmation) {
 
 function AKS_recipeInscriptions010_initializeSchema(confirmation) {
   AKS_inscriptions010RecipeConfirmation_(confirmation, "INITIALIZE_SCHEMA");
-  var audit = AKS_inscriptions010CommonAudit_();
+  AKS_inscriptions010CommonAudit_();
   var config = AKS_inscriptions010Configuration_();
   if (String(config.environment || "").trim().toUpperCase() !== "RECETTE") {
     var recipeError = new Error("Une recette Inscriptions est obligatoire.");
@@ -193,18 +193,6 @@ function AKS_recipeInscriptions010_initializeSchema(confirmation) {
     throw proofError;
   }
   var now = new Date().toISOString();
-  if (audit.record(Object.freeze({
-    actor: "recipe-system",
-    action: "INITIALIZE_INSCRIPTIONS_RECIPE_SCHEMA",
-    target: Object.freeze({ resourceId: spreadsheet.getId() }),
-    result: "INTENTION",
-    date: now,
-    correlationId: "inscriptions-010-schema-" + now
-  })) === false) {
-    var auditError = new Error("Audit commun persistant indisponible.");
-    auditError.code = "INSCRIPTIONS_AUDIT_REQUIRED";
-    throw auditError;
-  }
   var metadata = sheets[0];
   metadata.setName("Metadata");
   metadata.getRange(1, 1, 8, 2).setValues([
@@ -230,18 +218,6 @@ function AKS_recipeInscriptions010_initializeSchema(confirmation) {
   ]]);
   spreadsheet.setSpreadsheetTimeZone("Europe/Paris");
   SpreadsheetApp.flush();
-  if (audit.record(Object.freeze({
-    actor: "recipe-system",
-    action: "INITIALIZE_INSCRIPTIONS_RECIPE_SCHEMA",
-    target: Object.freeze({ resourceId: spreadsheet.getId() }),
-    result: "REUSSI",
-    date: new Date().toISOString(),
-    correlationId: "inscriptions-010-schema-" + now
-  })) === false) {
-    var finalAuditError = new Error("Audit commun persistant indisponible.");
-    finalAuditError.code = "INSCRIPTIONS_AUDIT_REQUIRED";
-    throw finalAuditError;
-  }
   return AKS_recipeInscriptions010_validateSchema({
     confirmed: true,
     action: "VALIDATE_SCHEMA",
