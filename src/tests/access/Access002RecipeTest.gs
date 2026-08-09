@@ -5,6 +5,8 @@ function AKS_access002RecipeFixture_(overrides) {
   var operations = [];
   var auditEvents = [];
   var registryLockReleases = 0;
+  var recipeLockAttempts = 0;
+  var recipeLockReleases = 0;
   values.AKS_ACCESS002_RECIPE_ENVIRONMENT = "RECETTE";
   values.AKS_ACCESS002_RECIPE_EXPECTED_SCRIPT_ID = scriptId;
   values.AKS_ACCESS002_RECIPE_MANAGER_EMAIL = "manager@example.com";
@@ -41,7 +43,7 @@ function AKS_access002RecipeFixture_(overrides) {
     },
     isPersistentRecipeAudit: function () { return true; }
   };
-  function accessService_(identity) {
+  function accessService_(identity, lockAlreadyHeld) {
     if (overrides.allowDenied && identity === "denied@example.com") {
       return { assertAdministrativeCapability: function () { return true; } };
     }
@@ -53,7 +55,10 @@ function AKS_access002RecipeFixture_(overrides) {
       clock: function () { return new Date("2026-09-01T10:00:00.000Z"); },
       audit: audit,
       correlationIdProvider: function () { return "corr-access002-apply"; },
-      registryLock: {
+      registryLock: lockAlreadyHeld ? {
+        tryLock: function () { return true; },
+        releaseLock: function () {}
+      } : {
         tryLock: function () { return true; },
         releaseLock: function () { registryLockReleases += 1; }
       }
@@ -67,8 +72,13 @@ function AKS_access002RecipeFixture_(overrides) {
     createAccessService: accessService_,
     audit: audit,
     lock: {
-      tryLock: function () { return overrides.lockAvailable !== false; },
-      releaseLock: function () { registryLockReleases += 1; }
+      tryLock: function () {
+        recipeLockAttempts += 1;
+        return typeof overrides.lockAvailable === "function"
+          ? overrides.lockAvailable(recipeLockAttempts)
+          : overrides.lockAvailable !== false;
+      },
+      releaseLock: function () { recipeLockReleases += 1; }
     },
     clock: function () { return new Date("2026-09-01T10:00:00.000Z"); },
     idProvider: function () { return "recipe-0001"; }
@@ -78,7 +88,9 @@ function AKS_access002RecipeFixture_(overrides) {
     values: values,
     operations: operations,
     auditEvents: auditEvents,
-    registryLockReleases: function () { return registryLockReleases; }
+    registryLockReleases: function () { return registryLockReleases; },
+    recipeLockAttempts: function () { return recipeLockAttempts; },
+    recipeLockReleases: function () { return recipeLockReleases; }
   };
 }
 
@@ -150,6 +162,21 @@ function AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_() {
   }).length);
 }
 
+function AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_() {
+  var fixture = AKS_access002RecipeFixture_({
+    lockAvailable: function (attempt) { return attempt === 1; }
+  });
+  fixture.recipe.apply();
+  var appliedRaw = fixture.values.AKS_ACCESS_REGISTRY;
+  var appliedBackup = fixture.values.AKS_ACCESS002_RECIPE_BACKUP;
+  assertThrows_(function () { fixture.recipe.apply(); },
+    "ACCESS_RECIPE_LOCK_UNAVAILABLE");
+  assertEquals_(appliedRaw, fixture.values.AKS_ACCESS_REGISTRY);
+  assertEquals_(appliedBackup, fixture.values.AKS_ACCESS002_RECIPE_BACKUP);
+  assertEquals_(2, fixture.recipeLockAttempts());
+  assertEquals_(1, fixture.recipeLockReleases());
+}
+
 function AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_() {
   var fixture = AKS_access002RecipeFixture_();
   fixture.recipe.apply();
@@ -213,6 +240,8 @@ function AKS_runAccess002RecipeSuite() {
       test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ },
     { name: "application idempotente",
       test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ },
+    { name: "application concurrente sans effet sur le succès acquis",
+      test: AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_ },
     { name: "registre absent restauré exactement",
       test: AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_ },
     { name: "sérialisation existante restaurée exactement",

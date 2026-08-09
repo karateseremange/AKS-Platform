@@ -241,61 +241,73 @@ function AKS_createAccess002Recipe_(ports) {
     assertDependencies_();
     var settings = settings_();
     var actor = actor_();
-    var existingBackup = readBackup_();
-    if (existingBackup) {
-      var currentView = createAccessService(settings.manager).readRegistryForAdministration();
-      if (existingBackup.afterRevision && currentView.revision === existingBackup.afterRevision) {
-        verifyDecision_(settings);
-        return publicResult_(settings, actor, {
-          phase: "APPLIED", revision: currentView.revision,
-          correlationId: existingBackup.correlationId, alreadyApplied: true
-        });
-      }
-      throw failure_("ACCESS_RECIPE_RECOVERY_REQUIRED", "La sauvegarde existante impose une restauration contrôlée.");
-    }
-    var service = createAccessService(actor);
-    var before = service.readRegistryForAdministration();
-    var target = targetRegistry_(before, settings);
-    var backup = {
-      schemaVersion: "access-recipe-backup/1.0",
-      scriptId: settings.actualScriptId,
-      actor: actor,
-      manager: settings.manager,
-      denied: settings.denied,
-      createdAt: nowIso_(),
-      beforeRevision: before.revision,
-      beforeRaw: rawRegistry_(),
-      afterRevision: "",
-      afterRaw: null,
-      correlationId: ""
-    };
-    writeVerifiedBackup_(backup);
-    var result;
+    var lockHeld = false;
     try {
-      result = service.updateRegistryForAdministration({
-        expectedRevision: before.revision,
-        registry: target
-      });
-      backup.afterRevision = result.revision;
-      backup.afterRaw = rawRegistry_();
-      backup.correlationId = result.correlationId;
+      if (!lock.tryLock(LOCK_TIMEOUT_MS)) {
+        throw failure_("ACCESS_RECIPE_LOCK_UNAVAILABLE", "Le registre de recette est momentanément indisponible.");
+      }
+      lockHeld = true;
+      var existingBackup = readBackup_();
+      if (existingBackup) {
+        var currentView = createAccessService(settings.manager, true)
+          .readRegistryForAdministration();
+        if (existingBackup.afterRevision &&
+            currentView.revision === existingBackup.afterRevision &&
+            rawRegistry_() === existingBackup.afterRaw) {
+          verifyDecision_(settings);
+          return publicResult_(settings, actor, {
+            phase: "APPLIED", revision: currentView.revision,
+            correlationId: existingBackup.correlationId, alreadyApplied: true
+          });
+        }
+        throw failure_("ACCESS_RECIPE_RECOVERY_REQUIRED", "La sauvegarde existante impose une restauration contrôlée.");
+      }
+      var service = createAccessService(actor, true);
+      var before = service.readRegistryForAdministration();
+      var target = targetRegistry_(before, settings);
+      var backup = {
+        schemaVersion: "access-recipe-backup/1.0",
+        scriptId: settings.actualScriptId,
+        actor: actor,
+        manager: settings.manager,
+        denied: settings.denied,
+        createdAt: nowIso_(),
+        beforeRevision: before.revision,
+        beforeRaw: rawRegistry_(),
+        afterRevision: "",
+        afterRaw: null,
+        correlationId: ""
+      };
       writeVerifiedBackup_(backup);
-      verifyDecision_(settings);
-    } catch (recipeFailure) {
-      if (rawRegistry_() !== backup.beforeRaw) restoreRaw_(backup.beforeRaw);
-      propertyStore.deleteProperty(BACKUP_KEY);
-      throw recipeFailure;
+      var result;
+      try {
+        result = service.updateRegistryForAdministration({
+          expectedRevision: before.revision,
+          registry: target
+        });
+        backup.afterRevision = result.revision;
+        backup.afterRaw = rawRegistry_();
+        backup.correlationId = result.correlationId;
+        writeVerifiedBackup_(backup);
+        verifyDecision_(settings);
+      } catch (recipeFailure) {
+        if (rawRegistry_() !== backup.beforeRaw) restoreRaw_(backup.beforeRaw);
+        propertyStore.deleteProperty(BACKUP_KEY);
+        throw recipeFailure;
+      }
+      return publicResult_(settings, actor, {
+        phase: "APPLIED",
+        beforeRevision: before.revision,
+        revision: result.revision,
+        correlationId: result.correlationId,
+        managerAccess: true,
+        deniedAccess: false,
+        backupVerified: true,
+        alreadyApplied: false
+      });
+    } finally {
+      if (lockHeld) lock.releaseLock();
     }
-    return publicResult_(settings, actor, {
-      phase: "APPLIED",
-      beforeRevision: before.revision,
-      revision: result.revision,
-      correlationId: result.correlationId,
-      managerAccess: true,
-      deniedAccess: false,
-      backupVerified: true,
-      alreadyApplied: false
-    });
   }
 
   function auditEvent_(actor, backup, result, afterRevision, correlationId) {
@@ -379,10 +391,14 @@ function AKS_createAccess002Recipe_(ports) {
 
 function AKS_createDefaultAccess002Recipe_() {
   var propertyStore = PropertiesService.getScriptProperties();
-  function identityService_(identity) {
+  function identityService_(identity, lockAlreadyHeld) {
     return AKS_createAccessService_({
       identityProvider: function () { return identity; },
-      registryStore: AKS_createAccessRegistryStore_(propertyStore)
+      registryStore: AKS_createAccessRegistryStore_(propertyStore),
+      registryLock: lockAlreadyHeld ? {
+        tryLock: function () { return true; },
+        releaseLock: function () {}
+      } : LockService.getScriptLock()
     });
   }
   return AKS_createAccess002Recipe_({
