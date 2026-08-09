@@ -331,7 +331,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / professeur limité", test: AKS_testAccess001_limitsTeacherToAssignment_ }
     ,{ name: "ACCESS-001 / assistant limité", test: AKS_testAccess001_limitsAssistant_ }
     ,{ name: "ACCESS-001 / consultation seule", test: AKS_testAccess001_keepsConsultationReadOnly_ }
-    ,{ name: "ACCESS-001 / administrateur global", test: AKS_testAccess001_grantsAdministratorGlobalScope_ }
+    ,{ name: "ACCESS-001 / rôle administrateur descriptif", test: AKS_testAccess001_keepsAdministratorRoleDescriptive_ }
     ,{ name: "ACCESS-001 / périmètre invalide", test: AKS_testAccess001_rejectsInvalidScope_ }
     ,{ name: "ACCESS-001 / rôle inconnu", test: AKS_testAccess001_rejectsUnknownRole_ }
     ,{ name: "ACCESS-001 / schéma inconnu", test: AKS_testAccess001_rejectsUnknownSchema_ }
@@ -364,6 +364,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
     ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
     ,{ name: "ACCESS-002-02 / administrateur et ACCESS_MANAGE explicite uniquement", test: AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_ }
+    ,{ name: "ACCESS-002-02 / administrateur sans capacité implicite", test: AKS_testAccess002Recipe_grantsNoImplicitAdministratorCapability_ }
     ,{ name: "ACCESS-002-02 / application idempotente", test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ }
     ,{ name: "ACCESS-002-02 / concurrence sérialisée", test: AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_ }
     ,{ name: "ACCESS-002-02 / registre absent restauré", test: AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_ }

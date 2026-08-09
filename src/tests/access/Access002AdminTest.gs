@@ -36,7 +36,10 @@ function AKS_access002AdminFixture_(overrides) {
         displayName: "Gestionnaire",
         status: "ACTIVE",
         roles: ["ADMINISTRATEUR"],
-        assignments: [],
+        assignments: [{
+          module: "ACCESS", season: "*", status: "ACTIVE",
+          roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+        }],
         updatedAt: "2026-08-09T12:00:00Z",
         updatedBy: " ADMIN@EXAMPLE.COM "
       }, {
@@ -317,7 +320,10 @@ function AKS_testAccess002Admin_rejectsConcurrentRevision_() {
     schemaVersion: "access/1.0",
     accounts: [{
       email: "admin@example.com", status: "ACTIVE",
-      roles: ["ADMINISTRATEUR"], assignments: [], displayName: "Concurrent"
+      roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "ACCESS", season: "*", status: "ACTIVE",
+        roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+      }], displayName: "Concurrent"
     }]
   };
   var fixture = AKS_access002AdminFixture_({
@@ -383,7 +389,10 @@ function AKS_testAccess002Admin_reactivationClearsFormerAssignments_() {
     schemaVersion: "access/1.0",
     accounts: [{
       email: "admin@example.com", status: "ACTIVE",
-      roles: ["ADMINISTRATEUR"], assignments: []
+      roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "ACCESS", season: "*", status: "ACTIVE",
+        roles: ["ADMINISTRATEUR"], extraCapabilities: ["ACCESS_MANAGE"]
+      }]
     }, {
       email: "teacher@example.com", status: "INACTIVE",
       roles: ["PROFESSEUR"], assignments: [{
