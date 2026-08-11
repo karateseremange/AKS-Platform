@@ -41,7 +41,9 @@ function AKS_access002RecipeFixture_(overrides) {
           event.metadata.restored === true) throw new Error("audit failure");
       return { correlation_id: event.correlationId, audit_id: "aud-lock" };
     },
-    isPersistentRecipeAudit: function () { return true; }
+    isPersistentRecipeAudit: function () {
+      return overrides.persistentAudit !== false;
+    }
   };
   function accessService_(identity, lockAlreadyHeld) {
     if (overrides.allowDenied && identity === "denied@example.com") {
@@ -115,6 +117,13 @@ function AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_() {
   assertEquals_(true, result.bootstrap);
   assertEquals_(false, result.writePerformed);
   assertEquals_("m***@example.com", result.manager);
+  assertEquals_(0, fixture.operations.length);
+}
+
+function AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_() {
+  var fixture = AKS_access002RecipeFixture_({ persistentAudit: false });
+  assertThrows_(function () { fixture.recipe.preflight(); },
+    "ACCESS_RECIPE_AUDIT_REQUIRED");
   assertEquals_(0, fixture.operations.length);
 }
 
@@ -284,6 +293,8 @@ function AKS_runAccess002RecipeSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-02 — recette réversible", [
     { name: "précontrôle sans écriture et minimisé",
       test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ },
+    { name: "audit persistant indisponible refusé sans écriture",
+      test: AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_ },
     { name: "cible non confirmée refusée",
       test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ },
     { name: "identité de refus privilégiée rejetée",
