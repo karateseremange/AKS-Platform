@@ -197,10 +197,20 @@ function AKS_createAccess002Recipe_(ports) {
     return target;
   }
 
+  function assertPersistentAudit_() {
+    if (!audit || typeof audit.recordUnderExistingLock !== "function" ||
+        typeof audit.isPersistentRecipeAudit !== "function" ||
+        audit.isPersistentRecipeAudit() !== true) {
+      throw failure_("ACCESS_RECIPE_AUDIT_REQUIRED",
+        "L\'audit persistant de recette est indisponible.");
+    }
+  }
+
   function preflight() {
     assertDependencies_();
     var settings = settings_();
     var actor = actor_();
+    assertPersistentAudit_();
     var backup = readBackup_();
     if (backup) {
       throw failure_("ACCESS_RECIPE_RECOVERY_REQUIRED", "Une sauvegarde de recette doit être restaurée avant une nouvelle exécution.");

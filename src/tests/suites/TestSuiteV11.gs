@@ -360,6 +360,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-01 / réactivation sans anciennes habilitations", test: AKS_testAccess002Admin_reactivationClearsFormerAssignments_ }
     ,{ name: "ACCESS-002-01 / périmètre historique inactif conservé", test: AKS_testAccess002Admin_preservesInactiveHistoricalScope_ }
     ,{ name: "ACCESS-002-02 / précontrôle recette sans écriture", test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ }
+    ,{ name: "ACCESS-002-02 / audit persistant requis au précontrôle", test: AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_ }
     ,{ name: "ACCESS-002-02 / cible recette confirmée", test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ }
     ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
     ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
