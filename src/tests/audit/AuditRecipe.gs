@@ -277,13 +277,49 @@ function AKS_createAudit001Recipe_(ports) {
     return serialized;
   }
 
+  function connectionKeys_() {
+    return [
+      configPrefix + "audit.environment",
+      configPrefix + "audit.schemaVersion",
+      configPrefix + "audit.spreadsheetId"
+    ].sort();
+  }
+
+  function exactKeys_(value) {
+    return value && typeof value === "object" && !Array.isArray(value) &&
+      JSON.stringify(Object.keys(value).sort()) === JSON.stringify(connectionKeys_());
+  }
+
+  function validInstalled_(backup) {
+    try {
+      var expected = {
+        "audit.environment": "RECETTE",
+        "audit.schemaVersion": catalogs.schemaVersion,
+        "audit.spreadsheetId": backup.targetId
+      };
+      return connectionKeys_().every(function (storageKey) {
+        var record = JSON.parse(backup.installed[storageKey]);
+        var key = storageKey.slice(configPrefix.length);
+        return record && record.value === expected[key] &&
+          typeof record.updatedAt === "string" && typeof record.updatedBy === "string";
+      });
+    } catch (ignored) {
+      return false;
+    }
+  }
+
   function readConnectionBackup_() {
     var raw = propertyStore.getProperty(connectionBackupKey);
     if (!raw) return null;
     try {
       var backup = JSON.parse(raw);
       if (!backup || backup.schemaVersion !== "audit-recipe-connection/1.0" ||
-          !backup.previous || !backup.installed || typeof backup.targetId !== "string") {
+          !/^[A-Za-z0-9_-]{20,128}$/.test(String(backup.targetId || "")) ||
+          !exactKeys_(backup.previous) || !exactKeys_(backup.installed) ||
+          !connectionKeys_().every(function (key) {
+            return backup.previous[key] === null ||
+              typeof backup.previous[key] === "string";
+          }) || !validInstalled_(backup)) {
         throw new Error("invalid");
       }
       return backup;
@@ -294,14 +330,27 @@ function AKS_createAudit001Recipe_(ports) {
   }
 
   function exactConfiguration_(values) {
-    return Object.keys(values).every(function (key) {
+    return connectionKeys_().every(function (key) {
       return propertyStore.getProperty(key) === values[key];
     });
   }
 
+  function recoverableConfiguration_(backup) {
+    return connectionKeys_().every(function (key) {
+      var current = propertyStore.getProperty(key);
+      return current === backup.installed[key] || current === backup.previous[key];
+    });
+  }
+
   function restorePrevious_(backup) {
-    Object.keys(backup.previous).sort().forEach(function (key) {
+    if (!recoverableConfiguration_(backup)) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_CONFLICT",
+        "La configuration d'audit contient une modification concurrente.");
+    }
+    connectionKeys_().forEach(function (key) {
+      var current = propertyStore.getProperty(key);
       var previous = backup.previous[key];
+      if (current === previous) return;
       if (previous === null) propertyStore.deleteProperty(key);
       else propertyStore.setProperty(key, previous);
     });
@@ -338,7 +387,7 @@ function AKS_createAudit001Recipe_(ports) {
       schemaVersion: "audit-recipe-connection/1.0",
       targetId: prepared.spreadsheetId,
       actor: actor,
-      createdAt: new Date().toISOString(),
+      createdAt: JSON.parse(installed[configPrefix + "audit.environment"]).updatedAt,
       previous: previous,
       installed: installed
     };
@@ -381,7 +430,7 @@ function AKS_createAudit001Recipe_(ports) {
       throw failure_("AUDIT_RECIPE_ACCESS_RESTORE_REQUIRED",
         "La recette ACCESS doit être restaurée avant de déconnecter l'audit.");
     }
-    if (!exactConfiguration_(backup.installed)) {
+    if (!recoverableConfiguration_(backup)) {
       throw failure_("AUDIT_RECIPE_CONNECTION_CONFLICT",
         "La configuration d'audit a changé depuis sa connexion.");
     }
