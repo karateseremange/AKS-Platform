@@ -112,7 +112,9 @@ AKS.Core.Audit = Object.freeze({
   recordUnderExistingLock: function (event) {
     return AKS_createDefaultAuditService_().recordUnderExistingLock(event);
   },
-  isPersistentRecipeAudit: function () { return true; },
+  isPersistentRecipeAudit: function () {
+    return AKS_createDefaultAuditService_().isPersistentRecipeAudit();
+  },
   getSchema: function () {
     return Object.freeze({
       version: AKS_AUDIT_CATALOGS_.schemaVersion,

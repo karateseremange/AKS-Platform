@@ -198,9 +198,13 @@ function AKS_createAccess002Recipe_(ports) {
   }
 
   function assertPersistentAudit_() {
-    if (!audit || typeof audit.recordUnderExistingLock !== "function" ||
-        typeof audit.isPersistentRecipeAudit !== "function" ||
-        audit.isPersistentRecipeAudit() !== true) {
+    var available = false;
+    try {
+      available = !!audit && typeof audit.recordUnderExistingLock === "function" &&
+        typeof audit.isPersistentRecipeAudit === "function" &&
+        audit.isPersistentRecipeAudit() === true;
+    } catch (ignoredAuditFailure) {}
+    if (!available) {
       throw failure_("ACCESS_RECIPE_AUDIT_REQUIRED",
         "L\'audit persistant de recette est indisponible.");
     }

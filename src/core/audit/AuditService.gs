@@ -370,7 +370,10 @@ function AKS_createAuditService_(options) {
   return Object.freeze({
     record: record,
     recordUnderExistingLock: recordUnderExistingLock,
-    isPersistentRecipeAudit: function () { return true; },
+    isPersistentRecipeAudit: function () {
+      assertSupport_();
+      return true;
+    },
     getSchema: function () {
       return Object.freeze({
         version: catalogs.schemaVersion,
