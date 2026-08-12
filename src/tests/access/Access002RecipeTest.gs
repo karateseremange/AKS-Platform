@@ -42,6 +42,7 @@ function AKS_access002RecipeFixture_(overrides) {
       return { correlation_id: event.correlationId, audit_id: "aud-lock" };
     },
     isPersistentRecipeAudit: function () {
+      if (overrides.persistentAuditFailure) throw overrides.persistentAuditFailure;
       return overrides.persistentAudit !== false;
     }
   };
@@ -122,6 +123,15 @@ function AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_() {
 
 function AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_() {
   var fixture = AKS_access002RecipeFixture_({ persistentAudit: false });
+  assertThrows_(function () { fixture.recipe.preflight(); },
+    "ACCESS_RECIPE_AUDIT_REQUIRED");
+  assertEquals_(0, fixture.operations.length);
+}
+
+function AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_() {
+  var auditFailure = new Error("support mismatch");
+  auditFailure.code = "AUDIT_RECIPE_REQUIRED";
+  var fixture = AKS_access002RecipeFixture_({ persistentAuditFailure: auditFailure });
   assertThrows_(function () { fixture.recipe.preflight(); },
     "ACCESS_RECIPE_AUDIT_REQUIRED");
   assertEquals_(0, fixture.operations.length);
@@ -295,6 +305,8 @@ function AKS_runAccess002RecipeSuite() {
       test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ },
     { name: "audit persistant indisponible refusé sans écriture",
       test: AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_ },
+    { name: "échec de validation audit converti sans écriture",
+      test: AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_ },
     { name: "cible non confirmée refusée",
       test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ },
     { name: "identité de refus privilégiée rejetée",
