@@ -561,10 +561,27 @@ function AKS_testAudit001_returnsDeeplyImmutableProof_() {
   assertEquals_("DOSSIER_UPDATE", proof.action);
 }
 
+function AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_() {
+  var fixture = AKS_audit001Fixture_();
+  assertEquals_(true, fixture.service.isPersistentRecipeAudit());
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.environment": "PRODUCTION" }
+  });
+  assertThrows_(function () { fixture.service.isPersistentRecipeAudit(); },
+    "AUDIT_RECIPE_REQUIRED");
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
 function AKS_testAudit001_exposesPersistentCommonPort_() {
   assertTrue_(AKS.Core.Audit && typeof AKS.Core.Audit.record === "function");
   assertTrue_(typeof AKS.Core.Audit.recordUnderExistingLock === "function");
-  assertEquals_(true, AKS.Core.Audit.isPersistentRecipeAudit());
+  assertTrue_(typeof AKS.Core.Audit.isPersistentRecipeAudit === "function");
   assertEquals_(16, AKS.Core.Audit.getSchema().headers.length);
 }
 
@@ -849,6 +866,8 @@ function AKS_runAudit001Tests() {
     { name: "identifiant dupliqué refusé", test: AKS_testAudit001_rejectsDuplicateIdentifier_ },
     { name: "preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ },
     { name: "preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ },
+    { name: "support persistant validé sans écriture", test: AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_ },
+    { name: "support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ },
     { name: "port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ },
     { name: "adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ },
     { name: "onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ },
