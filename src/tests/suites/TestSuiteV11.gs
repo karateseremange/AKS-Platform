@@ -8,6 +8,18 @@ var AKS = AKS || {};
  * foundation tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
+function AKS_testSuiteV11_includesRealAuditPreflightCoverage_() {
+  var source = AKS_runValidationSuiteV11.toString();
+  [
+    "AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_",
+    "AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_",
+    "AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_"
+  ].forEach(function (testName) {
+    assertTrue_(source.indexOf(testName) !== -1,
+      "Test critique absent de la suite cumulative : " + testName);
+  });
+}
+
 function AKS_runValidationSuiteV11() {
   return AKS_runNamedTestSuite_("AKS Platform V1.1", [
     { name: "VERSION-001 / API exists", test: AKS_testVersion001ApiExists_ },
@@ -361,6 +373,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-01 / périmètre historique inactif conservé", test: AKS_testAccess002Admin_preservesInactiveHistoricalScope_ }
     ,{ name: "ACCESS-002-02 / précontrôle recette sans écriture", test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ }
     ,{ name: "ACCESS-002-02 / audit persistant requis au précontrôle", test: AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_ }
+    ,{ name: "ACCESS-002-02 / échec de validation audit converti", test: AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_ }
+    ,{ name: "ACCESS-002-02 / garde de couverture audit réelle", test: AKS_testSuiteV11_includesRealAuditPreflightCoverage_ }
     ,{ name: "ACCESS-002-02 / cible recette confirmée", test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ }
     ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
     ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
@@ -517,6 +531,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / identifiant dupliqué refusé", test: AKS_testAudit001_rejectsDuplicateIdentifier_ }
     ,{ name: "AUDIT-001 / preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ }
     ,{ name: "AUDIT-001 / preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ }
+    ,{ name: "AUDIT-001 / support persistant validé sans écriture", test: AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_ }
+    ,{ name: "AUDIT-001 / support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ }
     ,{ name: "AUDIT-001 / port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ }
     ,{ name: "AUDIT-001 / adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ }
     ,{ name: "AUDIT-001 / onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ }
