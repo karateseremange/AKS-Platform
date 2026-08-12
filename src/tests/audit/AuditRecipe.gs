@@ -28,6 +28,8 @@ function AKS_createAudit001Recipe_(ports) {
     "AKS_AUDIT001_RECIPE_SPREADSHEET_ID";
   var resourceName = "AKS Audit RECETTE";
   var configPrefix = "AKS_CONFIG_VALUE.";
+  var connectionBackupKey = "AKS_AUDIT001_RECIPE_CONNECTION_BACKUP";
+  var accessBackupKey = "AKS_ACCESS002_RECIPE_BACKUP";
   var configValues = {
     "audit.environment": "RECETTE",
     "audit.schemaVersion": catalogs.schemaVersion
@@ -257,8 +259,149 @@ function AKS_createAudit001Recipe_(ports) {
     return Object.freeze(result);
   }
 
+  function connectionValues_(targetId, actor) {
+    var instant = clock();
+    if (!(instant instanceof Date) || isNaN(instant.getTime())) {
+      throw failure_("AUDIT_RECIPE_CLOCK_INVALID", "L'horodatage de recette est invalide.");
+    }
+    var values = {
+      "audit.environment": "RECETTE",
+      "audit.spreadsheetId": targetId,
+      "audit.schemaVersion": catalogs.schemaVersion
+    };
+    var serialized = {};
+    Object.keys(values).sort().forEach(function (key) {
+      serialized[configPrefix + key] =
+        serializedConfig_(values[key], actor, instant.toISOString());
+    });
+    return serialized;
+  }
+
+  function readConnectionBackup_() {
+    var raw = propertyStore.getProperty(connectionBackupKey);
+    if (!raw) return null;
+    try {
+      var backup = JSON.parse(raw);
+      if (!backup || backup.schemaVersion !== "audit-recipe-connection/1.0" ||
+          !backup.previous || !backup.installed || typeof backup.targetId !== "string") {
+        throw new Error("invalid");
+      }
+      return backup;
+    } catch (ignored) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_BACKUP_INVALID",
+        "La sauvegarde de connexion d'audit est invalide.");
+    }
+  }
+
+  function exactConfiguration_(values) {
+    return Object.keys(values).every(function (key) {
+      return propertyStore.getProperty(key) === values[key];
+    });
+  }
+
+  function restorePrevious_(backup) {
+    Object.keys(backup.previous).sort().forEach(function (key) {
+      var previous = backup.previous[key];
+      if (previous === null) propertyStore.deleteProperty(key);
+      else propertyStore.setProperty(key, previous);
+    });
+    if (!exactConfiguration_(backup.previous)) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_RESTORE_FAILED",
+        "La configuration d'audit antérieure n'a pas été restaurée exactement.");
+    }
+  }
+
+  function connect() {
+    assertDependencies_();
+    var actor = authorizedActor_();
+    var prepared = prepare();
+    var existing = readConnectionBackup_();
+    if (existing) {
+      if (existing.targetId !== prepared.spreadsheetId ||
+          !exactConfiguration_(existing.installed) ||
+          createAuditService().isPersistentRecipeAudit() !== true) {
+        throw failure_("AUDIT_RECIPE_CONNECTION_RECOVERY_REQUIRED",
+          "La connexion d'audit existante exige une récupération contrôlée.");
+      }
+      return Object.freeze({
+        ok: true, phase: "CONNECTED", spreadsheetTitle: resourceName,
+        spreadsheetIdSuffix: existing.targetId.slice(-6),
+        backupVerified: true, alreadyConnected: true
+      });
+    }
+    var installed = connectionValues_(prepared.spreadsheetId, actor);
+    var previous = {};
+    Object.keys(installed).forEach(function (key) {
+      previous[key] = propertyStore.getProperty(key);
+    });
+    var backup = {
+      schemaVersion: "audit-recipe-connection/1.0",
+      targetId: prepared.spreadsheetId,
+      actor: actor,
+      createdAt: new Date().toISOString(),
+      previous: previous,
+      installed: installed
+    };
+    var serializedBackup = JSON.stringify(backup);
+    propertyStore.setProperty(connectionBackupKey, serializedBackup);
+    if (propertyStore.getProperty(connectionBackupKey) !== serializedBackup) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_BACKUP_FAILED",
+        "La sauvegarde de connexion d'audit n'a pas été vérifiée.");
+    }
+    try {
+      Object.keys(installed).sort().forEach(function (key) {
+        propertyStore.setProperty(key, installed[key]);
+      });
+      if (!exactConfiguration_(installed) ||
+          createAuditService().isPersistentRecipeAudit() !== true) {
+        throw failure_("AUDIT_RECIPE_CONNECTION_FAILED",
+          "La connexion persistante de l'audit n'a pas été vérifiée.");
+      }
+    } catch (failure) {
+      restorePrevious_(backup);
+      propertyStore.deleteProperty(connectionBackupKey);
+      throw failure;
+    }
+    return Object.freeze({
+      ok: true, phase: "CONNECTED", spreadsheetTitle: resourceName,
+      spreadsheetIdSuffix: prepared.spreadsheetId.slice(-6),
+      backupVerified: true, alreadyConnected: false
+    });
+  }
+
+  function disconnect() {
+    assertDependencies_();
+    authorizedActor_();
+    var backup = readConnectionBackup_();
+    if (!backup) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_BACKUP_REQUIRED",
+        "Aucune connexion d'audit de recette n'est à restaurer.");
+    }
+    if (propertyStore.getProperty(accessBackupKey)) {
+      throw failure_("AUDIT_RECIPE_ACCESS_RESTORE_REQUIRED",
+        "La recette ACCESS doit être restaurée avant de déconnecter l'audit.");
+    }
+    if (!exactConfiguration_(backup.installed)) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_CONFLICT",
+        "La configuration d'audit a changé depuis sa connexion.");
+    }
+    restorePrevious_(backup);
+    propertyStore.deleteProperty(connectionBackupKey);
+    if (propertyStore.getProperty(connectionBackupKey)) {
+      throw failure_("AUDIT_RECIPE_CONNECTION_BACKUP_REMOVE_FAILED",
+        "La sauvegarde de connexion d'audit n'a pas été supprimée.");
+    }
+    return Object.freeze({
+      ok: true, phase: "DISCONNECTED",
+      spreadsheetIdSuffix: backup.targetId.slice(-6),
+      exactRestore: true, backupRemoved: true
+    });
+  }
+
   assertDependencies_();
-  return Object.freeze({ prepare: prepare, run: run });
+  return Object.freeze({
+    prepare: prepare, run: run, connect: connect, disconnect: disconnect
+  });
 }
 
 function AKS_createDefaultAudit001Recipe_() {
@@ -280,6 +423,20 @@ function AKS_createDefaultAudit001Recipe_() {
 function AKS_prepareAudit001Recipe() {
   var result = AKS_createDefaultAudit001Recipe_().prepare();
   console.log("PRÉPARATION RECETTE AUDIT-001: " + JSON.stringify(result));
+  return result;
+}
+
+/** Editor-only reversible connection for the ACCESS-002-02 recipe. */
+function AKS_connectAudit001Recipe() {
+  var result = AKS_createDefaultAudit001Recipe_().connect();
+  console.log("CONNEXION RECETTE AUDIT-001: " + JSON.stringify(result));
+  return result;
+}
+
+/** Editor-only exact restoration after ACCESS-002-02 has been restored. */
+function AKS_disconnectAudit001Recipe() {
+  var result = AKS_createDefaultAudit001Recipe_().disconnect();
+  console.log("DÉCONNEXION RECETTE AUDIT-001: " + JSON.stringify(result));
   return result;
 }
 
