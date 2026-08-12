@@ -17,7 +17,8 @@ function AKS_testSuiteV11_includesRealAuditPreflightCoverage_() {
     "AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_",
     "AKS_testAudit001Recipe_connectionIsIdempotent_",
     "AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_",
-    "AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_"
+    "AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_",
+    "AKS_testAudit001Recipe_recoversPartialConnectionRestore_"
   ].forEach(function (testName) {
     assertTrue_(source.indexOf(testName) !== -1,
       "Test critique absent de la suite cumulative : " + testName);
@@ -549,6 +550,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / recette connexion persistante idempotente", test: AKS_testAudit001Recipe_connectionIsIdempotent_ }
     ,{ name: "AUDIT-001 / recette déconnexion restaure exactement", test: AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_ }
     ,{ name: "AUDIT-001 / recette déconnexion interdite avant restauration ACCESS", test: AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_ }
+    ,{ name: "AUDIT-001 / recette récupération après restauration partielle", test: AKS_testAudit001Recipe_recoversPartialConnectionRestore_ }
     ,{ name: "AUDIT-001 / recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
     ,{ name: "AUDIT-001 / recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
     ,{ name: "AUDIT-001 / recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
