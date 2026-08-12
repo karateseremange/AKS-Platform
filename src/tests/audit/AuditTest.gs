@@ -647,6 +647,7 @@ function AKS_audit001RecipeFixture_(overrides) {
   }
   var headers = AKS_getAuditCatalogs_().headers.slice();
   var rows = overrides.rows ? overrides.rows.slice() : [headers.slice()];
+  var setCounts = Object.create(null);
   var sheet = {
     getLastRow: function () { return rows.length; },
     getLastColumn: function () { return rows.length ? rows[0].length : 0; },
@@ -680,7 +681,11 @@ function AKS_audit001RecipeFixture_(overrides) {
         return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null;
       },
       setProperty: function (key, value) {
-        if (overrides.failSetKey === key) {
+        setCounts[key] = (setCounts[key] || 0) + 1;
+        if (overrides.failSetKey === key ||
+            overrides.failSetOccurrence &&
+            overrides.failSetOccurrence.key === key &&
+            overrides.failSetOccurrence.occurrence === setCounts[key]) {
           var failure = new Error("set failure");
           failure.code = "RECIPE_PROPERTY_SET_FAILED";
           throw failure;
@@ -697,6 +702,15 @@ function AKS_audit001RecipeFixture_(overrides) {
         schemaVersion: JSON.parse(values["AKS_CONFIG_VALUE.audit.schemaVersion"]).value
       });
       return {
+        isPersistentRecipeAudit: function () {
+          var environment = JSON.parse(values["AKS_CONFIG_VALUE.audit.environment"]).value;
+          var spreadsheetId = JSON.parse(values["AKS_CONFIG_VALUE.audit.spreadsheetId"]).value;
+          var schemaVersion = JSON.parse(values["AKS_CONFIG_VALUE.audit.schemaVersion"]).value;
+          return overrides.persistentAuditAvailable !== false &&
+            environment === "RECETTE" &&
+            spreadsheetId === "1AuditRecipeSpreadsheetId00001" &&
+            schemaVersion === "aks-audit/1.0";
+        },
         record: function (event) {
           recorded.push(event);
           if (overrides.concurrentConfigKey && recorded.length === 1) {
@@ -765,6 +779,77 @@ function AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_() {
     fixture.values, "AKS_CONFIG_VALUE.audit.spreadsheetId"));
   assertTrue_(!Object.prototype.hasOwnProperty.call(
     fixture.values, "AKS_CONFIG_VALUE.audit.schemaVersion"));
+}
+
+function AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_() {
+  var previous = "{\"legacy\":true}";
+  var fixture = AKS_audit001RecipeFixture_({
+    initialConfig: { "AKS_CONFIG_VALUE.audit.environment": previous }
+  });
+  var result = fixture.recipe.connect();
+  assertTrue_(result.ok && result.backupVerified);
+  assertEquals_("CONNECTED", result.phase);
+  assertEquals_(0, fixture.recorded.length);
+  assertEquals_("RECETTE",
+    JSON.parse(fixture.values["AKS_CONFIG_VALUE.audit.environment"]).value);
+  assertTrue_(!!fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
+}
+
+function AKS_testAudit001Recipe_connectionIsIdempotent_() {
+  var fixture = AKS_audit001RecipeFixture_();
+  fixture.recipe.connect();
+  var backup = fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP;
+  var result = fixture.recipe.connect();
+  assertEquals_(true, result.alreadyConnected);
+  assertEquals_(backup, fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
+}
+
+function AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_() {
+  var key = "AKS_CONFIG_VALUE.audit.environment";
+  var previous = "{\"legacy\":\"exact\"}";
+  var fixture = AKS_audit001RecipeFixture_({
+    initialConfig: { "AKS_CONFIG_VALUE.audit.environment": previous }
+  });
+  fixture.recipe.connect();
+  var result = fixture.recipe.disconnect();
+  assertTrue_(result.exactRestore && result.backupRemoved);
+  assertEquals_(previous, fixture.values[key]);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.spreadsheetId"));
+  assertTrue_(!fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
+}
+
+function AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_() {
+  var fixture = AKS_audit001RecipeFixture_();
+  fixture.recipe.connect();
+  fixture.values.AKS_ACCESS002_RECIPE_BACKUP = "{\"pending\":true}";
+  assertThrows_(function () { fixture.recipe.disconnect(); },
+    "AUDIT_RECIPE_ACCESS_RESTORE_REQUIRED");
+  assertTrue_(!!fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
+  assertEquals_("RECETTE",
+    JSON.parse(fixture.values["AKS_CONFIG_VALUE.audit.environment"]).value);
+}
+
+function AKS_testAudit001Recipe_recoversPartialConnectionRestore_() {
+  var schemaKey = "AKS_CONFIG_VALUE.audit.schemaVersion";
+  var previousSchema = "{\"legacy\":\"schema\"}";
+  var fixture = AKS_audit001RecipeFixture_({
+    persistentAuditAvailable: false,
+    failSetOccurrence: { key: schemaKey, occurrence: 2 },
+    initialConfig: { "AKS_CONFIG_VALUE.audit.schemaVersion": previousSchema }
+  });
+  assertThrows_(function () { fixture.recipe.connect(); },
+    "RECIPE_PROPERTY_SET_FAILED");
+  assertTrue_(!!fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.environment"));
+  assertTrue_(Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.schemaVersion"));
+  var result = fixture.recipe.disconnect();
+  assertTrue_(result.exactRestore && result.backupRemoved);
+  assertEquals_(previousSchema, fixture.values[schemaKey]);
+  assertTrue_(!Object.prototype.hasOwnProperty.call(
+    fixture.values, "AKS_CONFIG_VALUE.audit.spreadsheetId"));
 }
 
 function AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_() {
@@ -876,6 +961,11 @@ function AKS_runAudit001Tests() {
     ,{ name: "recette cible isolée exacte", test: AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_ }
     ,{ name: "recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
     ,{ name: "recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
+    ,{ name: "recette connexion persistante sans preuve", test: AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_ }
+    ,{ name: "recette connexion persistante idempotente", test: AKS_testAudit001Recipe_connectionIsIdempotent_ }
+    ,{ name: "recette déconnexion restaure exactement", test: AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_ }
+    ,{ name: "recette déconnexion interdite avant restauration ACCESS", test: AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_ }
+    ,{ name: "recette récupération après restauration partielle", test: AKS_testAudit001Recipe_recoversPartialConnectionRestore_ }
     ,{ name: "recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
     ,{ name: "recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
     ,{ name: "recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
