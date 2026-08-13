@@ -10,16 +10,18 @@
       <header class="aks-admin-header">
         <div>
           <p class="aks-admin-eyebrow">Association Karaté Serémange</p>
-          <h1>Administration AKS Platform</h1>
-          <p class="aks-admin-subtitle">Page d’accueil de l’espace d’administration</p>
+          <h1>Portail AKS</h1>
+          <p class="aks-admin-subtitle">Vos services AKS Platform autorisés</p>
         </div>
-        <div class="aks-admin-user" aria-label="Administrateur connecté">
-          <?= viewModel.administrator.email ?>
-        </div>
+        <? if (viewModel.state !== "DENIED") { ?>
+          <div class="aks-admin-user" aria-label="Compte connecté">
+            <?= viewModel.user.email ?>
+          </div>
+        <? } ?>
       </header>
 
       <? if (viewModel.navigation.families.length > 0) { ?>
-        <nav class="aks-admin-navigation" aria-label="Navigation administrative principale">
+        <nav class="aks-admin-navigation" aria-label="Navigation principale du portail">
           <? viewModel.navigation.families.forEach(function (family) { ?>
             <section class="aks-admin-navigation__group" aria-labelledby="nav-<?= family.id ?>">
               <h2 id="nav-<?= family.id ?>"><?= family.label ?></h2>
@@ -43,7 +45,19 @@
         </nav>
       <? } ?>
 
-      <section class="aks-admin-grid" aria-label="Tableau de bord administratif">
+      <? if (viewModel.state === "NO_ACCESS") { ?>
+        <section class="aks-admin-card aks-admin-card--wide" aria-live="polite">
+          <h2>Aucun accès attribué</h2><p><?= viewModel.emptyMessage ?></p>
+        </section>
+      <? } ?>
+
+      <? if (viewModel.state === "DENIED") { ?>
+        <section class="aks-admin-card aks-admin-card--wide" aria-live="polite">
+          <h2>Accès non autorisé</h2><p><?= viewModel.emptyMessage ?></p>
+        </section>
+      <? } ?>
+
+      <section class="aks-admin-grid" aria-label="Informations du portail">
         <article class="aks-admin-card" aria-labelledby="platform-card-title">
           <div class="aks-admin-card__header">
             <p class="aks-admin-card__kicker">Plateforme</p>
@@ -73,7 +87,7 @@
 
           <? if (viewModel.actions.length === 0) { ?>
             <p class="aks-admin-empty-state">
-              Aucune autre fonctionnalité administrative n’est disponible dans ce premier incrément.
+              Aucune autre fonctionnalité n’est actuellement disponible.
             </p>
           <? } else { ?>
             <nav class="aks-admin-actions" aria-label="Actions rapides">
@@ -86,7 +100,7 @@
           <? } ?>
         </article>
 
-        <article class="aks-admin-card aks-admin-card--wide" aria-labelledby="logs-card-title">
+        <? if (viewModel.recentLogs) { ?><article class="aks-admin-card aks-admin-card--wide" aria-labelledby="logs-card-title">
           <div class="aks-admin-card__header aks-admin-card__header--action">
             <div>
               <p class="aks-admin-card__kicker">Supervision</p>
@@ -109,7 +123,7 @@
               <? }); ?>
             </ol>
           <? } ?>
-        </article>
+        </article><? } ?>
       </section>
     </main>
   </body>
