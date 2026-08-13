@@ -453,6 +453,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / commandes UI réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ }
     ,{ name: "ACCESS-002-03 / navigation UI conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ }
     ,{ name: "ACCESS-002-03 / états UI sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
+    ,{ name: "ACCESS-002-03 / recette précontrôle sans écriture", test: AKS_testAccess002AccountRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-03 / recette compte existant refusé", test: AKS_testAccess002AccountRecipe_rejectsExistingAccount_ }
+    ,{ name: "ACCESS-002-03 / recette cycle vérifié", test: AKS_testAccess002AccountRecipe_runsVerifiedLifecycle_ }
+    ,{ name: "ACCESS-002-03 / recette restauration exacte", test: AKS_testAccess002AccountRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-03 / recette échec auto-restauré", test: AKS_testAccess002AccountRecipe_autoRestoresFailedCycle_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
