@@ -114,9 +114,11 @@ function AKS_createAccessService_(options) {
     var requestId = String(value.requestId || "").trim();
     var operation = upper_(value.operation);
     var comment = String(value.comment || "").trim().replace(/\s+/g, " ");
+    var summary = value.summary || {};
     if (requestId && !/^req-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(requestId) ||
         operation && !/^[A-Z][A-Z0-9_]{1,47}$/.test(operation) ||
         comment.length > 500 ||
+        (!summary || typeof summary !== "object" || Array.isArray(summary)) ||
         value.sensitive !== true && value.sensitive !== false &&
           typeof value.sensitive !== "undefined") {
       throw error_("ACCESS_COMMAND_INVALID", "Contexte d'audit invalide.");
@@ -125,7 +127,13 @@ function AKS_createAccessService_(options) {
       requestId: requestId,
       operation: operation,
       comment: comment,
-      sensitive: value.sensitive === true
+      sensitive: value.sensitive === true,
+      rolesAdded: Array.isArray(summary.rolesAdded) ? summary.rolesAdded.slice() : [],
+      rolesRemoved: Array.isArray(summary.rolesRemoved) ? summary.rolesRemoved.slice() : [],
+      assignmentsAdded: Array.isArray(summary.assignmentsAdded)
+        ? summary.assignmentsAdded.length : 0,
+      assignmentsRemoved: Array.isArray(summary.assignmentsRemoved)
+        ? summary.assignmentsRemoved.length : 0
     };
   }
 
@@ -809,6 +817,12 @@ function AKS_createAccessService_(options) {
     if (commandContext.operation) metadata.operation = commandContext.operation;
     if (commandContext.comment) metadata.comment = commandContext.comment;
     if (commandContext.sensitive === true) metadata.sensitive = true;
+    if (commandContext.requestId) {
+      metadata.rolesAdded = commandContext.rolesAdded;
+      metadata.rolesRemoved = commandContext.rolesRemoved;
+      metadata.assignmentsAdded = commandContext.assignmentsAdded;
+      metadata.assignmentsRemoved = commandContext.assignmentsRemoved;
+    }
     return metadata;
   }
 

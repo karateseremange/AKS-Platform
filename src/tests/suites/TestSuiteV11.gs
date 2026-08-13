@@ -490,6 +490,13 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / fiche inactive UI en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
     ,{ name: "ACCESS-002-04 / échappement et confirmation UI", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
     ,{ name: "ACCESS-002-04 / cases compactes et ACCESS unique UI", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
+    ,{ name: "ACCESS-002-04 / historique ciblé minimisé", test: AKS_testAccess002History_returnsMinimizedMatchingProofs_ }
+    ,{ name: "ACCESS-002-04 / historique paginé décroissant", test: AKS_testAccess002History_paginatesNewestFirst_ }
+    ,{ name: "ACCESS-002-04 / historique réautorisé par page", test: AKS_testAccess002History_reauthorizesEveryPage_ }
+    ,{ name: "ACCESS-002-04 / historique cible curseur schéma refusés", test: AKS_testAccess002History_rejectsInvalidTargetCursorAndSchema_ }
+    ,{ name: "ACCESS-002-04 / historique immuable", test: AKS_testAccess002History_returnsImmutableView_ }
+    ,{ name: "ACCESS-002-04 / métadonnées AUDIT fonctionnelles", test: AKS_testAudit001_acceptsAccessFunctionalHistoryMetadata_ }
+    ,{ name: "ACCESS-002-04 / historique UI fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }

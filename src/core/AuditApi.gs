@@ -58,6 +58,18 @@ function AKS_createDefaultAuditService_() {
   });
 }
 
+function AKS_createDefaultAccessAccountHistoryService_() {
+  var registry = AKS_createPlatformParameterRegistry_();
+  var configuration = AKS_createConfigurationService_(
+    registry, AKS_createScriptParameterValueStore_());
+  var spreadsheetId = configuration.resolve("audit.spreadsheetId").value;
+  return AKS.Core.AccessAccountHistory.create({
+    accessService: AKS_createAccessService_(),
+    gateway: AKS_createConfiguredAuditSheetsGateway_(spreadsheetId),
+    catalogs: AKS_getAuditCatalogs_()
+  });
+}
+
 function AKS_createDefaultAuditActorAuthorizer_(
     adminAccess, resolveTechnicalIdentity, createAccessService) {
   function normalized_(value) {
