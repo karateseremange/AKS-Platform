@@ -335,7 +335,10 @@ function AKS_createAccess002Recipe_(ports) {
         beforeRevision: backup.afterRevision,
         proposedRevision: backup.beforeRevision,
         afterRevision: afterRevision,
-        changedAccountIds: [backup.manager], changedCount: 1,
+        changedAccountIds: Array.isArray(backup.changedAccountIds)
+          ? backup.changedAccountIds.slice() : [backup.manager],
+        changedCount: Array.isArray(backup.changedAccountIds)
+          ? backup.changedAccountIds.length : 1,
         selfModification: backup.manager === actor, restored: true
       }
     };
