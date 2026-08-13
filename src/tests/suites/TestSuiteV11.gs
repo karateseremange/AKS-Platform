@@ -478,6 +478,12 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / proposition invalide refusée", test: AKS_testAccess002Detail_rejectsInvalidProposalWithoutWrite_ }
     ,{ name: "ACCESS-002-04 / compte inactif non modifiable", test: AKS_testAccess002Detail_rejectsInactiveModification_ }
     ,{ name: "ACCESS-002-04 / API fiche et aperçu réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ }
+    ,{ name: "ACCESS-002-04 / enregistrement ciblé audité", test: AKS_testAccess002Detail_savesOnlyTargetWithAuditContext_ }
+    ,{ name: "ACCESS-002-04 / absence de changement refusée", test: AKS_testAccess002Detail_rejectsNoChangeWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / confirmation ACCESS_MANAGE", test: AKS_testAccess002Detail_requiresSensitiveManageConfirmation_ }
+    ,{ name: "ACCESS-002-04 / confirmation auto-modification", test: AKS_testAccess002Detail_requiresSelfModificationConfirmation_ }
+    ,{ name: "ACCESS-002-04 / double soumission bornée", test: AKS_testAccess002Detail_doubleSubmissionMutatesOnce_ }
+    ,{ name: "ACCESS-002-04 / métadonnées de commande bornées", test: AKS_testAccess002Detail_rejectsInvalidRequestMetadata_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
