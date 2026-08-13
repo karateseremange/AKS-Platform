@@ -525,6 +525,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / Portail modèle immuable", test: AKS_testAccess002PortalUi_modelIsDeeplyImmutable_ }
     ,{ name: "ACCESS-002-05 / Portail renommage route stable", test: AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_ }
     ,{ name: "ACCESS-002-05 / Portail refus générique", test: AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_ }
+    ,{ name: "ACCESS-002-05 / recette précontrôle sans écriture", test: AKS_testAccess002PortalRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-05 / recette profils vérifiés", test: AKS_testAccess002PortalRecipe_verifiesMultipleProfiles_ }
+    ,{ name: "ACCESS-002-05 / recette restauration exacte", test: AKS_testAccess002PortalRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-05 / recette identités distinctes", test: AKS_testAccess002PortalRecipe_rejectsDuplicateIdentities_ }
+    ,{ name: "ACCESS-002-05 / recette échec auto-restauré", test: AKS_testAccess002PortalRecipe_autoRestoresProjectionFailure_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
