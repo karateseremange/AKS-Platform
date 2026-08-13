@@ -19,6 +19,7 @@ function AKS_createAccessAdminService_(options) {
   if (!accessService ||
       typeof accessService.readRegistryForAdministration !== "function" ||
       typeof accessService.previewRegistryForAdministration !== "function" ||
+      typeof accessService.getCurrentIdentity !== "function" ||
       typeof accessService.updateRegistryForAdministration !== "function" ||
       typeof accessService.recordAdministrativeRefusalForAdministration !== "function") {
     var failure = new Error("Service d'administration des accès indisponible.");
@@ -29,6 +30,10 @@ function AKS_createAccessAdminService_(options) {
   return Object.freeze({
     readRegistry: function () {
       return accessService.readRegistryForAdministration();
+    },
+
+    getCurrentIdentity: function () {
+      return accessService.getCurrentIdentity();
     },
 
     updateRegistry: function (command) {
