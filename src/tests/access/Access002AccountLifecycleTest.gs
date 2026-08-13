@@ -2,6 +2,7 @@ function AKS_access002LifecycleFixture_(overrides) {
   overrides = overrides || {};
   var updates = [];
   var reads = 0;
+  var refusals = [];
   var view = overrides.view || {
     revision: "access-rev/lifecycle", bootstrap: false, accounts: [{
       email: "manager@example.com", displayName: "Gestionnaire", status: "ACTIVE",
@@ -34,11 +35,16 @@ function AKS_access002LifecycleFixture_(overrides) {
         accounts: JSON.parse(JSON.stringify(command.registry.accounts))
       };
       return JSON.parse(JSON.stringify(view));
+    },
+    recordRefusal: function (reasonCode) {
+      refusals.push(reasonCode);
+      return { correlationId: "corr-access-refusal-" + refusals.length };
     }
   };
   return {
     service: AKS_createAccessAccountLifecycleService_({ accessAdmin: admin }),
     updates: updates,
+    refusals: refusals,
     reads: function () { return reads; },
     view: function () { return view; }
   };
@@ -74,6 +80,7 @@ function AKS_testAccess002Lifecycle_rejectsInvalidCreateBeforeRead_() {
   }, "ACCESS_COMMAND_INVALID");
   assertEquals_(0, fixture.reads());
   assertEquals_(0, fixture.updates.length);
+  assertEquals_("ACCESS_COMMAND_INVALID", fixture.refusals[0]);
 }
 
 function AKS_testAccess002Lifecycle_rejectsDuplicateAccount_() {
@@ -84,6 +91,7 @@ function AKS_testAccess002Lifecycle_rejectsDuplicateAccount_() {
     }));
   }, "ACCESS_ACCOUNT_EXISTS");
   assertEquals_(0, fixture.updates.length);
+  assertEquals_("ACCESS_ACCOUNT_EXISTS", fixture.refusals[0]);
 }
 
 function AKS_testAccess002Lifecycle_deactivatesAndPreservesHistory_() {
@@ -114,6 +122,17 @@ function AKS_testAccess002Lifecycle_returnsInactiveAccountWithoutWrite_() {
   }));
   assertEquals_(false, result.changed);
   assertEquals_(0, fixture.updates.length);
+}
+
+function AKS_testAccess002Lifecycle_rejectsStaleIdempotentCommand_() {
+  var fixture = AKS_access002LifecycleFixture_();
+  assertThrows_(function () {
+    fixture.service.deactivateAccount(AKS_access002LifecycleCommand_({
+      accountId: "old@example.com", expectedRevision: "access-rev/stale"
+    }));
+  }, "ACCESS_REGISTRY_CONFLICT");
+  assertEquals_(0, fixture.updates.length);
+  assertEquals_("ACCESS_REGISTRY_CONFLICT", fixture.refusals[0]);
 }
 
 function AKS_testAccess002Lifecycle_requiresConfirmedAssignmentClear_() {
@@ -159,9 +178,9 @@ function AKS_testAccess002Lifecycle_propagatesAuditedBoundaryFailure_() {
 function AKS_testAccess002Lifecycle_passesExpectedRevisionToBoundary_() {
   var fixture = AKS_access002LifecycleFixture_();
   fixture.service.createAccount(AKS_access002LifecycleCommand_({
-    displayName: "Nouvelle", role: "PROFESSEUR", expectedRevision: "stale-revision"
+    displayName: "Nouvelle", role: "PROFESSEUR"
   }));
-  assertEquals_("stale-revision", fixture.updates[0].expectedRevision);
+  assertEquals_("access-rev/lifecycle", fixture.updates[0].expectedRevision);
 }
 
 function AKS_testAccess002Lifecycle_returnsImmutableResult_() {
@@ -182,6 +201,7 @@ function AKS_runAccess002AccountLifecycleSuite() {
     { name: "désactivation avec historique", test: AKS_testAccess002Lifecycle_deactivatesAndPreservesHistory_ },
     { name: "compte inconnu refusé", test: AKS_testAccess002Lifecycle_rejectsUnknownAccountWithoutWrite_ },
     { name: "désactivation idempotente", test: AKS_testAccess002Lifecycle_returnsInactiveAccountWithoutWrite_ },
+    { name: "idempotence sous révision courante", test: AKS_testAccess002Lifecycle_rejectsStaleIdempotentCommand_ },
     { name: "effacement confirmé requis", test: AKS_testAccess002Lifecycle_requiresConfirmedAssignmentClear_ },
     { name: "réactivation sans anciennes habilitations", test: AKS_testAccess002Lifecycle_reactivatesWithoutOldAssignments_ },
     { name: "réactivation idempotente", test: AKS_testAccess002Lifecycle_returnsActiveAccountWithoutWrite_ },
