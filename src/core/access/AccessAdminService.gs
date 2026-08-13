@@ -18,7 +18,8 @@ function AKS_createAccessAdminService_(options) {
 
   if (!accessService ||
       typeof accessService.readRegistryForAdministration !== "function" ||
-      typeof accessService.updateRegistryForAdministration !== "function") {
+      typeof accessService.updateRegistryForAdministration !== "function" ||
+      typeof accessService.recordAdministrativeRefusalForAdministration !== "function") {
     var failure = new Error("Service d'administration des accès indisponible.");
     failure.code = "ACCESS_ADMIN_UNAVAILABLE";
     throw failure;
@@ -31,6 +32,10 @@ function AKS_createAccessAdminService_(options) {
 
     updateRegistry: function (command) {
       return accessService.updateRegistryForAdministration(command);
+    },
+
+    recordRefusal: function (reasonCode) {
+      return accessService.recordAdministrativeRefusalForAdministration(reasonCode);
     }
   });
 }
