@@ -137,3 +137,16 @@ AKS.Admin.Dashboard = (function () {
 function AKS_includeAdminDashboardFile_(path) {
   return HtmlService.createHtmlOutputFromFile(path).getContent();
 }
+
+/**
+ * Reads an unevaluated Dashboard template for structural tests.
+ *
+ * Unlike createHtmlOutputFromFile(), this accepts Apps Script template
+ * scriptlets and must never be used to serve a response directly.
+ *
+ * @param {string} path
+ * @returns {string}
+ */
+function AKS_getAdminDashboardTemplateSource_(path) {
+  return HtmlService.createTemplateFromFile(path).getRawContent();
+}
