@@ -15,7 +15,7 @@
         </div>
         <? if (viewModel.state !== "DENIED") { ?>
           <div class="aks-admin-user" aria-label="Compte connecté">
-            <?= viewModel.user.email ?>
+            <?= (viewModel.user || viewModel.administrator).email ?>
           </div>
         <? } ?>
       </header>
