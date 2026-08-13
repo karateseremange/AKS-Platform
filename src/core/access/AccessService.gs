@@ -11,7 +11,8 @@ function AKS_createAccessService_(options) {
   "use strict";
 
   options = options || {};
-  var SCHEMA_VERSION = "access/1.0";
+  var SCHEMA_VERSION = "access/1.1";
+  var LEGACY_SCHEMA_VERSION = "access/1.0";
   var ROLES = {
     ADMINISTRATEUR: true,
     PROFESSEUR: true,
@@ -45,6 +46,11 @@ function AKS_createAccessService_(options) {
     INSCRIPTIONS_WRITE: "OPTIONAL",
     INSCRIPTIONS_APPLY_IMPORT: "FORBIDDEN",
     INSCRIPTIONS_ACTIVATE: "REQUIRED"
+  };
+  var ANALYTICS_CAPABILITIES = {
+    ANALYTICS_READ: true,
+    ANALYTICS_PREVIEW: true,
+    ANALYTICS_PUBLISH: true
   };
   var ROLE_CAPABILITIES = {
     ADMINISTRATEUR: [],
@@ -157,7 +163,7 @@ function AKS_createAccessService_(options) {
     });
   }
 
-  function normalizeAssignment_(assignment) {
+  function normalizeAssignment_(assignment, sourceSchemaVersion) {
     if (!assignment || typeof assignment !== "object") {
       throw error_("ACCESS_REGISTRY_INVALID", "Affectation d'accès invalide.");
     }
@@ -181,6 +187,10 @@ function AKS_createAccessService_(options) {
       if (normalized.season !== "*" || normalized.section || normalized.courseCode) {
         throw error_("ACCESS_REGISTRY_INVALID", "Périmètre ACCESS invalide.");
       }
+    } else if (module === "ANALYTICS") {
+      if (normalized.season !== "*" || normalized.section || normalized.courseCode) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Périmètre Analytics invalide.");
+      }
     } else if (module === "INSCRIPTIONS") {
       if (!normalized.section) {
         throw error_("ACCESS_REGISTRY_INVALID", "Périmètre Inscriptions invalide.");
@@ -193,7 +203,6 @@ function AKS_createAccessService_(options) {
       if (!CAPABILITIES[capability] ||
           capability === "ATTENDANCE_CORRECT_CLOSED" ||
           (capability === "ACCESS_MANAGE" && module !== "ACCESS") ||
-          capability === "ANALYTICS_PUBLISH" ||
           capability === "AUDIT_READ" ||
           normalized.extraCapabilities.indexOf(capability) !== -1) {
         throw error_("ACCESS_REGISTRY_INVALID", "Capacité complémentaire invalide.");
@@ -202,14 +211,20 @@ function AKS_createAccessService_(options) {
         if (capability !== "ACCESS_MANAGE") {
           throw error_("ACCESS_REGISTRY_INVALID", "Capacité ACCESS incohérente.");
         }
+      } else if (module === "ANALYTICS") {
+        if (!ANALYTICS_CAPABILITIES[capability]) {
+          throw error_("ACCESS_REGISTRY_INVALID", "Capacité Analytics incohérente.");
+        }
       } else if (module === "INSCRIPTIONS") {
         if (!INSCRIPTIONS_CAPABILITIES[capability] ||
             INSCRIPTIONS_CAPABILITIES[capability] === "REQUIRED" && !normalized.courseCode ||
             INSCRIPTIONS_CAPABILITIES[capability] === "FORBIDDEN" && normalized.courseCode) {
           throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions incohérente.");
         }
-      } else if (INSCRIPTIONS_CAPABILITIES[capability]) {
-        throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions hors module.");
+      } else if (INSCRIPTIONS_CAPABILITIES[capability] ||
+          ANALYTICS_CAPABILITIES[capability] &&
+          sourceSchemaVersion !== LEGACY_SCHEMA_VERSION) {
+        throw error_("ACCESS_REGISTRY_INVALID", "Capacité hors module.");
       }
       normalized.extraCapabilities.push(capability);
     });
@@ -221,12 +236,17 @@ function AKS_createAccessService_(options) {
     if (module === "INSCRIPTIONS" && normalized.extraCapabilities.length === 0) {
       throw error_("ACCESS_REGISTRY_INVALID", "Capacité Inscriptions absente.");
     }
+    if (module === "ANALYTICS" && normalized.extraCapabilities.length === 0) {
+      throw error_("ACCESS_REGISTRY_INVALID", "Capacité Analytics absente.");
+    }
     validatePeriod_(normalized);
     return normalized;
   }
 
   function normalizeRegistry_(registry) {
-    if (!registry || registry.schemaVersion !== SCHEMA_VERSION ||
+    if (!registry ||
+        (registry.schemaVersion !== SCHEMA_VERSION &&
+          registry.schemaVersion !== LEGACY_SCHEMA_VERSION) ||
         !Array.isArray(registry.accounts)) {
       throw error_("ACCESS_REGISTRY_INVALID", "Registre d'accès indisponible.");
     }
@@ -247,7 +267,9 @@ function AKS_createAccessService_(options) {
         status: status,
         roles: uniqueKnownValues_(account.roles, ROLES),
         assignments: Array.isArray(account.assignments)
-          ? account.assignments.map(normalizeAssignment_) : (function () {
+          ? account.assignments.map(function (assignment) {
+            return normalizeAssignment_(assignment, registry.schemaVersion);
+          }) : (function () {
             throw error_("ACCESS_REGISTRY_INVALID", "Affectations de compte invalides.");
           }()),
         validFrom: normalizeDate_(account.validFrom),
@@ -312,6 +334,14 @@ function AKS_createAccessService_(options) {
             return account.roles.indexOf(role) !== -1;
           })) {
             throw error_("ACCESS_REGISTRY_INVALID", "Rôle ACCESS non détenu.");
+          }
+          return;
+        }
+        if (assignment.module === "ANALYTICS") {
+          if (!assignment.roles.some(function (role) {
+            return account.roles.indexOf(role) !== -1;
+          })) {
+            throw error_("ACCESS_REGISTRY_INVALID", "Rôle Analytics non détenu.");
           }
           return;
         }
@@ -471,6 +501,25 @@ function AKS_createAccessService_(options) {
     });
     if (!allowed) {
       throw error_("ACCESS_CAPABILITY_DENIED", "Opération Inscriptions non autorisée.");
+    }
+    return true;
+  }
+
+  function assertAnalyticsCapability(capability) {
+    capability = upper_(capability);
+    if (!ANALYTICS_CAPABILITIES[capability]) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Capacité Analytics non autorisée.");
+    }
+    var context = context_();
+    if (context.legacyBootstrap) return true;
+    var allowed = context.account.assignments.some(function (assignment) {
+      return assignment.module === "ANALYTICS" && activeAt_(assignment, context.now) &&
+        assignment.roles.some(function (role) {
+          return context.account.roles.indexOf(role) !== -1;
+        }) && assignment.extraCapabilities.indexOf(capability) !== -1;
+    });
+    if (!allowed) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Opération Analytics non autorisée.");
     }
     return true;
   }
@@ -790,6 +839,9 @@ function AKS_createAccessService_(options) {
         throw error_("ACCESS_COMMAND_INVALID", "Commande de modification invalide.");
       }
       proposed = normalizeRegistry_(command.registry);
+      // A legacy registry may still be read as-is, but no write may persist a
+      // shape that is invalid once stamped with the canonical access/1.1 schema.
+      proposed = normalizeRegistry_(proposed);
       validateRegistryScopes_(proposed, authorizationTime);
     } catch (failure) {
       recordRefusal_(actor, correlationId, failure, initial, proposed);
@@ -947,6 +999,7 @@ function AKS_createAccessService_(options) {
     listAuthorizedCourses: listAuthorizedCourses,
     hasCapability: hasCapability,
     assertCapability: assertCapability,
+    assertAnalyticsCapability: assertAnalyticsCapability,
     assertInscriptionsCapability: assertInscriptionsCapability,
     assertAdministrativeCapability: assertAdministrativeCapability,
     readRegistryForAdministration: readRegistryForAdministration,
