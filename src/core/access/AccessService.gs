@@ -106,6 +106,29 @@ function AKS_createAccessService_(options) {
     return String(value || "").trim().toUpperCase();
   }
 
+  function normalizeAuditContext_(value) {
+    if (typeof value === "undefined") return {};
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw error_("ACCESS_COMMAND_INVALID", "Contexte d'audit invalide.");
+    }
+    var requestId = String(value.requestId || "").trim();
+    var operation = upper_(value.operation);
+    var comment = String(value.comment || "").trim().replace(/\s+/g, " ");
+    if (requestId && !/^req-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(requestId) ||
+        operation && !/^[A-Z][A-Z0-9_]{1,47}$/.test(operation) ||
+        comment.length > 500 ||
+        value.sensitive !== true && value.sensitive !== false &&
+          typeof value.sensitive !== "undefined") {
+      throw error_("ACCESS_COMMAND_INVALID", "Contexte d'audit invalide.");
+    }
+    return {
+      requestId: requestId,
+      operation: operation,
+      comment: comment,
+      sensitive: value.sensitive === true
+    };
+  }
+
   function immutableCopy_(value) {
     function freeze_(entry) {
       if (!entry || typeof entry !== "object" || Object.isFrozen(entry)) return entry;
@@ -770,9 +793,9 @@ function AKS_createAccessService_(options) {
     }).sort();
   }
 
-  function auditMetadata_(before, proposed, after, actor, restored) {
+  function auditMetadata_(before, proposed, after, actor, restored, commandContext) {
     var changed = changedAccountIds_(before, proposed);
-    return {
+    var metadata = {
       beforeRevision: revisionFor_(before),
       proposedRevision: revisionFor_(proposed),
       afterRevision: revisionFor_(after),
@@ -781,10 +804,16 @@ function AKS_createAccessService_(options) {
       selfModification: changed.indexOf(actor) !== -1,
       restored: restored === true
     };
+    commandContext = commandContext || {};
+    if (commandContext.requestId) metadata.requestId = commandContext.requestId;
+    if (commandContext.operation) metadata.operation = commandContext.operation;
+    if (commandContext.comment) metadata.comment = commandContext.comment;
+    if (commandContext.sensitive === true) metadata.sensitive = true;
+    return metadata;
   }
 
   function recordRegistryAudit_(actor, correlationId, result, reasonCode,
-      before, proposed, after, restored, lockAlreadyHeld) {
+      before, proposed, after, restored, lockAlreadyHeld, commandContext) {
     assertPersistentAudit_();
     var proof;
     try {
@@ -799,7 +828,7 @@ function AKS_createAccessService_(options) {
         result: result,
         reasonCode: reasonCode || "",
         correlationId: correlationId,
-        metadata: auditMetadata_(before, proposed, after, actor, restored)
+        metadata: auditMetadata_(before, proposed, after, actor, restored, commandContext)
       };
       proof = lockAlreadyHeld
         ? audit.recordUnderExistingLock(event)
@@ -814,12 +843,12 @@ function AKS_createAccessService_(options) {
   }
 
   function recordRefusal_(actor, correlationId, failure, before, proposed,
-      lockAlreadyHeld) {
+      lockAlreadyHeld, commandContext) {
     try {
       recordRegistryAudit_(
         actor, correlationId, "REFUSE",
         failure && failure.code ? failure.code : "UNEXPECTED_ERROR",
-        before, proposed || before, before, false, lockAlreadyHeld
+        before, proposed || before, before, false, lockAlreadyHeld, commandContext
       );
     } catch (ignoredAuditFailure) {}
   }
@@ -831,7 +860,9 @@ function AKS_createAccessService_(options) {
     var authorizationTime = now_();
     var initial = loadedRegistry_();
     var proposed = null;
+    var commandContext = {};
     try {
+      commandContext = normalizeAuditContext_(command && command.auditContext);
       authorizeRegistryWrite_(initial, actor, authorizationTime);
       if (!command || typeof command !== "object" ||
           typeof command.expectedRevision !== "string" ||
@@ -844,14 +875,14 @@ function AKS_createAccessService_(options) {
       proposed = normalizeRegistry_(proposed);
       validateRegistryScopes_(proposed, authorizationTime);
     } catch (failure) {
-      recordRefusal_(actor, correlationId, failure, initial, proposed);
+      recordRefusal_(actor, correlationId, failure, initial, proposed, false, commandContext);
       throw failure;
     }
     var lock;
     try {
       lock = acquireRegistryLock_();
     } catch (lockFailure) {
-      recordRefusal_(actor, correlationId, lockFailure, initial, proposed);
+      recordRefusal_(actor, correlationId, lockFailure, initial, proposed, false, commandContext);
       throw lockFailure;
     }
     try {
@@ -866,11 +897,13 @@ function AKS_createAccessService_(options) {
         proposed = stampChanges_(proposed, current, actor, now);
         assertActiveManagerRemains_(proposed, now);
       } catch (validationFailure) {
-        recordRefusal_(actor, correlationId, validationFailure, current, proposed, true);
+        recordRefusal_(actor, correlationId, validationFailure, current, proposed, true,
+          commandContext);
         throw validationFailure;
       }
       recordRegistryAudit_(
-        actor, correlationId, "INTENTION", "", current, proposed, proposed, false, true
+        actor, correlationId, "INTENTION", "", current, proposed, proposed, false, true,
+        commandContext
       );
       try {
         persistRegistryAtomically_(proposed, current);
@@ -878,21 +911,22 @@ function AKS_createAccessService_(options) {
         try {
           recordRegistryAudit_(
             actor, correlationId, "ECHEC", persistenceFailure.code,
-            current, proposed, current, true, true
+            current, proposed, current, true, true, commandContext
           );
         } catch (ignoredAuditFailure) {}
         throw persistenceFailure;
       }
       try {
         recordRegistryAudit_(
-          actor, correlationId, "REUSSI", "", current, proposed, proposed, false, true
+          actor, correlationId, "REUSSI", "", current, proposed, proposed, false, true,
+          commandContext
         );
       } catch (successAuditFailure) {
         restoreRegistry_(current);
         try {
           recordRegistryAudit_(
             actor, correlationId, "ECHEC", "ACCESS_AUDIT_REQUIRED",
-            current, proposed, current, true, true
+            current, proposed, current, true, true, commandContext
           );
         } catch (ignoredFinalAuditFailure) {}
         throw error_("ACCESS_AUDIT_REQUIRED", "Preuve finale des accès indisponible.");
