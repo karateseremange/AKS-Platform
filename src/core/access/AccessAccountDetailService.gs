@@ -16,6 +16,9 @@ function AKS_createAccessAccountDetailService_(options) {
 
   if (!accessAdmin || typeof accessAdmin.readRegistry !== "function" ||
       typeof accessAdmin.previewRegistry !== "function" ||
+      typeof accessAdmin.updateRegistry !== "function" ||
+      typeof accessAdmin.getCurrentIdentity !== "function" ||
+      typeof accessAdmin.recordRefusal !== "function" ||
       !catalogueProvider || typeof catalogueProvider.get !== "function") {
     throw error_("ACCESS_DETAIL_UNAVAILABLE", "Fiche des accès indisponible.");
   }
@@ -93,6 +96,23 @@ function AKS_createAccessAccountDetailService_(options) {
   function difference_(left, right) {
     return left.filter(function (value) { return right.indexOf(value) === -1; }).sort();
   }
+  function reject_(code, message) {
+    try { accessAdmin.recordRefusal(code); } catch (ignoredAuditFailure) {}
+    throw error_(code, message);
+  }
+  function proposedAccounts_(view, id, command) {
+    var accounts = JSON.parse(JSON.stringify(view.accounts));
+    var proposed = account_({ accounts: accounts }, id);
+    proposed.roles = command.roles.map(upper_);
+    proposed.assignments = command.assignments.map(storageAssignment_);
+    return accounts;
+  }
+  function manageChanged_(summary) {
+    return summary.assignmentsAdded.concat(summary.assignmentsRemoved).some(function (entry) {
+      return entry.module === "ACCESS" &&
+        entry.capabilities.indexOf("ACCESS_MANAGE") !== -1;
+    });
+  }
 
   function getAccountDetail(accountId) {
     var id = accountId_(accountId);
@@ -114,10 +134,7 @@ function AKS_createAccessAccountDetailService_(options) {
     if (before.status !== "ACTIVE") {
       throw error_("ACCESS_ACCOUNT_INACTIVE", "Un compte inactif est non modifiable.");
     }
-    var proposedAccounts = JSON.parse(JSON.stringify(view.accounts));
-    var proposed = account_( { accounts: proposedAccounts }, id);
-    proposed.roles = command.roles.map(upper_);
-    proposed.assignments = command.assignments.map(storageAssignment_);
+    var proposedAccounts = proposedAccounts_(view, id, command);
     var validated = accessAdmin.previewRegistry({
       expectedRevision: view.revision,
       registry: { schemaVersion: "access/1.1", accounts: proposedAccounts }
@@ -147,9 +164,57 @@ function AKS_createAccessAccountDetailService_(options) {
     });
   }
 
+  function saveAccountAccess(command) {
+    var requestId = String(command && command.requestId || "").trim();
+    var comment = String(command && command.comment || "").trim().replace(/\s+/g, " ");
+    if (!/^req-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(requestId) ||
+        comment.length > 500) {
+      reject_("ACCESS_COMMAND_INVALID", "Commande d'enregistrement invalide.");
+    }
+    var preview = previewAccountAccess(command);
+    if (!preview.changed) {
+      reject_("ACCESS_NO_CHANGE", "Aucune modification à enregistrer.");
+    }
+    var actor = lower_(accessAdmin.getCurrentIdentity());
+    var sensitive = actor === preview.accountId || manageChanged_(preview.summary);
+    if (sensitive && command.confirmSensitive !== true) {
+      reject_("ACCESS_SENSITIVE_CONFIRMATION_REQUIRED",
+        "Une confirmation renforcée est obligatoire.");
+    }
+    var view = accessAdmin.readRegistry();
+    if (view.revision !== preview.revision) {
+      reject_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+    }
+    var updated = accessAdmin.updateRegistry({
+      expectedRevision: view.revision,
+      auditContext: {
+        requestId: requestId,
+        operation: "SAVE_ACCOUNT_ACCESS",
+        comment: comment,
+        sensitive: sensitive
+      },
+      registry: {
+        schemaVersion: "access/1.1",
+        accounts: proposedAccounts_(view, preview.accountId, command)
+      }
+    });
+    return immutable_({
+      action: "SAVE_ACCOUNT_ACCESS",
+      changed: true,
+      requestId: requestId,
+      accountId: preview.accountId,
+      revision: updated.revision,
+      correlationId: updated.correlationId,
+      sensitive: sensitive,
+      summary: preview.summary,
+      account: detail_(updated, account_(updated, preview.accountId)).account
+    });
+  }
+
   return Object.freeze({
     getAccountDetail: getAccountDetail,
-    previewAccountAccess: previewAccountAccess
+    previewAccountAccess: previewAccountAccess,
+    saveAccountAccess: saveAccountAccess
   });
 }
 
