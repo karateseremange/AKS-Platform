@@ -518,6 +518,13 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / Mes accès API sans cible", test: AKS_testAccess002MyAccess_publicApiAcceptsNoTargetIdentity_ }
     ,{ name: "ACCESS-002-05 / Mes accès route lecture seule", test: AKS_testAccess002MyAccess_exposesReadOnlyRouteAndView_ }
     ,{ name: "ACCESS-002-05 / Mes accès refus générique", test: AKS_testAccess002MyAccess_deniedViewLeaksNoIdentity_ }
+    ,{ name: "ACCESS-002-05 / Portail Mes accès visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ }
+    ,{ name: "ACCESS-002-05 / Portail destinations projetées", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ }
+    ,{ name: "ACCESS-002-05 / Portail état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ }
+    ,{ name: "ACCESS-002-05 / Portail journaux historiques bornés", test: AKS_testAccess002PortalUi_hidesLogsOutsideLegacyAdministration_ }
+    ,{ name: "ACCESS-002-05 / Portail modèle immuable", test: AKS_testAccess002PortalUi_modelIsDeeplyImmutable_ }
+    ,{ name: "ACCESS-002-05 / Portail renommage route stable", test: AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_ }
+    ,{ name: "ACCESS-002-05 / Portail refus générique", test: AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }

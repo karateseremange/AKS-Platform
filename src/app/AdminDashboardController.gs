@@ -1,6 +1,45 @@
 var AKS = AKS || {};
 AKS.Admin = AKS.Admin || {};
 
+function AKS_buildPortalDashboardViewModel_(portal, releaseInfo, baseUrl, recentLogs) {
+  var destinations = portal.destinations.slice();
+  destinations.push({ id: "access.my-access", label: "Mes accès", family: "personal",
+    target: baseUrl + "?app=my-access", priority: 1, transitional: false });
+  var order = ["personal", "administration", "modules"];
+  var labels = { personal: "Mon espace", administration: "Administration", modules: "Modules" };
+  var families = order.map(function (family) {
+    return { id: family, label: labels[family], destinations: destinations.filter(function (entry) {
+      return entry.family === family;
+    }) };
+  }).filter(function (family) { return family.destinations.length > 0; });
+  function freeze_(value) {
+    if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+    Object.keys(value).forEach(function (key) { freeze_(value[key]); });
+    return Object.freeze(value);
+  }
+  return freeze_({
+    platform: { name: "AKS Platform", version: releaseInfo.version,
+      releaseName: releaseInfo.releaseName },
+    user: portal.identity, administrator: portal.identity, state: portal.state,
+    emptyMessage: portal.state === "NO_ACCESS"
+      ? "Aucun accès n’est actuellement attribué à votre compte." : "",
+    navigation: { families: families }, actions: destinations,
+    recentLogs: recentLogs || null,
+    legacyAdministrativeAccess: portal.legacyAdministrativeAccess
+  });
+}
+
+function AKS_buildDeniedPortalDashboardViewModel_(releaseInfo) {
+  return Object.freeze({
+    platform: Object.freeze({ name: "AKS Platform", version: releaseInfo.version,
+      releaseName: releaseInfo.releaseName }),
+    user: Object.freeze({ email: "" }), administrator: Object.freeze({ email: "" }),
+    state: "DENIED", emptyMessage: "Accès non autorisé.",
+    navigation: Object.freeze({ families: Object.freeze([]) }),
+    actions: Object.freeze([]), recentLogs: null, legacyAdministrativeAccess: false
+  });
+}
+
 /**
  * Administrative Dashboard controller.
  *
@@ -42,22 +81,37 @@ AKS.Admin.Dashboard = (function () {
   }
 
   function getViewModel() {
-    var authorizedEmail = AKS.Admin.Access.assertCurrentUserAuthorized();
-    var accessManageAuthorized = false;
+    var baseUrl = getWebAppUrl_();
+    var accessService = AKS_createAccessService_();
+    var portal = AKS.Core.AccessPortalProjection.create({
+      accessService: accessService,
+      legacyAdministrator: function (email) {
+        return AKS.Admin.Access.isAuthorizedEmail(email);
+      },
+      baseUrlProvider: function () { return baseUrl; }
+    }).getPortalModel();
+    var recentLogs = null;
     try {
-      accessManageAuthorized =
-        AKS_createAccessService_().assertAdministrativeCapability("ACCESS_MANAGE") === true;
-    } catch (ignoredAccessRefusal) {}
-    return buildViewModel_(authorizedEmail, undefined, accessManageAuthorized);
+      if (portal.legacyAdministrativeAccess) {
+        recentLogs = AKS.Admin.Logs.getDashboardModelForAuthorizedUser(portal.identity.email, baseUrl);
+      }
+    } catch (ignoredLogsFailure) {}
+    return AKS_buildPortalDashboardViewModel_(
+      portal, AKS.Version.getReleaseInfo(), baseUrl, recentLogs);
   }
 
   function render() {
     var template = HtmlService.createTemplateFromFile("ui/admin/Dashboard");
-    template.viewModel = getViewModel();
+    try {
+      template.viewModel = getViewModel();
+    } catch (ignoredAccessRefusal) {
+      template.viewModel = AKS_buildDeniedPortalDashboardViewModel_(
+        AKS.Version.getReleaseInfo());
+    }
 
     return template
       .evaluate()
-      .setTitle("Administration — AKS Platform")
+      .setTitle("Portail AKS — AKS Platform")
       .addMetaTag("viewport", "width=device-width, initial-scale=1");
   }
 
