@@ -7,6 +7,7 @@ function AKS_createAdminAccessAccountController_(options) {
   options = options || {};
   var accessService = options.accessService;
   var projection = options.projection;
+  var detail = options.detail;
   var lifecycle = options.lifecycle;
   var baseUrlProvider = options.baseUrlProvider || function () { return ""; };
 
@@ -43,9 +44,20 @@ function AKS_createAdminAccessAccountController_(options) {
     return lifecycle[method](command || {});
   }
 
+  function detail_(method, value) {
+    authorize_();
+    return detail[method](value);
+  }
+
   return Object.freeze({
     getViewModel: viewModel,
     listAccounts: list,
+    getAccountDetail: function (accountId) {
+      return detail_("getAccountDetail", accountId);
+    },
+    previewAccountAccess: function (command) {
+      return detail_("previewAccountAccess", command || {});
+    },
     createAccount: function (command) { return command_("createAccount", command); },
     deactivateAccount: function (command) { return command_("deactivateAccount", command); },
     reactivateAccount: function (command) { return command_("reactivateAccount", command); }
@@ -58,6 +70,7 @@ function AKS_createProductionAdminAccessAccountController_() {
   return AKS_createAdminAccessAccountController_({
     accessService: accessService,
     projection: AKS.Core.AccessAccountProjection.create({ accessAdmin: admin }),
+    detail: AKS.Core.AccessAccountDetail.create({ accessAdmin: admin }),
     lifecycle: AKS.Core.AccessAccountLifecycle.create({ accessAdmin: admin }),
     baseUrlProvider: function () { return ScriptApp.getService().getUrl() || ""; }
   });
@@ -80,6 +93,12 @@ function AKS_listAdminAccessAccounts(query) {
 }
 function AKS_createAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().createAccount(command);
+}
+function AKS_getAdminAccessAccountDetail(accountId) {
+  return AKS_createProductionAdminAccessAccountController_().getAccountDetail(accountId);
+}
+function AKS_previewAdminAccessAccount(command) {
+  return AKS_createProductionAdminAccessAccountController_().previewAccountAccess(command);
 }
 function AKS_deactivateAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().deactivateAccount(command);
