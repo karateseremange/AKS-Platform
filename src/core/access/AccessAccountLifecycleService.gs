@@ -22,7 +22,8 @@ function AKS_createAccessAccountLifecycleService_(options) {
   }
 
   if (!accessAdmin || typeof accessAdmin.readRegistry !== "function" ||
-      typeof accessAdmin.updateRegistry !== "function") {
+      typeof accessAdmin.updateRegistry !== "function" ||
+      typeof accessAdmin.recordRefusal !== "function") {
     throw failure_("ACCESS_ADMIN_UNAVAILABLE", "Gestion des comptes indisponible.");
   }
 
@@ -43,9 +44,14 @@ function AKS_createAccessAccountLifecycleService_(options) {
     return freeze_(JSON.parse(JSON.stringify(value)));
   }
 
+  function reject_(code, message) {
+    try { accessAdmin.recordRefusal(code); } catch (ignoredAuditFailure) {}
+    throw failure_(code, message);
+  }
+
   function baseCommand_(command) {
     if (!command || typeof command !== "object" || Array.isArray(command)) {
-      throw failure_("ACCESS_COMMAND_INVALID", "Commande de compte invalide.");
+      reject_("ACCESS_COMMAND_INVALID", "Commande de compte invalide.");
     }
     var accountId = lower_(command.accountId || command.email);
     var expectedRevision = String(command.expectedRevision || "").trim();
@@ -54,7 +60,7 @@ function AKS_createAccessAccountLifecycleService_(options) {
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountId) ||
         !expectedRevision ||
         !/^req-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(requestId)) {
-      throw failure_("ACCESS_COMMAND_INVALID", "Commande de compte invalide.");
+      reject_("ACCESS_COMMAND_INVALID", "Commande de compte invalide.");
     }
     return {
       accountId: accountId,
@@ -77,6 +83,12 @@ function AKS_createAccessAccountLifecycleService_(options) {
       if (lower_(accounts[index].email) === accountId) return index;
     }
     return -1;
+  }
+
+  function assertRevision_(request, view) {
+    if (request.expectedRevision !== view.revision) {
+      reject_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+    }
   }
 
   function result_(action, changed, request, view, account) {
@@ -106,11 +118,12 @@ function AKS_createAccessAccountLifecycleService_(options) {
     var displayName = String(command.displayName || "").trim();
     var role = upper_(command.role);
     if (!displayName || displayName.length > 200 || !ROLES[role]) {
-      throw failure_("ACCESS_COMMAND_INVALID", "Création de compte invalide.");
+      reject_("ACCESS_COMMAND_INVALID", "Création de compte invalide.");
     }
     var view = registryView_();
+    assertRevision_(request, view);
     if (indexFor_(view.accounts, request.accountId) !== -1) {
-      throw failure_("ACCESS_ACCOUNT_EXISTS", "Ce compte existe déjà.");
+      reject_("ACCESS_ACCOUNT_EXISTS", "Ce compte existe déjà.");
     }
     var account = {
       email: request.accountId,
@@ -125,10 +138,11 @@ function AKS_createAccessAccountLifecycleService_(options) {
   function deactivateAccount(command) {
     var request = baseCommand_(command);
     var view = registryView_();
+    assertRevision_(request, view);
     var accounts = JSON.parse(JSON.stringify(view.accounts));
     var index = indexFor_(accounts, request.accountId);
     if (index === -1) {
-      throw failure_("ACCESS_ACCOUNT_NOT_FOUND", "Compte introuvable.");
+      reject_("ACCESS_ACCOUNT_NOT_FOUND", "Compte introuvable.");
     }
     if (accounts[index].status === "INACTIVE") {
       return result_("DEACTIVATE", false, request, view, accounts[index]);
@@ -140,16 +154,17 @@ function AKS_createAccessAccountLifecycleService_(options) {
   function reactivateAccount(command) {
     var request = baseCommand_(command);
     var view = registryView_();
+    assertRevision_(request, view);
     var accounts = JSON.parse(JSON.stringify(view.accounts));
     var index = indexFor_(accounts, request.accountId);
     if (index === -1) {
-      throw failure_("ACCESS_ACCOUNT_NOT_FOUND", "Compte introuvable.");
+      reject_("ACCESS_ACCOUNT_NOT_FOUND", "Compte introuvable.");
     }
     if (accounts[index].status === "ACTIVE") {
       return result_("REACTIVATE", false, request, view, accounts[index]);
     }
     if (accounts[index].assignments.length > 0 && command.clearAssignments !== true) {
-      throw failure_("ACCESS_ASSIGNMENTS_CLEAR_REQUIRED",
+      reject_("ACCESS_ASSIGNMENTS_CLEAR_REQUIRED",
         "La réactivation exige l'effacement confirmé des anciennes habilitations.");
     }
     accounts[index].assignments = [];
