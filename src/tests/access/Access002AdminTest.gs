@@ -432,6 +432,16 @@ function AKS_testAccess002Admin_preservesInactiveHistoricalScope_() {
   assertEquals_(1, fixture.writes());
 }
 
+function AKS_testAccess002Admin_recordsLifecycleRefusalWithoutRegistryWrite_() {
+  var fixture = AKS_access002AdminFixture_();
+  var result = fixture.service.recordRefusal("ACCESS_ACCOUNT_NOT_FOUND");
+  assertEquals_(0, fixture.writes());
+  assertEquals_(1, fixture.auditEvents.length);
+  assertEquals_("REFUSE", fixture.auditEvents[0].result);
+  assertEquals_("ACCESS_ACCOUNT_NOT_FOUND", fixture.auditEvents[0].reasonCode);
+  assertTrue_(String(result.correlationId).indexOf("corr-access-") === 0);
+}
+
 function AKS_runAccess002AdminSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-01", [
     {
@@ -477,6 +487,10 @@ function AKS_runAccess002AdminSuite() {
     {
       name: "refus audité sans écriture",
       test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_
+    },
+    {
+      name: "refus métier de cycle de vie audité",
+      test: AKS_testAccess002Admin_recordsLifecycleRefusalWithoutRegistryWrite_
     },
     {
       name: "écriture refusée avant verrou",

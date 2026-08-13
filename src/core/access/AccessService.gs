@@ -857,6 +857,18 @@ function AKS_createAccessService_(options) {
     }
   }
 
+  function recordAdministrativeRefusalForAdministration(reasonCode) {
+    var actor = currentIdentity_();
+    assertPersistentAudit_();
+    var correlationId = correlationId_();
+    var before = loadedRegistry_();
+    recordRegistryAudit_(
+      actor, correlationId, "REFUSE", upper_(reasonCode),
+      before, before, before, false, false
+    );
+    return immutableCopy_({ correlationId: correlationId });
+  }
+
   function capabilitiesFor_(context, courseCode, season) {
     if (context.legacyBootstrap) {
       return CAPABILITIES;
@@ -939,6 +951,8 @@ function AKS_createAccessService_(options) {
     assertAdministrativeCapability: assertAdministrativeCapability,
     readRegistryForAdministration: readRegistryForAdministration,
     updateRegistryForAdministration: updateRegistryForAdministration,
+    recordAdministrativeRefusalForAdministration:
+      recordAdministrativeRefusalForAdministration,
     getEffectiveAccessContext: effectiveContext,
     saveRegistry: saveRegistry
   });
