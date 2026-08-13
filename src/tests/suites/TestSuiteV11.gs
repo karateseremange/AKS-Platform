@@ -502,6 +502,14 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / recette restauration exacte", test: AKS_testAccess002HabilitationRecipe_restoresExactInitialState_ }
     ,{ name: "ACCESS-002-04 / recette échec écriture auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresFailedSave_ }
     ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
+    ,{ name: "ACCESS-002-05 / portail Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ }
+    ,{ name: "ACCESS-002-05 / portail Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ }
+    ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
+    ,{ name: "ACCESS-002-05 / portail historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ }
+    ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }
+    ,{ name: "ACCESS-002-05 / projection affectations effectives", test: AKS_testAccess002Portal_snapshotContainsOnlyEffectiveAssignments_ }
+    ,{ name: "ACCESS-002-05 / projection rôle sans héritage", test: AKS_testAccess002Portal_snapshotDoesNotInheritFromAccountRole_ }
+    ,{ name: "ACCESS-002-05 / projection immuable", test: AKS_testAccess002Portal_snapshotIsDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
