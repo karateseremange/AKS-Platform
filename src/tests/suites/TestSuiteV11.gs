@@ -497,6 +497,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / historique immuable", test: AKS_testAccess002History_returnsImmutableView_ }
     ,{ name: "ACCESS-002-04 / métadonnées AUDIT fonctionnelles", test: AKS_testAudit001_acceptsAccessFunctionalHistoryMetadata_ }
     ,{ name: "ACCESS-002-04 / historique UI fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
+    ,{ name: "ACCESS-002-04 / recette précontrôle sans écriture", test: AKS_testAccess002HabilitationRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-04 / recette fiche et historique vérifiés", test: AKS_testAccess002HabilitationRecipe_verifiesDetailAndHistory_ }
+    ,{ name: "ACCESS-002-04 / recette restauration exacte", test: AKS_testAccess002HabilitationRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-04 / recette échec écriture auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresFailedSave_ }
+    ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
