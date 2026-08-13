@@ -489,6 +489,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / dates commentaire et synthèse UI", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
     ,{ name: "ACCESS-002-04 / fiche inactive UI en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
     ,{ name: "ACCESS-002-04 / échappement et confirmation UI", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
+    ,{ name: "ACCESS-002-04 / cases compactes et ACCESS unique UI", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
