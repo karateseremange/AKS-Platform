@@ -48,11 +48,21 @@ function AKS_createAuditSheetsGateway_(spreadsheet, sheetName) {
       .map(function (row) { return row.map(String); });
   }
 
+  function listRows_() {
+    var sheet = sheet_();
+    var width = headers_().length;
+    var lastRow = sheet.getLastRow();
+    if (width < 1 || lastRow <= 1) return [];
+    return sheet.getRange(2, 1, lastRow - 1, width).getDisplayValues()
+      .map(function (row) { return row.map(String); });
+  }
+
   return Object.freeze({
     getResourceId: function () { return String(spreadsheet.getId()); },
     getResourceName: function () { return String(spreadsheet.getName()); },
     getHeaders: headers_,
     findRowsByAuditId: findRowsByAuditId_,
+    listRows: listRows_,
     appendRow: function (row) {
       sheet_().appendRow(row.map(function (cell) { return String(cell); }));
     }

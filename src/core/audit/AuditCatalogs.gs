@@ -45,7 +45,9 @@ function AKS_createAuditCatalogs_() {
       DOSSIER_UPDATE: frozenSet_(["attemptCount", "status"]),
       ACCESS_REGISTRY_UPDATE: frozenSet_([
         "beforeRevision", "proposedRevision", "afterRevision",
-        "changedAccountIds", "changedCount", "selfModification", "restored"
+        "changedAccountIds", "changedCount", "selfModification", "restored",
+        "requestId", "operation", "comment", "sensitive",
+        "rolesAdded", "rolesRemoved", "assignmentsAdded", "assignmentsRemoved"
       ])
     }),
     metadataStatuses: frozenSet_([

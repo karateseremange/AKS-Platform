@@ -191,7 +191,8 @@ function AKS_createAccessAccountDetailService_(options) {
         requestId: requestId,
         operation: "SAVE_ACCOUNT_ACCESS",
         comment: comment,
-        sensitive: sensitive
+        sensitive: sensitive,
+        summary: preview.summary
       },
       registry: {
         schemaVersion: "access/1.1",

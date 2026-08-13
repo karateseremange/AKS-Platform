@@ -168,7 +168,8 @@ function AKS_createAuditService_(options) {
       throw error_("AUDIT_EVENT_INVALID", "Schéma de métadonnées d'audit absent.");
     }
     if (action === "ACCESS_REGISTRY_UPDATE" &&
-        Object.keys(schema).some(function (requiredKey) {
+        ["beforeRevision", "proposedRevision", "afterRevision", "changedAccountIds",
+          "changedCount", "selfModification", "restored"].some(function (requiredKey) {
           return !Object.prototype.hasOwnProperty.call(metadata, requiredKey);
         })) {
       throw error_("AUDIT_EVENT_INVALID", "Métadonnées d'accès incomplètes.");
@@ -179,7 +180,8 @@ function AKS_createAuditService_(options) {
       if (!Object.prototype.hasOwnProperty.call(schema, key)) {
         throw error_("AUDIT_EVENT_INVALID", "Métadonnée d'audit interdite.");
       }
-      if (key === "attemptCount" || key === "changedCount") {
+      if (key === "attemptCount" || key === "changedCount" ||
+          key === "assignmentsAdded" || key === "assignmentsRemoved") {
         if (typeof value !== "number" || !isFinite(value) ||
             Math.floor(value) !== value || value < 0 || value > 999 ||
             key === "changedCount" &&
@@ -215,7 +217,34 @@ function AKS_createAuditService_(options) {
           seenAccounts[normalizedId] = true;
           return normalizedId;
         }).sort();
-      } else if (key === "selfModification" || key === "restored") {
+      } else if (key === "rolesAdded" || key === "rolesRemoved") {
+        if (!Array.isArray(value) || value.length > 4 || value.some(function (role, index) {
+          return !/^(ADMINISTRATEUR|ASSISTANT_AFA|CONSULTATION|PROFESSEUR)$/.test(role) ||
+            value.indexOf(role) !== index;
+        })) {
+          throw error_("AUDIT_EVENT_INVALID", "Synthèse des rôles invalide.");
+        }
+        normalized[key] = value.slice().sort();
+      } else if (key === "requestId") {
+        value = text_(value);
+        if (!/^req-[A-Za-z0-9][A-Za-z0-9._:-]{2,95}$/.test(value)) {
+          throw error_("AUDIT_EVENT_INVALID", "Identifiant de requête invalide.");
+        }
+        normalized[key] = value;
+      } else if (key === "operation") {
+        value = upper_(value);
+        if (!/^[A-Z][A-Z0-9_]{1,47}$/.test(value)) {
+          throw error_("AUDIT_EVENT_INVALID", "Opération d'accès invalide.");
+        }
+        normalized[key] = value;
+      } else if (key === "comment") {
+        value = text_(value).replace(/\s+/g, " ");
+        if (value.length > 500) {
+          throw error_("AUDIT_EVENT_INVALID", "Commentaire d'accès invalide.");
+        }
+        normalized[key] = value;
+      } else if (key === "selfModification" || key === "restored" ||
+          key === "sensitive") {
         if (typeof value !== "boolean") {
           throw error_("AUDIT_EVENT_INVALID", "Indicateur d'accès invalide.");
         }

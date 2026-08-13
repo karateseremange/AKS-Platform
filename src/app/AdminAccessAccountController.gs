@@ -8,6 +8,7 @@ function AKS_createAdminAccessAccountController_(options) {
   var accessService = options.accessService;
   var projection = options.projection;
   var detail = options.detail;
+  var history = options.history;
   var lifecycle = options.lifecycle;
   var baseUrlProvider = options.baseUrlProvider || function () { return ""; };
 
@@ -61,6 +62,10 @@ function AKS_createAdminAccessAccountController_(options) {
     saveAccountAccess: function (command) {
       return detail_("saveAccountAccess", command || {});
     },
+    getAccountHistory: function (accountId, cursor) {
+      authorize_();
+      return history.getAccountHistory(accountId, cursor || "");
+    },
     createAccount: function (command) { return command_("createAccount", command); },
     deactivateAccount: function (command) { return command_("deactivateAccount", command); },
     reactivateAccount: function (command) { return command_("reactivateAccount", command); }
@@ -74,6 +79,7 @@ function AKS_createProductionAdminAccessAccountController_() {
     accessService: accessService,
     projection: AKS.Core.AccessAccountProjection.create({ accessAdmin: admin }),
     detail: AKS.Core.AccessAccountDetail.create({ accessAdmin: admin }),
+    history: AKS_createDefaultAccessAccountHistoryService_(),
     lifecycle: AKS.Core.AccessAccountLifecycle.create({ accessAdmin: admin }),
     baseUrlProvider: function () { return ScriptApp.getService().getUrl() || ""; }
   });
@@ -105,6 +111,10 @@ function AKS_previewAdminAccessAccount(command) {
 }
 function AKS_saveAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().saveAccountAccess(command);
+}
+function AKS_getAdminAccessAccountHistory(accountId, cursor) {
+  return AKS_createProductionAdminAccessAccountController_()
+    .getAccountHistory(accountId, cursor);
 }
 function AKS_deactivateAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().deactivateAccount(command);

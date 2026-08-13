@@ -153,6 +153,27 @@ function AKS_testAudit001_persistsAndRereadsCompleteProof_() {
   assertEquals_(1, fixture.releases());
 }
 
+function AKS_testAudit001_acceptsAccessFunctionalHistoryMetadata_() {
+  var fixture = AKS_audit001Fixture_();
+  var proof = fixture.service.record(AKS_audit001Event_({
+    action: "ACCESS_REGISTRY_UPDATE", module: "ACCESS",
+    targetType: "ACCESS_REGISTRY", targetId: "AKS_ACCESS_REGISTRY",
+    metadata: {
+      beforeRevision: "access-rev/1-a-a-a", proposedRevision: "access-rev/1-b-b-b",
+      afterRevision: "access-rev/1-b-b-b", changedAccountIds: ["target@example.com"],
+      changedCount: 1, selfModification: false, restored: false,
+      requestId: "req-audit-history-001", operation: "SAVE_ACCOUNT_ACCESS",
+      comment: "Ajustement annuel", sensitive: false,
+      rolesAdded: ["CONSULTATION"], rolesRemoved: [],
+      assignmentsAdded: 1, assignmentsRemoved: 0
+    }
+  }));
+  var metadata = JSON.parse(proof.metadata_json);
+  assertEquals_("req-audit-history-001", metadata.requestId);
+  assertEquals_("Ajustement annuel", metadata.comment);
+  assertEquals_(1, metadata.assignmentsAdded);
+}
+
 function AKS_testAudit001_resolvesServerIdentities_() {
   var proof = AKS_audit001Fixture_().service.record(AKS_audit001Event_({
     actorId: "attacker@example.com",
@@ -610,6 +631,9 @@ function AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_() {
   var found = gateway.findRowsByAuditId("aud-gateway-001");
   assertEquals_(1, found.length);
   assertEquals_(JSON.stringify(candidate), JSON.stringify(found[0]));
+  var listed = gateway.listRows();
+  assertEquals_(1, listed.length);
+  assertEquals_(JSON.stringify(candidate), JSON.stringify(listed[0]));
 }
 
 function AKS_testAudit001_sheetsGatewayRejectsMissingSheet_() {

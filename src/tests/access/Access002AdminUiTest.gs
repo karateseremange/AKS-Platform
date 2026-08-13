@@ -18,8 +18,12 @@ function AKS_access002AdminUiFixture_(authorized) {
     previewAccountAccess: function () { calls.push("preview"); return { changed: false }; },
     saveAccountAccess: function () { calls.push("save-access"); return { changed: true }; }
   };
+  var history = { getAccountHistory: function () {
+    calls.push("history"); return { entries: [], hasMore: false };
+  }};
   return { calls: calls, controller: AKS_createAdminAccessAccountController_({
     accessService: access, projection: projection, lifecycle: lifecycle, detail: detail,
+    history: history,
     baseUrlProvider: function () { return "https://example.test/exec"; }
   }) };
 }
@@ -54,9 +58,10 @@ function AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_() {
   fixture.controller.getAccountDetail("teacher@example.com");
   fixture.controller.previewAccountAccess({});
   fixture.controller.saveAccountAccess({});
+  fixture.controller.getAccountHistory("teacher@example.com", "");
   assertEquals_(JSON.stringify([
     "authorize:ACCESS_MANAGE", "detail", "authorize:ACCESS_MANAGE", "preview",
-    "authorize:ACCESS_MANAGE", "save-access"
+    "authorize:ACCESS_MANAGE", "save-access", "authorize:ACCESS_MANAGE", "history"
   ]), JSON.stringify(fixture.calls));
 }
 
@@ -126,6 +131,16 @@ function AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_() {
   assertTrue_(client.indexOf('module==="ACCESS"&&existing') !== -1);
 }
 
+function AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_() {
+  var html = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccounts");
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(html.indexOf("Historique des modifications") !== -1);
+  assertTrue_(client.indexOf("AKS_getAdminAccessAccountHistory") !== -1);
+  assertTrue_(client.indexOf("historyCursor") !== -1);
+  assertTrue_(client.indexOf("entry.comment") !== -1);
+  assertEquals_(-1, client.indexOf("metadata_json"));
+}
+
 function AKS_runAccess002AdminUiSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-03 — interface d’administration", [
     { name: "route refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ },
@@ -140,5 +155,6 @@ function AKS_runAccess002AdminUiSuite() {
     ,{ name: "fiche inactive en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
     ,{ name: "échappement et confirmation", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
     ,{ name: "cases compactes et ACCESS unique", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
+    ,{ name: "historique fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
   ]);
 }
