@@ -79,6 +79,45 @@ function AKS_testAccess002AdminUi_exposesSafeInteractiveStates_() {
   assertTrue_(html.indexOf("clearAssignments") !== -1);
 }
 
+function AKS_testAccess002AdminUi_exposesFourAccessCards_() {
+  var html = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccounts");
+  ["ATTENDANCE", "ANALYTICS", "INSCRIPTIONS", "ACCESS"].forEach(function (module) {
+    assertTrue_(html.indexOf('data-module="' + module + '"') !== -1);
+  });
+  assertTrue_(html.indexOf("Rôles descriptifs") !== -1);
+}
+
+function AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_() {
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(client.indexOf("AKS_getAdminAccessAccountDetail") !== -1);
+  assertTrue_(client.indexOf("AKS_previewAdminAccessAccount") !== -1);
+  assertTrue_(client.indexOf("AKS_saveAdminAccessAccount") !== -1);
+  assertTrue_(client.indexOf("Gérer les habilitations") !== -1);
+}
+
+function AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_() {
+  var html = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccounts");
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(html.indexOf('maxlength="500"') !== -1);
+  assertTrue_(client.indexOf('type=\\"date\\"') !== -1);
+  assertTrue_(client.indexOf("rolesAdded") !== -1);
+  assertTrue_(client.indexOf("assignmentsRemoved") !== -1);
+}
+
+function AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_() {
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(client.indexOf("!currentDetail.account.editable") !== -1);
+  assertTrue_(client.indexOf("document.getElementById(\"access-preview\").disabled") !== -1);
+}
+
+function AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_() {
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(client.indexOf("&quot;") !== -1);
+  assertTrue_(client.indexOf("attr(a.courseCode)") !== -1);
+  assertTrue_(client.indexOf("window.confirm") !== -1);
+  assertTrue_(client.indexOf("confirmSensitive=true") !== -1);
+}
+
 function AKS_runAccess002AdminUiSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-03 — interface d’administration", [
     { name: "route refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ },
@@ -87,5 +126,10 @@ function AKS_runAccess002AdminUiSuite() {
     { name: "fiche et prévisualisation réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ },
     { name: "navigation conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ },
     { name: "états interactifs sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
+    ,{ name: "quatre cartes d'habilitations", test: AKS_testAccess002AdminUi_exposesFourAccessCards_ }
+    ,{ name: "workflow de fiche protégé", test: AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_ }
+    ,{ name: "dates commentaire et synthèse", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
+    ,{ name: "fiche inactive en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
+    ,{ name: "échappement et confirmation", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
   ]);
 }
