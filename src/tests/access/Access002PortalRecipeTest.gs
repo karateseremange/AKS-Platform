@@ -58,9 +58,13 @@ function AKS_testAccess002PortalRecipe_preflightIsReadOnly_() {
   assertEquals_(JSON.stringify(["preflight"]), JSON.stringify(fixture.calls));
 }
 function AKS_testAccess002PortalRecipe_verifiesMultipleProfiles_() {
-  var result = AKS_access002PortalRecipeFixture_().recipe.apply();
+  var fixture = AKS_access002PortalRecipeFixture_(), result = fixture.recipe.apply();
   assertEquals_(true, result.noAccessVerified); assertEquals_(true, result.attendanceOnlyVerified);
   assertEquals_(true, result.myAccessVerified); assertEquals_(true, result.forbiddenDestinationsHidden);
+  var assignment = fixture.accounts["teacher@example.com"].assignments[0];
+  assertEquals_("", assignment.module);
+  assertEquals_("2099-2100", assignment.season);
+  assertEquals_("ACCESS00205RECIPE", assignment.courseCode);
 }
 function AKS_testAccess002PortalRecipe_restoresExactInitialState_() {
   var fixture = AKS_access002PortalRecipeFixture_(); fixture.recipe.apply();
