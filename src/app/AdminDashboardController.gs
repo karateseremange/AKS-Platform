@@ -16,10 +16,11 @@ AKS.Admin.Dashboard = (function () {
     }
   }
 
-  function buildViewModel_(authorizedEmail, baseUrl) {
+  function buildViewModel_(authorizedEmail, baseUrl, accessManageAuthorized) {
     var releaseInfo = AKS.Version.getReleaseInfo();
     var navigation = AKS.Admin.Navigation.getModel(
-      typeof baseUrl === "string" ? baseUrl : getWebAppUrl_()
+      typeof baseUrl === "string" ? baseUrl : getWebAppUrl_(),
+      accessManageAuthorized === true
     );
 
     return Object.freeze({
@@ -42,7 +43,12 @@ AKS.Admin.Dashboard = (function () {
 
   function getViewModel() {
     var authorizedEmail = AKS.Admin.Access.assertCurrentUserAuthorized();
-    return buildViewModel_(authorizedEmail);
+    var accessManageAuthorized = false;
+    try {
+      accessManageAuthorized =
+        AKS_createAccessService_().assertAdministrativeCapability("ACCESS_MANAGE") === true;
+    } catch (ignoredAccessRefusal) {}
+    return buildViewModel_(authorizedEmail, undefined, accessManageAuthorized);
   }
 
   function render() {
@@ -58,10 +64,11 @@ AKS.Admin.Dashboard = (function () {
   return Object.freeze({
     getViewModel: getViewModel,
     render: render,
-    buildViewModelForAuthorizedUser: function (email, baseUrl) {
+    buildViewModelForAuthorizedUser: function (email, baseUrl, accessManageAuthorized) {
       return buildViewModel_(
         AKS.Admin.Access.assertAuthorized(email),
-        baseUrl
+        baseUrl,
+        accessManageAuthorized
       );
     }
   });

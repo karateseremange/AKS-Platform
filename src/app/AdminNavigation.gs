@@ -140,7 +140,7 @@ function AKS_createAdminNavigation_(options) {
 }
 
 AKS.Admin.Navigation = Object.freeze({
-  getModel: function (baseUrl) {
+  getModel: function (baseUrl, accessManageAuthorized) {
     var entries = [{
       id: "admin.config",
       label: "Paramétrage",
@@ -149,6 +149,15 @@ AKS.Admin.Navigation = Object.freeze({
       available: true,
       authorized: true,
       priority: 10,
+      quickAction: true
+    }, {
+      id: "admin.access",
+      label: "Comptes et accès",
+      family: "administration",
+      target: "?app=access",
+      available: true,
+      authorized: accessManageAuthorized === true,
+      priority: 15,
       quickAction: true
     }, {
       id: "admin.logs",
