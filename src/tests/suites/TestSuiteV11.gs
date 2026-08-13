@@ -423,6 +423,17 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-02 / rôle d'affectation non détenu refusé", test: AKS_testAccess002ExplicitManage_rejectsRoleNotHeldByAccount_ }
     ,{ name: "ACCESS-002-02 / dernier gestionnaire explicite préservé", test: AKS_testAccess002ExplicitManage_preservesLastExplicitManager_ }
     ,{ name: "ACCESS-002-02 / gestionnaire historique migré vers habilitation explicite", test: AKS_testAccess002ExplicitManage_migratesHistoricalManager_ }
+    ,{ name: "ACCESS-002-03 / synthèse effective sûre", test: AKS_testAccess002Projection_buildsSafeEffectiveSummary_ }
+    ,{ name: "ACCESS-002-03 / gestionnaire explicite effectif", test: AKS_testAccess002Projection_marksManagerOnlyFromEffectiveAssignment_ }
+    ,{ name: "ACCESS-002-03 / recherche et filtres combinés", test: AKS_testAccess002Projection_normalizesSearchAndCombinedFilters_ }
+    ,{ name: "ACCESS-002-03 / états futur et sans habilitation", test: AKS_testAccess002Projection_filtersFutureAndWithoutAssignment_ }
+    ,{ name: "ACCESS-002-03 / affectation future non effective", test: AKS_testAccess002Projection_marksFutureWhenNoAssignmentIsEffective_ }
+    ,{ name: "ACCESS-002-03 / modules issus des capacités effectives", test: AKS_testAccess002Projection_derivesModulesFromEffectiveCapabilities_ }
+    ,{ name: "ACCESS-002-03 / tri stable", test: AKS_testAccess002Projection_sortsActiveThenNameThenEmail_ }
+    ,{ name: "ACCESS-002-03 / filtres inconnus refusés", test: AKS_testAccess002Projection_rejectsUnknownFiltersBeforeRead_ }
+    ,{ name: "ACCESS-002-03 / refus administratif propagé", test: AKS_testAccess002Projection_propagatesAdministrativeRefusal_ }
+    ,{ name: "ACCESS-002-03 / projection profondément immuable", test: AKS_testAccess002Projection_returnsDeeplyImmutableDefensiveView_ }
+    ,{ name: "ACCESS-002-03 / lecture seule", test: AKS_testAccess002Projection_isReadOnly_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
