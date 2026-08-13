@@ -58,6 +58,9 @@ function AKS_createAdminAccessAccountController_(options) {
     previewAccountAccess: function (command) {
       return detail_("previewAccountAccess", command || {});
     },
+    saveAccountAccess: function (command) {
+      return detail_("saveAccountAccess", command || {});
+    },
     createAccount: function (command) { return command_("createAccount", command); },
     deactivateAccount: function (command) { return command_("deactivateAccount", command); },
     reactivateAccount: function (command) { return command_("reactivateAccount", command); }
@@ -99,6 +102,9 @@ function AKS_getAdminAccessAccountDetail(accountId) {
 }
 function AKS_previewAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().previewAccountAccess(command);
+}
+function AKS_saveAdminAccessAccount(command) {
+  return AKS_createProductionAdminAccessAccountController_().saveAccountAccess(command);
 }
 function AKS_deactivateAdminAccessAccount(command) {
   return AKS_createProductionAdminAccessAccountController_().deactivateAccount(command);
