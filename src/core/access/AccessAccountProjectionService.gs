@@ -21,6 +21,14 @@ function AKS_createAccessAccountProjectionService_(options) {
   var MODULES = ["ACCESS", "ANALYTICS", "ATTENDANCE", "INSCRIPTIONS"];
   var STATUSES = ["ACTIVE", "INACTIVE"];
   var TEMPORAL_STATES = ["EFFECTIVE", "FUTURE", "EXPIRED", "WITHOUT_ASSIGNMENT"];
+  var ATTENDANCE_ROLES = {
+    PROFESSEUR: true, ASSISTANT_AFA: true, CONSULTATION: true
+  };
+  var ATTENDANCE_CAPABILITIES = {
+    COURSE_LIST: true, SESSION_LIST: true, ATTENDANCE_READ: true,
+    SESSION_CREATE: true, ATTENDANCE_WRITE_DRAFT: true,
+    SESSION_CLOSE: true, ATTENDANCE_CORRECT_CLOSED: true
+  };
 
   function error_(code, message) {
     var failure = new Error(message);
@@ -112,12 +120,23 @@ function AKS_createAccessAccountProjectionService_(options) {
     return "EFFECTIVE";
   }
 
-  function modulesFor_(assignment) {
+  function modulesFor_(account, assignment) {
     var modules = {};
-    if (assignment.module === "ACCESS") modules.ACCESS = true;
-    if (assignment.module === "INSCRIPTIONS") modules.INSCRIPTIONS = true;
-    if (!assignment.module && assignment.courseCode) modules.ATTENDANCE = true;
-    (assignment.extraCapabilities || []).forEach(function (capability) {
+    var capabilities = assignment.extraCapabilities || [];
+    var heldAssignmentRoles = (assignment.roles || []).filter(function (role) {
+      return (account.roles || []).indexOf(role) !== -1;
+    });
+    if (assignment.module === "ACCESS" &&
+        capabilities.indexOf("ACCESS_MANAGE") !== -1) modules.ACCESS = true;
+    if (assignment.module === "INSCRIPTIONS" && capabilities.some(function (capability) {
+      return String(capability).indexOf("INSCRIPTIONS_") === 0;
+    })) modules.INSCRIPTIONS = true;
+    if (!assignment.module && assignment.courseCode &&
+        (heldAssignmentRoles.some(function (role) { return ATTENDANCE_ROLES[role]; }) ||
+          capabilities.some(function (capability) {
+            return ATTENDANCE_CAPABILITIES[capability] === true;
+          }))) modules.ATTENDANCE = true;
+    capabilities.forEach(function (capability) {
       if (String(capability).indexOf("ANALYTICS_") === 0) modules.ANALYTICS = true;
     });
     return Object.keys(modules).sort();
@@ -142,7 +161,9 @@ function AKS_createAccessAccountProjectionService_(options) {
     var effectiveModules = {};
     assignments.forEach(function (assignment, index) {
       if (states[index] !== "EFFECTIVE") return;
-      modulesFor_(assignment).forEach(function (module) { effectiveModules[module] = true; });
+      modulesFor_(account, assignment).forEach(function (module) {
+        effectiveModules[module] = true;
+      });
     });
     return {
       accountId: lower_(account.email),
