@@ -448,6 +448,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / refus du socle audité propagé", test: AKS_testAccess002Lifecycle_propagatesAuditedBoundaryFailure_ }
     ,{ name: "ACCESS-002-03 / révision transmise au socle", test: AKS_testAccess002Lifecycle_passesExpectedRevisionToBoundary_ }
     ,{ name: "ACCESS-002-03 / résultat de cycle de vie immuable", test: AKS_testAccess002Lifecycle_returnsImmutableResult_ }
+    ,{ name: "ACCESS-002-03 / route UI refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ }
+    ,{ name: "ACCESS-002-03 / modèle UI protégé", test: AKS_testAccess002AdminUi_buildsProtectedViewModel_ }
+    ,{ name: "ACCESS-002-03 / commandes UI réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ }
+    ,{ name: "ACCESS-002-03 / navigation UI conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ }
+    ,{ name: "ACCESS-002-03 / états UI sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
