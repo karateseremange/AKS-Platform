@@ -510,6 +510,14 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / projection affectations effectives", test: AKS_testAccess002Portal_snapshotContainsOnlyEffectiveAssignments_ }
     ,{ name: "ACCESS-002-05 / projection rôle sans héritage", test: AKS_testAccess002Portal_snapshotDoesNotInheritFromAccountRole_ }
     ,{ name: "ACCESS-002-05 / projection immuable", test: AKS_testAccess002Portal_snapshotIsDeeplyImmutable_ }
+    ,{ name: "ACCESS-002-05 / Mes accès projection effective", test: AKS_testAccess002MyAccess_returnsEffectiveProjection_ }
+    ,{ name: "ACCESS-002-05 / Mes accès état vide neutre", test: AKS_testAccess002MyAccess_returnsNeutralEmptyState_ }
+    ,{ name: "ACCESS-002-05 / Mes accès bootstrap refusé", test: AKS_testAccess002MyAccess_rejectsBootstrapIdentity_ }
+    ,{ name: "ACCESS-002-05 / Mes accès vue immuable", test: AKS_testAccess002MyAccess_returnsDeeplyImmutableView_ }
+    ,{ name: "ACCESS-002-05 / Mes accès contrôleur personnel", test: AKS_testAccess002MyAccess_controllerBuildsPersonalModel_ }
+    ,{ name: "ACCESS-002-05 / Mes accès API sans cible", test: AKS_testAccess002MyAccess_publicApiAcceptsNoTargetIdentity_ }
+    ,{ name: "ACCESS-002-05 / Mes accès route lecture seule", test: AKS_testAccess002MyAccess_exposesReadOnlyRouteAndView_ }
+    ,{ name: "ACCESS-002-05 / Mes accès refus générique", test: AKS_testAccess002MyAccess_deniedViewLeaksNoIdentity_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
