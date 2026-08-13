@@ -909,6 +909,31 @@ function AKS_createAccessService_(options) {
     }
   }
 
+  function previewRegistryForAdministration(command) {
+    var actor = currentIdentity_();
+    var now = now_();
+    var current = loadedRegistry_();
+    authorizeRegistryWrite_(current, actor, now);
+    if (!command || typeof command !== "object" ||
+        typeof command.expectedRevision !== "string" ||
+        !command.expectedRevision.trim() || !command.registry) {
+      throw error_("ACCESS_COMMAND_INVALID", "Commande de prévisualisation invalide.");
+    }
+    if (command.expectedRevision !== revisionFor_(current)) {
+      throw error_("ACCESS_REGISTRY_CONFLICT", "Le registre a été modifié entre-temps.");
+    }
+    var proposed = normalizeRegistry_(command.registry);
+    proposed = normalizeRegistry_(proposed);
+    validateRegistryScopes_(proposed, now);
+    assertActiveManagerRemains_(proposed, now);
+    return immutableCopy_({
+      schemaVersion: SCHEMA_VERSION,
+      accounts: proposed.accounts,
+      revision: revisionFor_(current),
+      proposedRevision: revisionFor_(proposed)
+    });
+  }
+
   function recordAdministrativeRefusalForAdministration(reasonCode) {
     var actor = currentIdentity_();
     assertPersistentAudit_();
@@ -1003,6 +1028,7 @@ function AKS_createAccessService_(options) {
     assertInscriptionsCapability: assertInscriptionsCapability,
     assertAdministrativeCapability: assertAdministrativeCapability,
     readRegistryForAdministration: readRegistryForAdministration,
+    previewRegistryForAdministration: previewRegistryForAdministration,
     updateRegistryForAdministration: updateRegistryForAdministration,
     recordAdministrativeRefusalForAdministration:
       recordAdministrativeRefusalForAdministration,

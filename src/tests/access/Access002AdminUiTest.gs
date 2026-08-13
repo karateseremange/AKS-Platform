@@ -13,8 +13,12 @@ function AKS_access002AdminUiFixture_(authorized) {
     deactivateAccount: function () { calls.push("deactivate"); return { changed: true }; },
     reactivateAccount: function () { calls.push("reactivate"); return { changed: true }; }
   };
+  var detail = {
+    getAccountDetail: function () { calls.push("detail"); return { account: {} }; },
+    previewAccountAccess: function () { calls.push("preview"); return { changed: false }; }
+  };
   return { calls: calls, controller: AKS_createAdminAccessAccountController_({
-    accessService: access, projection: projection, lifecycle: lifecycle,
+    accessService: access, projection: projection, lifecycle: lifecycle, detail: detail,
     baseUrlProvider: function () { return "https://example.test/exec"; }
   }) };
 }
@@ -44,6 +48,15 @@ function AKS_testAccess002AdminUi_reauthorizesEveryCommand_() {
   ]), JSON.stringify(fixture.calls));
 }
 
+function AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_() {
+  var fixture = AKS_access002AdminUiFixture_(true);
+  fixture.controller.getAccountDetail("teacher@example.com");
+  fixture.controller.previewAccountAccess({});
+  assertEquals_(JSON.stringify([
+    "authorize:ACCESS_MANAGE", "detail", "authorize:ACCESS_MANAGE", "preview"
+  ]), JSON.stringify(fixture.calls));
+}
+
 function AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_() {
   var hidden = AKS.Admin.Navigation.getModel("https://example.test/exec", false);
   var visible = AKS.Admin.Navigation.getModel("https://example.test/exec", true);
@@ -68,6 +81,7 @@ function AKS_runAccess002AdminUiSuite() {
     { name: "route refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ },
     { name: "modèle protégé", test: AKS_testAccess002AdminUi_buildsProtectedViewModel_ },
     { name: "commandes réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ },
+    { name: "fiche et prévisualisation réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ },
     { name: "navigation conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ },
     { name: "états interactifs sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
   ]);

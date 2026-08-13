@@ -468,6 +468,16 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / catalogue fermé immuable", test: AKS_testAccess002Schema11_exposesClosedImmutableCatalogue_ }
     ,{ name: "ACCESS-002-04 / écriture canonique access 1.1", test: AKS_testAccess002Schema11_canonicalizesAuthorizedWrite_ }
     ,{ name: "ACCESS-002-04 / écriture Analytics historique non sûre refusée", test: AKS_testAccess002Schema11_rejectsUnsafeLegacyAnalyticsWrite_ }
+    ,{ name: "ACCESS-002-04 / fiche minimisée et catalogues", test: AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_ }
+    ,{ name: "ACCESS-002-04 / cible invalide ou inconnue", test: AKS_testAccess002Detail_rejectsInvalidOrUnknownTarget_ }
+    ,{ name: "ACCESS-002-04 / refus administratif de fiche", test: AKS_testAccess002Detail_propagatesAdministrativeRefusal_ }
+    ,{ name: "ACCESS-002-04 / prévisualisation des rôles", test: AKS_testAccess002Detail_previewsRolesWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / prévisualisation Analytics autonome", test: AKS_testAccess002Detail_previewsIndependentAnalytics_ }
+    ,{ name: "ACCESS-002-04 / synthèse sans changement", test: AKS_testAccess002Detail_returnsNoChangeSummary_ }
+    ,{ name: "ACCESS-002-04 / révision obsolète refusée", test: AKS_testAccess002Detail_rejectsStalePreview_ }
+    ,{ name: "ACCESS-002-04 / proposition invalide refusée", test: AKS_testAccess002Detail_rejectsInvalidProposalWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / compte inactif non modifiable", test: AKS_testAccess002Detail_rejectsInactiveModification_ }
+    ,{ name: "ACCESS-002-04 / API fiche et aperçu réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
