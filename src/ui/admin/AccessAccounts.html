@@ -14,4 +14,19 @@
   </section>
   <form id="access-create"><h2>Créer un compte</h2><input name="displayName" required maxlength="200" placeholder="Nom affiché"><input name="email" required type="email" placeholder="Adresse e-mail"><select name="role" required><? viewModel.roles.forEach(function(role) { ?><option value="<?= role ?>"><?= role ?></option><? }); ?></select><button type="submit">Créer inactif</button></form>
   <p id="access-count"></p><section id="access-list" aria-live="polite"></section>
+  <section id="access-detail" class="access-detail" hidden aria-labelledby="access-detail-title">
+    <div class="access-detail__head"><div><p class="eyebrow">Fiche utilisateur</p><h2 id="access-detail-title">Habilitations</h2><p id="access-detail-identity"></p></div><button type="button" id="access-detail-close">Fermer</button></div>
+    <form id="access-detail-form">
+      <fieldset id="access-detail-roles"><legend>Rôles descriptifs</legend></fieldset>
+      <div class="access-cards">
+        <section class="access-card" data-module="ATTENDANCE"><h3>Présences</h3><p>Saisons et cours explicitement autorisés.</p><div class="access-card__rows"></div><button type="button" data-add="ATTENDANCE">Ajouter une habilitation Présences</button></section>
+        <section class="access-card" data-module="ANALYTICS"><h3>Analytics</h3><p>Lecture, prévisualisation et publication indépendantes.</p><div class="access-card__rows"></div><button type="button" data-add="ANALYTICS">Ajouter une habilitation Analytics</button></section>
+        <section class="access-card" data-module="INSCRIPTIONS"><h3>Inscriptions</h3><p>Capacités fines par saison, section et cours.</p><div class="access-card__rows"></div><button type="button" data-add="INSCRIPTIONS">Ajouter une habilitation Inscriptions</button></section>
+        <section class="access-card access-card--sensitive" data-module="ACCESS"><h3>Administration ACCESS</h3><p>Capacité sensible de gestion des comptes et habilitations.</p><div class="access-card__rows"></div><button type="button" data-add="ACCESS">Ajouter ACCESS_MANAGE</button></section>
+      </div>
+      <label class="access-comment">Commentaire facultatif<textarea id="access-detail-comment" maxlength="500" rows="3"></textarea></label>
+      <div class="access-detail__actions"><button type="submit" id="access-preview">Prévisualiser les modifications</button></div>
+    </form>
+    <section id="access-preview-result" class="access-preview" hidden aria-live="polite"><h3>Synthèse avant enregistrement</h3><div id="access-preview-summary"></div><button type="button" id="access-save">Confirmer et enregistrer</button></section>
+  </section>
 </main><?!= AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient"); ?></body></html>
