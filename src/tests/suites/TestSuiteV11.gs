@@ -428,6 +428,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / recherche et filtres combinés", test: AKS_testAccess002Projection_normalizesSearchAndCombinedFilters_ }
     ,{ name: "ACCESS-002-03 / états futur et sans habilitation", test: AKS_testAccess002Projection_filtersFutureAndWithoutAssignment_ }
     ,{ name: "ACCESS-002-03 / affectation future non effective", test: AKS_testAccess002Projection_marksFutureWhenNoAssignmentIsEffective_ }
+    ,{ name: "ACCESS-002-03 / modules issus des capacités effectives", test: AKS_testAccess002Projection_derivesModulesFromEffectiveCapabilities_ }
     ,{ name: "ACCESS-002-03 / tri stable", test: AKS_testAccess002Projection_sortsActiveThenNameThenEmail_ }
     ,{ name: "ACCESS-002-03 / filtres inconnus refusés", test: AKS_testAccess002Projection_rejectsUnknownFiltersBeforeRead_ }
     ,{ name: "ACCESS-002-03 / refus administratif propagé", test: AKS_testAccess002Projection_propagatesAdministrativeRefusal_ }
