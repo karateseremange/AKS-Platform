@@ -406,12 +406,14 @@ function AKS_createAccess002Recipe_(ports) {
   return Object.freeze({ preflight: preflight, apply: apply, restore: restore });
 }
 
-function AKS_createDefaultAccess002Recipe_() {
+function AKS_createDefaultAccess002Recipe_(options) {
+  options = options || {};
   var propertyStore = PropertiesService.getScriptProperties();
   function identityService_(identity, lockAlreadyHeld) {
     return AKS_createAccessService_({
       identityProvider: function () { return identity; },
       registryStore: AKS_createAccessRegistryStore_(propertyStore),
+      courseProvider: options.courseProvider,
       registryLock: lockAlreadyHeld ? {
         tryLock: function () { return true; },
         releaseLock: function () {}
