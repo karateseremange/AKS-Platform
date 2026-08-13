@@ -106,6 +106,7 @@ function AKS_createAccessAccountLifecycleService_(options) {
   function update_(action, request, view, accounts, account) {
     var updated = accessAdmin.updateRegistry({
       expectedRevision: request.expectedRevision,
+      auditContext: { requestId: request.requestId, operation: action },
       registry: { schemaVersion: "access/1.0", accounts: accounts }
     });
     var updatedIndex = indexFor_(updated.accounts, request.accountId);

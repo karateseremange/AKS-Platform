@@ -3,8 +3,24 @@ function AKS_access002DetailFixture_(overrides) {
   var base = AKS_access002AdminFixture_(overrides);
   return {
     service: AKS_createAccessAccountDetailService_({ accessAdmin: base.service }),
-    writes: base.writes
+    writes: base.writes,
+    auditEvents: base.auditEvents,
+    registry: base.registry
   };
+}
+
+function AKS_access002SaveCommand_(detail, overrides) {
+  var command = {
+    accountId: detail.account.accountId,
+    expectedRevision: detail.revision,
+    requestId: "req-access00204-save-001",
+    comment: "Ajustement validé",
+    confirmSensitive: false,
+    roles: detail.account.roles.slice(),
+    assignments: JSON.parse(JSON.stringify(detail.account.assignments))
+  };
+  Object.keys(overrides || {}).forEach(function (key) { command[key] = overrides[key]; });
+  return command;
 }
 
 function AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_() {
@@ -135,6 +151,94 @@ function AKS_testAccess002Detail_rejectsInactiveModification_() {
   assertEquals_(0, inactiveFixture.writes());
 }
 
+function AKS_testAccess002Detail_savesOnlyTargetWithAuditContext_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("teacher@example.com");
+  var command = AKS_access002SaveCommand_(detail);
+  command.roles.push("CONSULTATION");
+  var result = fixture.service.saveAccountAccess(command);
+  assertEquals_(true, result.changed);
+  assertEquals_("req-access00204-save-001", result.requestId);
+  assertEquals_(1, fixture.writes());
+  assertEquals_(2, fixture.registry().accounts.length);
+  assertEquals_("admin@example.com", fixture.registry().accounts[0].email);
+  assertEquals_(2, fixture.auditEvents.length);
+  assertEquals_("req-access00204-save-001",
+    fixture.auditEvents[1].metadata.requestId);
+  assertEquals_("Ajustement validé", fixture.auditEvents[1].metadata.comment);
+  assertEquals_("SAVE_ACCOUNT_ACCESS", fixture.auditEvents[1].metadata.operation);
+}
+
+function AKS_testAccess002Detail_rejectsNoChangeWithoutWrite_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("teacher@example.com");
+  assertThrows_(function () {
+    fixture.service.saveAccountAccess(AKS_access002SaveCommand_(detail));
+  }, "ACCESS_NO_CHANGE");
+  assertEquals_(0, fixture.writes());
+}
+
+function AKS_testAccess002Detail_requiresSensitiveManageConfirmation_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("teacher@example.com");
+  var command = AKS_access002SaveCommand_(detail);
+  command.assignments.push({
+    module: "ACCESS", season: "*", section: "", courseCode: "",
+    status: "ACTIVE", roles: ["PROFESSEUR"],
+    capabilities: ["ACCESS_MANAGE"], validFrom: "", validUntil: ""
+  });
+  assertThrows_(function () { fixture.service.saveAccountAccess(command); },
+    "ACCESS_SENSITIVE_CONFIRMATION_REQUIRED");
+  assertEquals_(0, fixture.writes());
+  command.confirmSensitive = true;
+  var result = fixture.service.saveAccountAccess(command);
+  assertEquals_(true, result.sensitive);
+  assertEquals_(1, fixture.writes());
+}
+
+function AKS_testAccess002Detail_requiresSelfModificationConfirmation_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("admin@example.com");
+  var command = AKS_access002SaveCommand_(detail, {
+    requestId: "req-access00204-self-001",
+    roles: ["ADMINISTRATEUR", "CONSULTATION"]
+  });
+  assertThrows_(function () { fixture.service.saveAccountAccess(command); },
+    "ACCESS_SENSITIVE_CONFIRMATION_REQUIRED");
+  assertEquals_(0, fixture.writes());
+  command.confirmSensitive = true;
+  var result = fixture.service.saveAccountAccess(command);
+  assertEquals_(true, result.sensitive);
+  assertEquals_(1, fixture.writes());
+}
+
+function AKS_testAccess002Detail_doubleSubmissionMutatesOnce_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("teacher@example.com");
+  var command = AKS_access002SaveCommand_(detail);
+  command.roles.push("CONSULTATION");
+  fixture.service.saveAccountAccess(command);
+  assertThrows_(function () { fixture.service.saveAccountAccess(command); },
+    "ACCESS_REGISTRY_CONFLICT");
+  assertEquals_(1, fixture.writes());
+}
+
+function AKS_testAccess002Detail_rejectsInvalidRequestMetadata_() {
+  var fixture = AKS_access002DetailFixture_();
+  var detail = fixture.service.getAccountDetail("teacher@example.com");
+  var invalidId = AKS_access002SaveCommand_(detail, { requestId: "invalid" });
+  invalidId.roles.push("CONSULTATION");
+  assertThrows_(function () { fixture.service.saveAccountAccess(invalidId); },
+    "ACCESS_COMMAND_INVALID");
+  var longComment = AKS_access002SaveCommand_(detail, {
+    comment: new Array(502).join("x")
+  });
+  longComment.roles.push("CONSULTATION");
+  assertThrows_(function () { fixture.service.saveAccountAccess(longComment); },
+    "ACCESS_COMMAND_INVALID");
+  assertEquals_(0, fixture.writes());
+}
+
 function AKS_runAccess002AccountDetailSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-04 — fiche et prévisualisation", [
     { name: "fiche minimisée et catalogues", test: AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_ },
@@ -146,5 +250,11 @@ function AKS_runAccess002AccountDetailSuite() {
     { name: "révision obsolète refusée", test: AKS_testAccess002Detail_rejectsStalePreview_ },
     { name: "proposition invalide refusée", test: AKS_testAccess002Detail_rejectsInvalidProposalWithoutWrite_ },
     { name: "compte inactif non modifiable", test: AKS_testAccess002Detail_rejectsInactiveModification_ }
+    ,{ name: "enregistrement ciblé audité", test: AKS_testAccess002Detail_savesOnlyTargetWithAuditContext_ }
+    ,{ name: "absence de changement refusée", test: AKS_testAccess002Detail_rejectsNoChangeWithoutWrite_ }
+    ,{ name: "confirmation ACCESS_MANAGE", test: AKS_testAccess002Detail_requiresSensitiveManageConfirmation_ }
+    ,{ name: "confirmation auto-modification", test: AKS_testAccess002Detail_requiresSelfModificationConfirmation_ }
+    ,{ name: "double soumission bornée", test: AKS_testAccess002Detail_doubleSubmissionMutatesOnce_ }
+    ,{ name: "métadonnées de commande bornées", test: AKS_testAccess002Detail_rejectsInvalidRequestMetadata_ }
   ]);
 }
