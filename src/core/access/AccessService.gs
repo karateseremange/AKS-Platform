@@ -1049,6 +1049,47 @@ function AKS_createAccessService_(options) {
     });
   }
 
+  function effectiveAccessSnapshot() {
+    var context = context_();
+    if (context.legacyBootstrap) {
+      return immutableCopy_({
+        email: context.email, roles: [], assignments: [], bootstrap: true
+      });
+    }
+    return immutableCopy_({
+      email: context.email,
+      roles: context.account.roles.slice(),
+      assignments: context.account.assignments.filter(function (assignment) {
+        return activeAt_(assignment, context.now) && assignment.roles.some(function (role) {
+          return context.account.roles.indexOf(role) !== -1;
+        });
+      }).map(function (assignment) {
+        var capabilities = {};
+        if (!assignment.module) {
+          assignment.roles.forEach(function (role) {
+            if (context.account.roles.indexOf(role) === -1) return;
+            ROLE_CAPABILITIES[role].forEach(function (capability) {
+              capabilities[capability] = true;
+            });
+          });
+        }
+        assignment.extraCapabilities.forEach(function (capability) {
+          capabilities[capability] = true;
+        });
+        return {
+          module: assignment.module || "ATTENDANCE",
+          season: assignment.season,
+          section: assignment.section || "",
+          courseCode: assignment.courseCode || "",
+          validFrom: assignment.validFrom || "",
+          validUntil: assignment.validUntil || "",
+          capabilities: Object.keys(capabilities).sort()
+        };
+      }),
+      bootstrap: false
+    });
+  }
+
   function saveRegistry(registry) {
     var current = loadedRegistry_();
     var result;
@@ -1081,6 +1122,7 @@ function AKS_createAccessService_(options) {
     recordAdministrativeRefusalForAdministration:
       recordAdministrativeRefusalForAdministration,
     getEffectiveAccessContext: effectiveContext,
+    getEffectiveAccessSnapshot: effectiveAccessSnapshot,
     saveRegistry: saveRegistry
   });
 }
