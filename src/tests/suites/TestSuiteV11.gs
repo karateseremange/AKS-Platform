@@ -458,6 +458,16 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / recette cycle vérifié", test: AKS_testAccess002AccountRecipe_runsVerifiedLifecycle_ }
     ,{ name: "ACCESS-002-03 / recette restauration exacte", test: AKS_testAccess002AccountRecipe_restoresExactInitialState_ }
     ,{ name: "ACCESS-002-03 / recette échec auto-restauré", test: AKS_testAccess002AccountRecipe_autoRestoresFailedCycle_ }
+    ,{ name: "ACCESS-002-04 / lecture access 1.0 sans écriture", test: AKS_testAccess002Schema11_readsAccess10WithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / version de schéma inconnue refusée", test: AKS_testAccess002Schema11_rejectsUnknownSchema_ }
+    ,{ name: "ACCESS-002-04 / Analytics autonome", test: AKS_testAccess002Schema11_authorizesIndependentAnalytics_ }
+    ,{ name: "ACCESS-002-04 / publication Analytics", test: AKS_testAccess002Schema11_acceptsAnalyticsPublish_ }
+    ,{ name: "ACCESS-002-04 / Analytics hors module refusé", test: AKS_testAccess002Schema11_rejectsAnalyticsOutsideModule_ }
+    ,{ name: "ACCESS-002-04 / forme Analytics fermée", test: AKS_testAccess002Schema11_rejectsInvalidAnalyticsScopeOrCapability_ }
+    ,{ name: "ACCESS-002-04 / lecture Analytics historique", test: AKS_testAccess002Schema11_preservesLegacyAnalyticsRead_ }
+    ,{ name: "ACCESS-002-04 / catalogue fermé immuable", test: AKS_testAccess002Schema11_exposesClosedImmutableCatalogue_ }
+    ,{ name: "ACCESS-002-04 / écriture canonique access 1.1", test: AKS_testAccess002Schema11_canonicalizesAuthorizedWrite_ }
+    ,{ name: "ACCESS-002-04 / écriture Analytics historique non sûre refusée", test: AKS_testAccess002Schema11_rejectsUnsafeLegacyAnalyticsWrite_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
