@@ -368,6 +368,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-01 / audit persistant obligatoire avant mutation", test: AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_ }
     ,{ name: "ACCESS-002-01 / restauration après échec de preuve finale", test: AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_ }
     ,{ name: "ACCESS-002-01 / refus audité sans écriture", test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / refus métier audité sans écriture", test: AKS_testAccess002Admin_recordsLifecycleRefusalWithoutRegistryWrite_ }
     ,{ name: "ACCESS-002-01 / écriture refusée avant verrou", test: AKS_testAccess002Admin_rejectsWriteBeforeLockWithoutAccessManage_ }
     ,{ name: "ACCESS-002-01 / validation stricte avant verrou", test: AKS_testAccess002Admin_rejectsInvalidIdentityDatesAndScope_ }
     ,{ name: "ACCESS-002-01 / conflit de révision", test: AKS_testAccess002Admin_rejectsConcurrentRevision_ }
@@ -440,6 +441,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / désactivation avec historique", test: AKS_testAccess002Lifecycle_deactivatesAndPreservesHistory_ }
     ,{ name: "ACCESS-002-03 / compte inconnu refusé", test: AKS_testAccess002Lifecycle_rejectsUnknownAccountWithoutWrite_ }
     ,{ name: "ACCESS-002-03 / désactivation idempotente", test: AKS_testAccess002Lifecycle_returnsInactiveAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / idempotence sous révision courante", test: AKS_testAccess002Lifecycle_rejectsStaleIdempotentCommand_ }
     ,{ name: "ACCESS-002-03 / effacement confirmé requis", test: AKS_testAccess002Lifecycle_requiresConfirmedAssignmentClear_ }
     ,{ name: "ACCESS-002-03 / réactivation sans anciennes habilitations", test: AKS_testAccess002Lifecycle_reactivatesWithoutOldAssignments_ }
     ,{ name: "ACCESS-002-03 / réactivation idempotente", test: AKS_testAccess002Lifecycle_returnsActiveAccountWithoutWrite_ }
