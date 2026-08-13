@@ -484,6 +484,11 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / confirmation auto-modification", test: AKS_testAccess002Detail_requiresSelfModificationConfirmation_ }
     ,{ name: "ACCESS-002-04 / double soumission bornée", test: AKS_testAccess002Detail_doubleSubmissionMutatesOnce_ }
     ,{ name: "ACCESS-002-04 / métadonnées de commande bornées", test: AKS_testAccess002Detail_rejectsInvalidRequestMetadata_ }
+    ,{ name: "ACCESS-002-04 / quatre cartes d'habilitations UI", test: AKS_testAccess002AdminUi_exposesFourAccessCards_ }
+    ,{ name: "ACCESS-002-04 / workflow de fiche UI protégé", test: AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_ }
+    ,{ name: "ACCESS-002-04 / dates commentaire et synthèse UI", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
+    ,{ name: "ACCESS-002-04 / fiche inactive UI en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
+    ,{ name: "ACCESS-002-04 / échappement et confirmation UI", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
