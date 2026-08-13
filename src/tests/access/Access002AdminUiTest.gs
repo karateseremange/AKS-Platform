@@ -15,7 +15,8 @@ function AKS_access002AdminUiFixture_(authorized) {
   };
   var detail = {
     getAccountDetail: function () { calls.push("detail"); return { account: {} }; },
-    previewAccountAccess: function () { calls.push("preview"); return { changed: false }; }
+    previewAccountAccess: function () { calls.push("preview"); return { changed: false }; },
+    saveAccountAccess: function () { calls.push("save-access"); return { changed: true }; }
   };
   return { calls: calls, controller: AKS_createAdminAccessAccountController_({
     accessService: access, projection: projection, lifecycle: lifecycle, detail: detail,
@@ -52,8 +53,10 @@ function AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_() {
   var fixture = AKS_access002AdminUiFixture_(true);
   fixture.controller.getAccountDetail("teacher@example.com");
   fixture.controller.previewAccountAccess({});
+  fixture.controller.saveAccountAccess({});
   assertEquals_(JSON.stringify([
-    "authorize:ACCESS_MANAGE", "detail", "authorize:ACCESS_MANAGE", "preview"
+    "authorize:ACCESS_MANAGE", "detail", "authorize:ACCESS_MANAGE", "preview",
+    "authorize:ACCESS_MANAGE", "save-access"
   ]), JSON.stringify(fixture.calls));
 }
 
