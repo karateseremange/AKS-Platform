@@ -434,6 +434,18 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / refus administratif propagé", test: AKS_testAccess002Projection_propagatesAdministrativeRefusal_ }
     ,{ name: "ACCESS-002-03 / projection profondément immuable", test: AKS_testAccess002Projection_returnsDeeplyImmutableDefensiveView_ }
     ,{ name: "ACCESS-002-03 / lecture seule", test: AKS_testAccess002Projection_isReadOnly_ }
+    ,{ name: "ACCESS-002-03 / création inactive sans habilitation", test: AKS_testAccess002Lifecycle_createsInactiveAccountWithoutAssignments_ }
+    ,{ name: "ACCESS-002-03 / création invalide refusée", test: AKS_testAccess002Lifecycle_rejectsInvalidCreateBeforeRead_ }
+    ,{ name: "ACCESS-002-03 / doublon refusé", test: AKS_testAccess002Lifecycle_rejectsDuplicateAccount_ }
+    ,{ name: "ACCESS-002-03 / désactivation avec historique", test: AKS_testAccess002Lifecycle_deactivatesAndPreservesHistory_ }
+    ,{ name: "ACCESS-002-03 / compte inconnu refusé", test: AKS_testAccess002Lifecycle_rejectsUnknownAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / désactivation idempotente", test: AKS_testAccess002Lifecycle_returnsInactiveAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / effacement confirmé requis", test: AKS_testAccess002Lifecycle_requiresConfirmedAssignmentClear_ }
+    ,{ name: "ACCESS-002-03 / réactivation sans anciennes habilitations", test: AKS_testAccess002Lifecycle_reactivatesWithoutOldAssignments_ }
+    ,{ name: "ACCESS-002-03 / réactivation idempotente", test: AKS_testAccess002Lifecycle_returnsActiveAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / refus du socle audité propagé", test: AKS_testAccess002Lifecycle_propagatesAuditedBoundaryFailure_ }
+    ,{ name: "ACCESS-002-03 / révision transmise au socle", test: AKS_testAccess002Lifecycle_passesExpectedRevisionToBoundary_ }
+    ,{ name: "ACCESS-002-03 / résultat de cycle de vie immuable", test: AKS_testAccess002Lifecycle_returnsImmutableResult_ }
     ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
     ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
     ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
