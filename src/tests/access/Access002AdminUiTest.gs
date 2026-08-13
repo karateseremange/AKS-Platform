@@ -118,6 +118,14 @@ function AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_() {
   assertTrue_(client.indexOf("confirmSensitive=true") !== -1);
 }
 
+function AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_() {
+  var style = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsStyle");
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(style.indexOf('input[type="checkbox"]') !== -1);
+  assertTrue_(style.indexOf('input:not([type="checkbox"])') !== -1);
+  assertTrue_(client.indexOf('module==="ACCESS"&&existing') !== -1);
+}
+
 function AKS_runAccess002AdminUiSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-03 — interface d’administration", [
     { name: "route refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ },
@@ -131,5 +139,6 @@ function AKS_runAccess002AdminUiSuite() {
     ,{ name: "dates commentaire et synthèse", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
     ,{ name: "fiche inactive en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
     ,{ name: "échappement et confirmation", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
+    ,{ name: "cases compactes et ACCESS unique", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
   ]);
 }
