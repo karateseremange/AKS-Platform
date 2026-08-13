@@ -105,7 +105,8 @@ function AKS_createAccess002PortalRecipe_(ports) {
         expectedRevision: revision, requestId: command_(profiles.attendance, revision,
           "attendance-save").requestId, roles: ["PROFESSEUR"], confirmSensitive: false,
         comment: "Recette réversible ACCESS-002-05", assignments: [{
-          module: "ANALYTICS", season: "*", section: "", courseCode: "",
+          module: "", season: "2099-2100", section: "",
+          courseCode: "ACCESS00205RECIPE",
           status: "ACTIVE", roles: ["PROFESSEUR"],
           capabilities: ["COURSE_LIST", "ATTENDANCE_READ"], validFrom: "", validUntil: ""
         }] }), ids);
@@ -144,13 +145,18 @@ function AKS_createAccess002PortalRecipe_(ports) {
 
 function AKS_createDefaultAccess002PortalRecipe_() {
   var propertyStore = PropertiesService.getScriptProperties();
+  var courseProvider = Object.freeze({ list: function () {
+    return [{ code: "ACCESS00205RECIPE", season: "2099-2100", active: true }];
+  } });
   function service_(identity) { return AKS_createAccessService_({
     identityProvider: function () { return identity; },
-    registryStore: AKS_createAccessRegistryStore_(propertyStore)
+    registryStore: AKS_createAccessRegistryStore_(propertyStore),
+    courseProvider: courseProvider
   }); }
   function admin_(identity) { return AKS.Core.AccessAdmin.create({ accessService: service_(identity) }); }
   return AKS_createAccess002PortalRecipe_({
-    baseRecipe: AKS_createDefaultAccess002Recipe_(), propertyStore: propertyStore,
+    baseRecipe: AKS_createDefaultAccess002Recipe_({ courseProvider: courseProvider }),
+    propertyStore: propertyStore,
     lifecycleFactory: function (identity) { return AKS.Core.AccessAccountLifecycle.create({ accessAdmin: admin_(identity) }); },
     detailFactory: function (identity) { return AKS.Core.AccessAccountDetail.create({ accessAdmin: admin_(identity) }); },
     portalFactory: function (identity) { return AKS.Core.AccessPortalProjection.create({
