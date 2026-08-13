@@ -50,7 +50,7 @@ function AKS_testAccess002PortalUi_modelIsDeeplyImmutable_() {
 }
 
 function AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_() {
-  var html = AKS_includeAdminDashboardFile_("ui/admin/Dashboard");
+  var html = AKS_getAdminDashboardTemplateSource_("ui/admin/Dashboard");
   assertTrue_(html.indexOf("Portail AKS") !== -1);
   assertTrue_(html.indexOf("Compte connecté") !== -1);
   assertEquals_(-1, html.indexOf("Administration AKS Platform"));
