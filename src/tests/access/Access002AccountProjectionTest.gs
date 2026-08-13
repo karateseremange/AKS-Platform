@@ -102,6 +102,24 @@ function AKS_testAccess002Projection_marksFutureWhenNoAssignmentIsEffective_() {
   assertEquals_(0, result.accounts[0].effectiveModules.length);
 }
 
+function AKS_testAccess002Projection_derivesModulesFromEffectiveCapabilities_() {
+  var fixture = AKS_access002ProjectionFixture_({ view: {
+    revision: "access-rev/capabilities", bootstrap: false, accounts: [{
+      email: "admin@example.com", displayName: "Administrateur descriptif",
+      status: "ACTIVE", roles: ["ADMINISTRATEUR"], assignments: [{
+        module: "", season: "2026-2027", section: "", courseCode: "BABY",
+        status: "ACTIVE", roles: ["ADMINISTRATEUR"],
+        extraCapabilities: ["ANALYTICS_READ"], validFrom: "", validUntil: ""
+      }]
+    }]
+  }});
+  var result = fixture.service.listAccounts({});
+  assertEquals_(JSON.stringify(["ANALYTICS"]),
+    JSON.stringify(result.accounts[0].effectiveModules));
+  assertEquals_(0, fixture.service.listAccounts({ module: "attendance" }).resultCount);
+  assertEquals_(1, fixture.service.listAccounts({ module: "analytics" }).resultCount);
+}
+
 function AKS_testAccess002Projection_sortsActiveThenNameThenEmail_() {
   var result = AKS_access002ProjectionFixture_().service.listAccounts({});
   assertEquals_(JSON.stringify([
@@ -159,6 +177,7 @@ function AKS_runAccess002AccountProjectionSuite() {
     { name: "recherche et filtres combinés", test: AKS_testAccess002Projection_normalizesSearchAndCombinedFilters_ },
     { name: "états futur et sans habilitation", test: AKS_testAccess002Projection_filtersFutureAndWithoutAssignment_ },
     { name: "affectation future non effective", test: AKS_testAccess002Projection_marksFutureWhenNoAssignmentIsEffective_ },
+    { name: "modules issus des capacités effectives", test: AKS_testAccess002Projection_derivesModulesFromEffectiveCapabilities_ },
     { name: "tri stable", test: AKS_testAccess002Projection_sortsActiveThenNameThenEmail_ },
     { name: "filtres inconnus refusés", test: AKS_testAccess002Projection_rejectsUnknownFiltersBeforeRead_ },
     { name: "refus administratif propagé", test: AKS_testAccess002Projection_propagatesAdministrativeRefusal_ },
