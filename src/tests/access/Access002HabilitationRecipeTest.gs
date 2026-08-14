@@ -29,7 +29,7 @@ function AKS_access002HabilitationRecipeFixture_(overrides) {
   };
   var detail = {
     getAccountDetail: function () {
-      calls.push("detail"); return { revision: revision, schemaVersion: "access/1.1",
+      calls.push("detail"); return { revision: revision, schemaVersion: "access/1.2",
         account: JSON.parse(JSON.stringify(account)) };
     },
     saveAccountAccess: function (command) {
