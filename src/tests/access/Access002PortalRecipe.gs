@@ -115,14 +115,19 @@ function AKS_createAccess002PortalRecipe_(ports) {
       var attendancePortal = portalFactory(profiles.attendance).getPortalModel();
       var attendanceAccess = myAccessFactory(profiles.attendance).getMyAccess();
       var destinationIds = attendancePortal.destinations.map(function (entry) { return entry.id; });
-      if (emptyPortal.state !== "NO_ACCESS" || emptyAccess.state !== "NO_ACCESS" ||
-          destinationIds.indexOf("module.analytics.attendance") === -1 ||
-          destinationIds.indexOf("module.analytics") !== -1 ||
-          destinationIds.indexOf("admin.access") !== -1 ||
-          attendanceAccess.assignments.length !== 1) {
-        throw failure_("ACCESS_PORTAL_RECIPE_VERIFICATION_FAILED",
-          "Les projections multi-profils ACCESS-002-05 ne sont pas conformes.");
-      }
+      if (emptyPortal.state !== "NO_ACCESS" || emptyAccess.state !== "NO_ACCESS")
+        throw failure_("ACCESS_PORTAL_RECIPE_EMPTY_PROFILE_FAILED",
+          "Le profil sans accès n'est pas conforme.");
+      if (destinationIds.indexOf("module.analytics.attendance") === -1)
+        throw failure_("ACCESS_PORTAL_RECIPE_ATTENDANCE_MISSING",
+          "La destination Présences attendue est absente.");
+      if (destinationIds.indexOf("module.analytics") !== -1 ||
+          destinationIds.indexOf("admin.access") !== -1)
+        throw failure_("ACCESS_PORTAL_RECIPE_FORBIDDEN_DESTINATION",
+          "Une destination non autorisée est visible.");
+      if (attendanceAccess.assignments.length !== 1)
+        throw failure_("ACCESS_PORTAL_RECIPE_MY_ACCESS_FAILED",
+          "La projection Mes accès du profil Présences n'est pas conforme.");
       return Object.freeze({ ok: true, phase: "APPLIED", revision: revision,
         noAccessVerified: true, attendanceOnlyVerified: true,
         myAccessVerified: true, forbiddenDestinationsHidden: true, backupVerified: true });
@@ -161,7 +166,7 @@ function AKS_createDefaultAccess002PortalRecipe_() {
     detailFactory: function (identity) { return AKS.Core.AccessAccountDetail.create({ accessAdmin: admin_(identity) }); },
     portalFactory: function (identity) { return AKS.Core.AccessPortalProjection.create({
       accessService: service_(identity), legacyAdministrator: function () { return false; },
-      baseUrlProvider: function () { return ScriptApp.getService().getUrl() || ""; }
+      baseUrlProvider: function () { return "https://example.invalid/exec"; }
     }); },
     myAccessFactory: function (identity) { return AKS.Core.AccessMyAccess.create({ accessService: service_(identity) }); },
     idProvider: function () { return Utilities.getUuid(); }
