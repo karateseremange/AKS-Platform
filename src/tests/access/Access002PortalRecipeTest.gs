@@ -65,6 +65,8 @@ function AKS_testAccess002PortalRecipe_verifiesMultipleProfiles_() {
   assertEquals_("", assignment.module);
   assertEquals_("2099-2100", assignment.season);
   assertEquals_("ACCESS00205RECIPE", assignment.courseCode);
+  assertTrue_(AKS_createDefaultAccess002PortalRecipe_.toString()
+    .indexOf("https://example.invalid/exec") !== -1);
 }
 function AKS_testAccess002PortalRecipe_restoresExactInitialState_() {
   var fixture = AKS_access002PortalRecipeFixture_(); fixture.recipe.apply();
@@ -82,7 +84,7 @@ function AKS_testAccess002PortalRecipe_rejectsDuplicateIdentities_() {
 function AKS_testAccess002PortalRecipe_autoRestoresProjectionFailure_() {
   var fixture = AKS_access002PortalRecipeFixture_({ leakAnalytics: true });
   assertThrows_(function () { fixture.recipe.apply(); },
-    "ACCESS_PORTAL_RECIPE_VERIFICATION_FAILED");
+    "ACCESS_PORTAL_RECIPE_FORBIDDEN_DESTINATION");
   assertEquals_("before", fixture.values.AKS_ACCESS_REGISTRY);
   assertEquals_(undefined, fixture.values.AKS_ACCESS002_RECIPE_BACKUP);
 }
