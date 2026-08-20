@@ -29,6 +29,7 @@ function AKS_testUx001AdminViewsUseSharedFoundation_() {
     }
   });
   var configuration = AKS_renderUx001AdminView_("ui/admin/Configuration", {
+    permissions: { read: true, write: true, reset: true },
     navigation: {
       configurationTarget: "?app=configuration",
       homeTarget: "?app=admin"
