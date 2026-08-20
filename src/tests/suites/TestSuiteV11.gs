@@ -331,13 +331,18 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / publication concurrente", test: AKS_testAnalyticsOperational_rejectsConcurrentPublication_ }
     ,{ name: "ANALYTICS / chaîne réelle composée", test: AKS_testAnalyticsOperational_composesRealAnalyticsChain_ }
     ,{ name: "ANALYTICS / actions administratives protégées", test: AKS_testAnalyticsAdmin_protectsEveryServerAction_ }
-    ,{ name: "ANALYTICS / saison et navigation", test: AKS_testAnalyticsAdmin_buildsNavigationAndSeason_ }
+    ,{ name: "ANALYTICS / saison navigation et permissions", test: AKS_testAnalyticsAdmin_buildsNavigationSeasonAndPermissions_ }
+    ,{ name: "ACCESS-002-06 / Analytics permissions historiques partielles", test: AKS_testAnalyticsAdmin_adaptsPartialHistoricalPermissions_ }
+    ,{ name: "ACCESS-002-06 / Analytics bootstrap historique borné", test: AKS_testAnalyticsAdmin_preservesBoundedBootstrapAccess_ }
+    ,{ name: "ACCESS-002-06 / Analytics route sans capacité refusée", test: AKS_testAnalyticsAdmin_rejectsRouteWithoutAnalyticsCapability_ }
+    ,{ name: "ACCESS-002-06 / Analytics appel direct refusé", test: AKS_testAnalyticsAdmin_directRefusalStopsBusinessService_ }
     ,{ name: "ANALYTICS / diagnostics sans données individuelles", test: AKS_testAnalyticsAdmin_diagnosticContainsNoIndividualData_ }
     ,{ name: "ANALYTICS / aperçu sans publication", test: AKS_testAnalyticsAdmin_previewDelegatesWithoutPublishing_ }
     ,{ name: "ANALYTICS / confirmation UI obligatoire", test: AKS_testAnalyticsAdmin_requiresExplicitConfirmation_ }
     ,{ name: "ANALYTICS / jeton et racine configurée", test: AKS_testAnalyticsAdmin_forwardsPreviewTokenAndConfiguredRoot_ }
     ,{ name: "ANALYTICS / saison invalide bloquée", test: AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_ }
     ,{ name: "ANALYTICS / client anti-doublon et aperçu périmé", test: AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_ }
+    ,{ name: "ACCESS-002-06 / Analytics vue adaptée aux permissions", test: AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_ }
     ,{ name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ }
     ,{ name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ }
     ,{ name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }
@@ -514,6 +519,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
     ,{ name: "ACCESS-002-05 / portail Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ }
     ,{ name: "ACCESS-002-05 / portail Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ }
+    ,{ name: "ACCESS-002-06 / carte Analytics pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ }
     ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
     ,{ name: "ACCESS-002-05 / portail historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ }
     ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }
