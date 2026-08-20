@@ -527,6 +527,9 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-06 / récupération précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ }
     ,{ name: "ACCESS-002-06 / récupération audit persistant requis", test: AKS_testAccess002Recovery_reportsMissingPersistentAudit_ }
     ,{ name: "ACCESS-002-06 / récupération access/1.1 restaurée exactement", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ }
+    ,{ name: "ACCESS-002-06 / récupération registre absent restauré exactement", test: AKS_testAccess002Recovery_restoresAbsentRegistryExactly_ }
+    ,{ name: "ACCESS-002-06 / récupération échec de restauration explicite", test: AKS_testAccess002Recovery_reportsRestoreFailure_ }
+    ,{ name: "ACCESS-002-06 / récupération résidu temporaire refusé", test: AKS_testAccess002Recovery_refusesRemainingTemporaryState_ }
     ,{ name: "ACCESS-002-06 / récupération état temporaire supprimé", test: AKS_testAccess002Recovery_removesTemporaryProperties_ }
     ,{ name: "ACCESS-002-06 / récupération échec auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ }
     ,{ name: "ACCESS-002-06 / récupération restauration inexacte refusée", test: AKS_testAccess002Recovery_refusesInexactRestore_ }
