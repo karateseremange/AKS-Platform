@@ -31,7 +31,7 @@ function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   assertEquals_(releaseInfo.version, viewModel.platform.version);
   assertEquals_(releaseInfo.releaseName, viewModel.platform.releaseName);
   assertEquals_("karate.seremange@gmail.com", viewModel.administrator.email);
-  assertEquals_(5, viewModel.actions.length);
+  assertEquals_(4, viewModel.actions.length);
   assertEquals_(
     "admin.config",
     viewModel.actions[0].id
@@ -47,10 +47,6 @@ function AKS_testAdminDashboard_buildsDeclarativeViewModel() {
   assertEquals_(
     "module.analytics.attendance",
     viewModel.actions[3].id
-  );
-  assertEquals_(
-    "module.health-questionnaire",
-    viewModel.actions[4].id
   );
   assertTrue_(
     viewModel.navigation.families.length === 2 &&

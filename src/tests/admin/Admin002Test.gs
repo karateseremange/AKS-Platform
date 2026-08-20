@@ -146,12 +146,11 @@ function AKS_testAdmin002PublishesOnlyActiveModules_() {
   })[0];
 
   AKS_assertAdmin002_(
-    moduleDestinations.length === 3 &&
+    moduleDestinations.length === 2 &&
       moduleDestinations[0].id === "module.analytics" &&
       moduleDestinations[1].id === "module.analytics.attendance" &&
       moduleDestinations[1].target ===
         "https://example.test/app?app=attendance" &&
-      moduleDestinations[2].id === "module.health-questionnaire" &&
       attendanceQuickAction &&
       attendanceQuickAction.target ===
         "https://example.test/app?app=attendance",

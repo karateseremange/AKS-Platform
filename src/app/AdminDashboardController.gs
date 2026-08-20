@@ -94,9 +94,6 @@ AKS.Admin.Dashboard = (function () {
     var accessService = AKS_createAccessService_();
     var portal = AKS.Core.AccessPortalProjection.create({
       accessService: accessService,
-      legacyAdministrator: function (email) {
-        return AKS.Admin.Access.isAuthorizedEmail(email);
-      },
       baseUrlProvider: function () { return baseUrl; }
     }).getPortalModel();
     var recentLogs = null;

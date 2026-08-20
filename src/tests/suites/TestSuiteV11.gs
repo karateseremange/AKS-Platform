@@ -532,7 +532,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-06 / carte Journaux avec LOG_READ", test: AKS_testAccess002Portal_showsLogsForExplicitLogRead_ }
     ,{ name: "ACCESS-002-06 / Journaux historiques bornés au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_ }
     ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
-    ,{ name: "ACCESS-002-05 / portail historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ }
+    ,{ name: "ACCESS-002-06 / bootstrap borné sans questionnaire privé", test: AKS_testAccess002Portal_preservesBootstrapDestinationsOnly_ }
     ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }
     ,{ name: "ACCESS-002-05 / projection affectations effectives", test: AKS_testAccess002Portal_snapshotContainsOnlyEffectiveAssignments_ }
     ,{ name: "ACCESS-002-05 / projection rôle sans héritage", test: AKS_testAccess002Portal_snapshotDoesNotInheritFromAccountRole_ }

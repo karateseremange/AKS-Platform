@@ -5,9 +5,6 @@ function AKS_access002PortalFixture_(snapshot, historical, baseUrl) {
       accessService: { getEffectiveAccessSnapshot: function () {
         calls += 1; return JSON.parse(JSON.stringify(snapshot));
       }},
-      legacyAdministrator: function (email) {
-        return historical === true && email === snapshot.email;
-      },
       baseUrlProvider: function () { return baseUrl || "https://example.test/exec"; }
     }),
     calls: function () { return calls; }
@@ -99,12 +96,13 @@ function AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_() {
   assertEquals_(false, model.destinations[0].transitional);
 }
 
-function AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_() {
+function AKS_testAccess002Portal_preservesBootstrapDestinationsOnly_() {
   var model = AKS_access002PortalFixture_({
     email: "legacy@example.com", roles: [], assignments: [], bootstrap: true
   }, true).service.getPortalModel();
   assertEquals_(true, model.legacyAdministrativeAccess);
-  assertEquals_(JSON.stringify(["admin.config", "admin.logs", "module.health-questionnaire"]),
+  assertEquals_(true, model.bootstrapAccess);
+  assertEquals_(JSON.stringify(["admin.config", "admin.logs"]),
     JSON.stringify(model.destinations.map(function (entry) { return entry.id; })));
   assertTrue_(model.destinations.every(function (entry) { return entry.transitional; }));
 }
@@ -171,7 +169,7 @@ function AKS_runAccess002PortalProjectionSuite() {
     { name: "Journaux visibles avec LOG_READ", test: AKS_testAccess002Portal_showsLogsForExplicitLogRead_ },
     { name: "Journaux historiques bornés au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_ },
     { name: "ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ },
-    { name: "historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ },
+    { name: "bootstrap borné sans questionnaire privé", test: AKS_testAccess002Portal_preservesBootstrapDestinationsOnly_ },
     { name: "état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ },
     { name: "affectations effectives", test: AKS_testAccess002Portal_snapshotContainsOnlyEffectiveAssignments_ },
     { name: "rôle sans héritage", test: AKS_testAccess002Portal_snapshotDoesNotInheritFromAccountRole_ },
