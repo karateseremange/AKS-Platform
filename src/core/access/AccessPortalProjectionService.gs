@@ -18,7 +18,9 @@ function AKS_createAccessPortalProjectionService_(options) {
     { id: "admin.access", label: "Comptes et accès", family: "administration",
       target: "?app=access", priority: 10, capabilities: ["ACCESS_MANAGE"] },
     { id: "admin.config", label: "Paramétrage", family: "administration",
-      target: "?app=config", priority: 20, historical: true },
+      target: "?app=config", priority: 20,
+      capabilities: ["CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET"],
+      bootstrapHistorical: true },
     { id: "admin.logs", label: "Journaux", family: "administration",
       target: "?app=logs", priority: 30, historical: true },
     { id: "module.health-questionnaire", label: "Questionnaire santé",
@@ -57,15 +59,24 @@ function AKS_createAccessPortalProjectionService_(options) {
     var historical = legacyAdministrator(snapshot.email) === true;
     var capabilities = capabilities_(snapshot);
     var baseUrl = String(baseUrlProvider() || "").trim();
-    var destinations = DESTINATIONS.filter(function (entry) {
-      return entry.historical === true ? historical : entry.capabilities.some(function (capability) {
+    function hasEntryCapability_(entry) {
+      return (entry.capabilities || []).some(function (capability) {
         return capabilities[capability] === true;
       });
+    }
+    var destinations = DESTINATIONS.filter(function (entry) {
+      if (entry.bootstrapHistorical === true) {
+        return hasEntryCapability_(entry) ||
+          snapshot.bootstrap === true && historical;
+      }
+      return entry.historical === true ? historical : hasEntryCapability_(entry);
     }).map(function (entry) {
+      var explicit = hasEntryCapability_(entry);
       return {
         id: entry.id, label: entry.label, family: entry.family,
         target: target_(baseUrl, entry.target), priority: entry.priority,
-        transitional: entry.historical === true
+        transitional: entry.historical === true ||
+          entry.bootstrapHistorical === true && !explicit
       };
     }).filter(function (entry) { return !!entry.target; }).sort(function (left, right) {
       return left.priority - right.priority || (left.id < right.id ? -1 : 1);

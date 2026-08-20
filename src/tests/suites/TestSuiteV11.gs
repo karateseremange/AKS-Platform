@@ -106,14 +106,19 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / required delete protection", test: AKS_testConfig001_protectsRequiredValueFromDeletion_ },
     { name: "CONFIG-001 / corrupted persistence", test: AKS_testConfig001_detectsCorruptedPersistentValue_ },
     { name: "CONFIG-001 / persistence lock release", test: AKS_testConfig001_releasesPersistenceLockAfterFailure_ },
-    { name: "CONFIG-001 / authorized administration model", test: AKS_testConfig001AdminUi_buildsAuthorizedViewModel_ },
-    { name: "CONFIG-001 / administration access denied", test: AKS_testConfig001AdminUi_rejectsUnauthorizedUser_ },
+    { name: "ACCESS-002-06 / Config modèle autorisé", test: AKS_testConfig001AdminUi_buildsAuthorizedViewModel_ },
+    { name: "ACCESS-002-06 / Config combinaisons explicites", test: AKS_testConfig001AdminUi_adaptsExplicitCapabilityCombinations_ },
+    { name: "ACCESS-002-06 / Config bootstrap historique borné", test: AKS_testConfig001AdminUi_preservesBoundedBootstrapAccess_ },
+    { name: "ACCESS-002-06 / Config route sans capacité refusée", test: AKS_testConfig001AdminUi_rejectsRouteWithoutConfigCapability_ },
+    { name: "ACCESS-002-06 / Config mutations réautorisées", test: AKS_testConfig001AdminUi_reauthorizesEveryMutation_ },
+    { name: "ACCESS-002-06 / Config refus avant stockage", test: AKS_testConfig001AdminUi_stopsDeniedMutationBeforeStorage_ },
     { name: "CONFIG-001 / invalid required parameter status", test: AKS_testConfig001AdminUi_reportsInvalidRequiredParameter_ },
     { name: "CONFIG-001 / read-only parameter", test: AKS_testConfig001AdminUi_marksReadOnlyParameter_ },
     { name: "CONFIG-001 / authenticated mutation actor", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
     { name: "CONFIG-001 / administration restores default", test: AKS_testConfig001AdminUi_restoresDefault_ },
     { name: "CONFIG-001 / administration navigation", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
     { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ },
+    { name: "ACCESS-002-06 / Config vue adaptée aux permissions", test: AKS_testConfig001AdminUi_viewAdaptsToServerPermissions_ },
 
     { name: "LOG-001 / structured immutable event", test: AKS_testLog001_buildsStructuredImmutableEvent_ },
     { name: "LOG-001 / correlation propagation", test: AKS_testLog001_propagatesValidCorrelationId_ },
@@ -520,6 +525,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / portail Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ }
     ,{ name: "ACCESS-002-05 / portail Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ }
     ,{ name: "ACCESS-002-06 / carte Analytics pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ }
+    ,{ name: "ACCESS-002-06 / carte Paramétrage pour toute capacité", test: AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_ }
+    ,{ name: "ACCESS-002-06 / Paramétrage historique borné au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_ }
     ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
     ,{ name: "ACCESS-002-05 / portail historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ }
     ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }

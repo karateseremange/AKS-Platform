@@ -44,6 +44,30 @@ function AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_() {
   });
 }
 
+function AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_() {
+  ["CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET"].forEach(function (capability) {
+    var model = AKS_access002PortalFixture_({
+      email: "config@example.com", roles: ["ADMINISTRATEUR"], bootstrap: false,
+      assignments: [{
+        module: "ADMINISTRATION", capabilities: [capability]
+      }]
+    }).service.getPortalModel();
+    assertEquals_(JSON.stringify(["admin.config"]),
+      JSON.stringify(model.destinations.map(function (entry) { return entry.id; })));
+    assertEquals_(false, model.destinations[0].transitional);
+  });
+}
+
+function AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_() {
+  var model = AKS_access002PortalFixture_({
+    email: "legacy@example.com", roles: ["ADMINISTRATEUR"],
+    assignments: [], bootstrap: false
+  }, true).service.getPortalModel();
+  assertEquals_(false, model.destinations.some(function (entry) {
+    return entry.id === "admin.config";
+  }));
+}
+
 function AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_() {
   var model = AKS_access002PortalFixture_({
     email: "manager@example.com", roles: ["ADMINISTRATEUR"], bootstrap: false,
@@ -120,6 +144,8 @@ function AKS_runAccess002PortalProjectionSuite() {
     { name: "Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ },
     { name: "Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ },
     { name: "Analytics visible pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ },
+    { name: "Paramétrage visible pour toute capacité", test: AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_ },
+    { name: "Paramétrage historique borné au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_ },
     { name: "ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ },
     { name: "historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ },
     { name: "état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ },
