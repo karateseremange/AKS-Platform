@@ -22,7 +22,8 @@ function AKS_createAccessPortalProjectionService_(options) {
       capabilities: ["CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET"],
       bootstrapHistorical: true },
     { id: "admin.logs", label: "Journaux", family: "administration",
-      target: "?app=logs", priority: 30, historical: true },
+      target: "?app=logs", priority: 30, capabilities: ["LOG_READ"],
+      bootstrapHistorical: true },
     { id: "module.health-questionnaire", label: "Questionnaire santé",
       family: "modules", target: "?app=health-questionnaire", priority: 40,
       historical: true }

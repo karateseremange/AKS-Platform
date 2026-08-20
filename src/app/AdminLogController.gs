@@ -36,6 +36,11 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
     return Object.freeze(value);
   }
 
+  function authorize_() {
+    accessApi.assertAdministrationCapability("LOG_READ");
+    return accessApi.getCurrentIdentity();
+  }
+
   function baseUrl_() {
     try {
       return typeof baseUrlProvider === "function" ? baseUrlProvider() || "" : "";
@@ -133,8 +138,7 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
     };
   }
 
-  function read_(filters, dashboardMode) {
-    var email = accessApi.assertCurrentUserAuthorized();
+  function readAuthorized_(email, filters, dashboardMode) {
     var normalized = normalizeFilters_(filters);
     var events = repository.listRecent(dashboardMode ? 5 : 500)
       .filter(function (event) {
@@ -166,16 +170,15 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
   }
 
   function getViewModel(filters) {
-    return read_(filters, false);
+    var email = authorize_();
+    return readAuthorized_(email, filters, false);
   }
 
   function getDashboardModel() {
+    var email = authorize_();
     try {
-      return read_({ limit: 25 }, true);
+      return readAuthorized_(email, { limit: 25 }, true);
     } catch (error) {
-      if (error && error.code === "ADMIN001_ACCESS_DENIED") {
-        throw error;
-      }
       return deepFreeze_({
         available: false,
         events: [],
@@ -192,7 +195,7 @@ function AKS_createAdminLogController_(accessApi, repository, baseUrlProvider) {
 
 function AKS_createProductionAdminLogController_() {
   return AKS_createAdminLogController_(
-    AKS.Admin.Access,
+    AKS_createAccessService_(),
     AKS.LogEventRepository,
     function () {
       return ScriptApp.getService().getUrl() || "";
@@ -207,16 +210,8 @@ AKS.Admin.Logs = Object.freeze({
   getDashboardModel: function () {
     return AKS_createProductionAdminLogController_().getDashboardModel();
   },
-  getDashboardModelForAuthorizedUser: function (email, baseUrl) {
-    return AKS_createAdminLogController_(
-      {
-        assertCurrentUserAuthorized: function () {
-          return AKS.Admin.Access.assertAuthorized(email);
-        }
-      },
-      AKS.LogEventRepository,
-      function () { return baseUrl || ""; }
-    ).getDashboardModel();
+  getDashboardModelForAuthorizedUser: function () {
+    return AKS_createProductionAdminLogController_().getDashboardModel();
   },
   render: function (filters) {
     var template = HtmlService.createTemplateFromFile("ui/admin/Logs");

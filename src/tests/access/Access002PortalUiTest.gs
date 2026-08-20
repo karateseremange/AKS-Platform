@@ -36,10 +36,13 @@ function AKS_testAccess002PortalUi_returnsNeutralNoAccessState_() {
   assertEquals_(1, model.actions.length);
 }
 
-function AKS_testAccess002PortalUi_hidesLogsOutsideLegacyAdministration_() {
-  assertEquals_(null, AKS_access002PortalUiModel_({ legacy: false }).recentLogs);
-  assertEquals_("event", AKS_access002PortalUiModel_({ legacy: true,
-    logs: { available: true, events: ["event"] } }).recentLogs.events[0]);
+function AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_() {
+  assertEquals_(false, AKS_portalHasDestination_({
+    destinations: [{ id: "module.analytics" }]
+  }, "admin.logs"));
+  assertEquals_(true, AKS_portalHasDestination_({
+    destinations: [{ id: "admin.logs" }]
+  }, "admin.logs"));
 }
 
 function AKS_testAccess002PortalUi_modelIsDeeplyImmutable_() {
@@ -73,7 +76,7 @@ function AKS_runAccess002PortalUiSuite() {
     { name: "Mes accès toujours visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ },
     { name: "destinations projetées uniquement", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ },
     { name: "état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ },
-    { name: "journaux historiques bornés", test: AKS_testAccess002PortalUi_hidesLogsOutsideLegacyAdministration_ },
+    { name: "journaux selon destination projetée", test: AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_ },
     { name: "modèle immuable", test: AKS_testAccess002PortalUi_modelIsDeeplyImmutable_ },
     { name: "renommage et route stable", test: AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_ },
     { name: "refus générique sans fuite", test: AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_ }

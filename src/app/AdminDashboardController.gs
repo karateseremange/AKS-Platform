@@ -29,6 +29,12 @@ function AKS_buildPortalDashboardViewModel_(portal, releaseInfo, baseUrl, recent
   });
 }
 
+function AKS_portalHasDestination_(portal, destinationId) {
+  return !!portal && (portal.destinations || []).some(function (entry) {
+    return entry.id === destinationId;
+  });
+}
+
 function AKS_buildDeniedPortalDashboardViewModel_(releaseInfo) {
   return Object.freeze({
     platform: Object.freeze({ name: "AKS Platform", version: releaseInfo.version,
@@ -73,10 +79,13 @@ AKS.Admin.Dashboard = (function () {
       }),
       navigation: navigation,
       actions: navigation.quickActions,
-      recentLogs: AKS.Admin.Logs.getDashboardModelForAuthorizedUser(
-        authorizedEmail,
-        typeof baseUrl === "string" ? baseUrl : getWebAppUrl_()
-      )
+      recentLogs: (function () {
+        try {
+          return AKS.Admin.Logs.getDashboardModel();
+        } catch (ignoredLogAccessFailure) {
+          return null;
+        }
+      }())
     });
   }
 
@@ -92,8 +101,8 @@ AKS.Admin.Dashboard = (function () {
     }).getPortalModel();
     var recentLogs = null;
     try {
-      if (portal.legacyAdministrativeAccess) {
-        recentLogs = AKS.Admin.Logs.getDashboardModelForAuthorizedUser(portal.identity.email, baseUrl);
+      if (AKS_portalHasDestination_(portal, "admin.logs")) {
+        recentLogs = AKS.Admin.Logs.getDashboardModel();
       }
     } catch (ignoredLogsFailure) {}
     return AKS_buildPortalDashboardViewModel_(

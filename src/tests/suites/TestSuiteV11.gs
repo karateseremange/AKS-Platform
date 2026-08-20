@@ -141,6 +141,8 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / invalid retention policy", test: AKS_testLog001Retention_rejectsInvalidPolicy_ },
     { name: "LOG-001 / controlled purge trace", test: AKS_testLog001Retention_tracesControlledPurge_ },
     { name: "LOG-001 / consultation authorization", test: AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_ },
+    { name: "ACCESS-002-06 / Journaux LOG_READ sur chaque lecture", test: AKS_testLog001Admin_reauthorizesEveryReadWithLogRead_ },
+    { name: "ACCESS-002-06 / Journaux refus non dégradé", test: AKS_testLog001Admin_dashboardDenialIsNotDegraded_ },
     { name: "LOG-001 / controlled filters", test: AKS_testLog001Admin_normalizesControlledFilters_ },
     { name: "LOG-001 / filtered recent events", test: AKS_testLog001Admin_filtersAndLimitsRecentEvents_ },
     { name: "LOG-001 / masked read-only details", test: AKS_testLog001Admin_presentsMaskedDetailsReadOnly_ },
@@ -527,6 +529,8 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-06 / carte Analytics pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ }
     ,{ name: "ACCESS-002-06 / carte Paramétrage pour toute capacité", test: AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_ }
     ,{ name: "ACCESS-002-06 / Paramétrage historique borné au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_ }
+    ,{ name: "ACCESS-002-06 / carte Journaux avec LOG_READ", test: AKS_testAccess002Portal_showsLogsForExplicitLogRead_ }
+    ,{ name: "ACCESS-002-06 / Journaux historiques bornés au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_ }
     ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
     ,{ name: "ACCESS-002-05 / portail historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ }
     ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }
@@ -544,7 +548,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / Portail Mes accès visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ }
     ,{ name: "ACCESS-002-05 / Portail destinations projetées", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ }
     ,{ name: "ACCESS-002-05 / Portail état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ }
-    ,{ name: "ACCESS-002-05 / Portail journaux historiques bornés", test: AKS_testAccess002PortalUi_hidesLogsOutsideLegacyAdministration_ }
+    ,{ name: "ACCESS-002-06 / Portail journaux selon destination projetée", test: AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_ }
     ,{ name: "ACCESS-002-05 / Portail modèle immuable", test: AKS_testAccess002PortalUi_modelIsDeeplyImmutable_ }
     ,{ name: "ACCESS-002-05 / Portail renommage route stable", test: AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_ }
     ,{ name: "ACCESS-002-05 / Portail refus générique", test: AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_ }
