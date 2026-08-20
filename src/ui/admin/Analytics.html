@@ -7,7 +7,10 @@
     <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle"); ?>
   </head>
   <body>
-    <main class="aks-admin-shell" data-analytics-root>
+    <main class="aks-admin-shell" data-analytics-root
+      data-can-diagnose="<?= viewModel.permissions.diagnose ? "true" : "false" ?>"
+      data-can-preview="<?= viewModel.permissions.preview ? "true" : "false" ?>"
+      data-can-publish="<?= viewModel.permissions.publish ? "true" : "false" ?>">
       <header class="aks-admin-header">
         <div>
           <p class="aks-admin-eyebrow">Centre de pilotage</p>
@@ -34,18 +37,27 @@
           <input id="analytics-season" inputmode="numeric" pattern="\d{4}-\d{4}"
             value="<?= viewModel.season ?>" placeholder="2026-2027" required>
           <div class="aks-analytics-actions">
-            <button type="button" data-action="diagnose">Contrôler les sources</button>
-            <button type="button" class="aks-analytics-button--secondary" data-action="preview" disabled>
-              Prévisualiser les rapports
-            </button>
+            <? if (viewModel.permissions.diagnose) { ?>
+              <button type="button" data-action="diagnose">Contrôler les sources</button>
+            <? } ?>
+            <? if (viewModel.permissions.preview) { ?>
+              <button type="button" class="aks-analytics-button--secondary" data-action="preview">
+                Prévisualiser les rapports
+              </button>
+            <? } ?>
           </div>
         </div>
       </section>
 
       <div class="aks-analytics-status" role="status" aria-live="polite" data-status>
-        Sélectionnez une saison puis contrôlez les sources attendues.
+        <? if (viewModel.permissions.diagnose || viewModel.permissions.preview) { ?>
+          Sélectionnez une saison puis utilisez une action autorisée.
+        <? } else { ?>
+          Aucune action Analytics utilisable n’est actuellement attribuée à votre compte.
+        <? } ?>
       </div>
 
+      <? if (viewModel.permissions.diagnose || viewModel.permissions.preview) { ?>
       <section class="aks-admin-card" aria-labelledby="analytics-diagnostic-title">
         <div class="aks-admin-card__header">
           <p class="aks-admin-card__kicker">Contrôle qualité</p>
@@ -53,7 +65,9 @@
         </div>
         <div data-diagnostic class="aks-analytics-empty">Aucun contrôle effectué.</div>
       </section>
+      <? } ?>
 
+      <? if (viewModel.permissions.preview) { ?>
       <section class="aks-admin-card aks-admin-card--wide" aria-labelledby="analytics-reports-title">
         <div class="aks-admin-card__header">
           <p class="aks-admin-card__kicker">Prévisualisation</p>
@@ -63,7 +77,9 @@
           <p class="aks-analytics-empty">L’aperçu sera disponible après un contrôle valide.</p>
         </div>
       </section>
+      <? } ?>
 
+      <? if (viewModel.permissions.publish) { ?>
       <section class="aks-admin-card aks-analytics-publish" aria-labelledby="analytics-publish-title">
         <div class="aks-admin-card__header">
           <p class="aks-admin-card__kicker">Action finale</p>
@@ -79,6 +95,7 @@
           <div data-publication></div>
         </div>
       </section>
+      <? } ?>
     </main>
     <?!= AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsClient"); ?>
   </body>

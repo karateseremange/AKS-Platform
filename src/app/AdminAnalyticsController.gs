@@ -27,8 +27,48 @@ function AKS_createAdminAnalyticsController_(
     return Object.freeze(value);
   }
 
-  function authorize_() {
-    return accessApi.assertCurrentUserAuthorized();
+  function error_(code, message) {
+    var failure = new Error(message);
+    failure.code = code;
+    return failure;
+  }
+
+  function capability_(capability) {
+    return accessApi.assertAnalyticsCapability(capability);
+  }
+
+  function viewAuthorization_() {
+    if (!accessApi || typeof accessApi.getEffectiveAccessSnapshot !== "function") {
+      throw error_("ANALYTICS_ADMIN_ACCESS_UNAVAILABLE", "Analytics indisponible.");
+    }
+    var snapshot = accessApi.getEffectiveAccessSnapshot();
+    if (snapshot.bootstrap === true) {
+      return {
+        email: String(snapshot.email || "").trim().toLowerCase(),
+        permissions: { diagnose: true, preview: true, publish: true }
+      };
+    }
+    var capabilities = {};
+    (snapshot.assignments || []).forEach(function (assignment) {
+      if (assignment.module !== "ANALYTICS") return;
+      (assignment.capabilities || []).forEach(function (capability) {
+        capabilities[String(capability || "").trim().toUpperCase()] = true;
+      });
+    });
+    var permissions = {
+      diagnose: capabilities.ANALYTICS_READ === true,
+      preview: capabilities.ANALYTICS_PREVIEW === true,
+      publish: capabilities.ANALYTICS_PREVIEW === true &&
+        capabilities.ANALYTICS_PUBLISH === true
+    };
+    if (!permissions.diagnose && !permissions.preview &&
+        capabilities.ANALYTICS_PUBLISH !== true) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Analytics non autorisé.");
+    }
+    return {
+      email: String(snapshot.email || "").trim().toLowerCase(),
+      permissions: permissions
+    };
   }
 
   function baseUrl_() {
@@ -106,9 +146,10 @@ function AKS_createAdminAnalyticsController_(
   }
 
   function getViewModel() {
-    var email = authorize_();
+    var authorization = viewAuthorization_();
     return freeze_({
-      administrator: { email: email },
+      administrator: { email: authorization.email },
+      permissions: authorization.permissions,
       season: configuredValue_("platform.activeSeason"),
       navigation: {
         homeTarget: baseUrl_() + "?app=admin",
@@ -118,17 +159,17 @@ function AKS_createAdminAnalyticsController_(
   }
 
   function diagnose(request) {
-    authorize_();
+    capability_("ANALYTICS_READ");
     return preview_(request || {}, false);
   }
 
   function preview(request) {
-    authorize_();
+    capability_("ANALYTICS_PREVIEW");
     return preview_(request || {}, true);
   }
 
   function publish(request) {
-    authorize_();
+    capability_("ANALYTICS_PUBLISH");
     request = request || {};
     if (request.confirmed !== true) {
       var error = new Error("Une confirmation explicite est obligatoire.");
@@ -167,7 +208,7 @@ function AKS_createAdminAnalyticsController_(
 
 function AKS_createProductionAdminAnalyticsController_() {
   return AKS_createAdminAnalyticsController_(
-    AKS.Admin.Access,
+    AKS_createAccessService_(),
     AKS.Analytics.OperationalService,
     AKS_createConfigurationService_(
       AKS_createPlatformParameterRegistry_(),
@@ -204,4 +245,14 @@ function AKS_publishAdminAnalyticsReports(request) {
 
 function AKS_includeAdminAnalyticsFile_(path) {
   return HtmlService.createHtmlOutputFromFile(path).getContent();
+}
+
+/**
+ * Reads an unevaluated Analytics template for structural tests.
+ *
+ * Unlike createHtmlOutputFromFile(), this accepts Apps Script template
+ * scriptlets and must never be used to serve a response directly.
+ */
+function AKS_getAdminAnalyticsTemplateSource_(path) {
+  return HtmlService.createTemplateFromFile(path).getRawContent();
 }

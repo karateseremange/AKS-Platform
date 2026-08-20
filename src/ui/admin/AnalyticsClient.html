@@ -3,6 +3,11 @@
   "use strict";
   var root = document.querySelector("[data-analytics-root]");
   if (!root) return;
+  var allowed = {
+    diagnose: root.getAttribute("data-can-diagnose") === "true",
+    preview: root.getAttribute("data-can-preview") === "true",
+    publish: root.getAttribute("data-can-publish") === "true"
+  };
   var season = document.getElementById("analytics-season");
   var status = root.querySelector("[data-status]");
   var diagnostic = root.querySelector("[data-diagnostic]");
@@ -28,22 +33,28 @@
   }
   function resetPreview_() {
     previewToken = null;
-    confirmation.checked = false;
-    confirmation.disabled = true;
-    buttons.publish.disabled = true;
-    publication.innerHTML = "";
+    if (confirmation) {
+      confirmation.checked = false;
+      confirmation.disabled = true;
+    }
+    if (buttons.publish) buttons.publish.disabled = true;
+    if (publication) publication.innerHTML = "";
   }
   function setBusy_(value) {
     busy = value;
-    buttons.diagnose.disabled = value;
-    buttons.preview.disabled = value || diagnostic.getAttribute("data-publishable") !== "true";
-    buttons.publish.disabled = value || !previewToken || !confirmation.checked;
+    if (buttons.diagnose) buttons.diagnose.disabled = value || !allowed.diagnose;
+    if (buttons.preview) buttons.preview.disabled = value || !allowed.preview;
+    if (buttons.publish) {
+      buttons.publish.disabled = value || !allowed.publish ||
+        !previewToken || !confirmation || !confirmation.checked;
+    }
   }
   function failure_(error) {
     setBusy_(false);
     message_("L’action n’a pas abouti. Vérifiez la saison et la configuration, puis réessayez.", "error");
   }
   function renderDiagnostic_(result) {
+    if (!diagnostic) return;
     var item = result.diagnostic;
     diagnostic.setAttribute("data-publishable", item.publishable ? "true" : "false");
     diagnostic.innerHTML =
@@ -60,7 +71,7 @@
         item.errors.map(function (error) { return '<li>' + escape_(error.code) + '</li>'; }).join("") + '</ul>' : "");
   }
   function diagnose_() {
-    if (busy) return;
+    if (busy || !allowed.diagnose) return;
     resetPreview_(); setBusy_(true); message_("Contrôle des sources en cours…");
     google.script.run.withSuccessHandler(function (result) {
       renderDiagnostic_(result); setBusy_(false);
@@ -69,48 +80,65 @@
     }).withFailureHandler(failure_).AKS_getAdminAnalyticsDiagnostic({ season: season.value });
   }
   function preview_() {
-    if (busy) return;
+    if (busy || !allowed.preview) return;
     resetPreview_(); setBusy_(true); message_("Génération de l’aperçu sans écriture…");
     google.script.run.withSuccessHandler(function (result) {
       renderDiagnostic_(result);
       previewToken = result.confirmationToken;
-      reports.innerHTML = "";
-      result.reports.forEach(function (report) {
-        var article = document.createElement("article");
-        var title = document.createElement("h3");
-        var frame = document.createElement("iframe");
-        article.className = "aks-analytics-report";
-        title.textContent = report.label || "Rapport";
-        frame.title = "Aperçu — " + (report.label || "Rapport");
-        frame.setAttribute("sandbox", "");
-        frame.srcdoc = report.html || "";
-        article.appendChild(title);
-        article.appendChild(frame);
-        reports.appendChild(article);
-      });
-      confirmation.disabled = !previewToken;
+      if (reports) {
+        reports.innerHTML = "";
+        result.reports.forEach(function (report) {
+          var article = document.createElement("article");
+          var title = document.createElement("h3");
+          var frame = document.createElement("iframe");
+          article.className = "aks-analytics-report";
+          title.textContent = report.label || "Rapport";
+          frame.title = "Aperçu — " + (report.label || "Rapport");
+          frame.setAttribute("sandbox", "");
+          frame.srcdoc = report.html || "";
+          article.appendChild(title);
+          article.appendChild(frame);
+          reports.appendChild(article);
+        });
+      }
+      if (confirmation) confirmation.disabled = !previewToken || !allowed.publish;
       setBusy_(false);
       message_("Aperçu généré sans écriture Drive. Vérifiez les rapports.", "success");
     }).withFailureHandler(failure_).AKS_previewAdminAnalyticsReports({ season: season.value });
   }
   function publish_() {
-    if (busy || !previewToken || !confirmation.checked) return;
+    if (busy || !allowed.publish || !previewToken ||
+        !confirmation || !confirmation.checked) return;
     setBusy_(true); message_("Publication confirmée en cours…");
     google.script.run.withSuccessHandler(function (result) {
-      previewToken = null; confirmation.disabled = true; setBusy_(false);
+      previewToken = null;
+      confirmation.disabled = true;
+      setBusy_(false);
       message_("Les rapports ont été publiés.", "success");
-      publication.innerHTML = result.folderUrl ?
-        '<p><a target="_blank" rel="noopener noreferrer" href="' + escape_(result.folderUrl) + '">Ouvrir le dossier publié</a></p>' : "";
+      if (publication) {
+        publication.innerHTML = result.folderUrl ?
+          '<p><a target="_blank" rel="noopener noreferrer" href="' + escape_(result.folderUrl) + '">Ouvrir le dossier publié</a></p>' : "";
+      }
     }).withFailureHandler(failure_).AKS_publishAdminAnalyticsReports({
       season: season.value, confirmationToken: previewToken, confirmed: true
     });
   }
   season.addEventListener("input", function () {
-    diagnostic.removeAttribute("data-publishable"); buttons.preview.disabled = true; resetPreview_();
+    if (diagnostic) diagnostic.removeAttribute("data-publishable");
+    resetPreview_();
+    setBusy_(false);
   });
-  confirmation.addEventListener("change", function () { buttons.publish.disabled = busy || !confirmation.checked || !previewToken; });
-  buttons.diagnose.addEventListener("click", diagnose_);
-  buttons.preview.addEventListener("click", preview_);
-  buttons.publish.addEventListener("click", publish_);
+  if (confirmation) {
+    confirmation.addEventListener("change", function () {
+      if (buttons.publish) {
+        buttons.publish.disabled = busy || !allowed.publish ||
+          !confirmation.checked || !previewToken;
+      }
+    });
+  }
+  if (buttons.diagnose) buttons.diagnose.addEventListener("click", diagnose_);
+  if (buttons.preview) buttons.preview.addEventListener("click", preview_);
+  if (buttons.publish) buttons.publish.addEventListener("click", publish_);
+  setBusy_(false);
 }());
 </script>

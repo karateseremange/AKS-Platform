@@ -33,6 +33,17 @@ function AKS_testAccess002Portal_keepsAnalyticsIndependent_() {
     JSON.stringify(model.destinations.map(function (entry) { return entry.id; })));
 }
 
+function AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_() {
+  ["ANALYTICS_READ", "ANALYTICS_PREVIEW", "ANALYTICS_PUBLISH"].forEach(function (capability) {
+    var model = AKS_access002PortalFixture_({
+      email: "analyst@example.com", roles: ["CONSULTATION"], bootstrap: false,
+      assignments: [{ module: "ANALYTICS", capabilities: [capability] }]
+    }).service.getPortalModel();
+    assertEquals_(JSON.stringify(["module.analytics"]),
+      JSON.stringify(model.destinations.map(function (entry) { return entry.id; })));
+  });
+}
+
 function AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_() {
   var model = AKS_access002PortalFixture_({
     email: "manager@example.com", roles: ["ADMINISTRATEUR"], bootstrap: false,
@@ -108,6 +119,7 @@ function AKS_runAccess002PortalProjectionSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-05 — projection portail", [
     { name: "Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ },
     { name: "Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ },
+    { name: "Analytics visible pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ },
     { name: "ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ },
     { name: "historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ },
     { name: "état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ },
