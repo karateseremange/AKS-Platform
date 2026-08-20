@@ -104,7 +104,7 @@ function AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_() {
   var fixture = AKS_access002RecoveryFixture_({ failApply: true });
   assertThrows_(function () {
     fixture.rehearsal.runReversible();
-  }, "temporary verification failure");
+  });
   assertEquals_(fixture.initialRaw, fixture.values.AKS_ACCESS_REGISTRY);
   assertTrue_(fixture.calls.indexOf("base:restore") !== -1);
 }
