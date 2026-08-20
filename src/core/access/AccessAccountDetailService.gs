@@ -137,7 +137,7 @@ function AKS_createAccessAccountDetailService_(options) {
     var proposedAccounts = proposedAccounts_(view, id, command);
     var validated = accessAdmin.previewRegistry({
       expectedRevision: view.revision,
-      registry: { schemaVersion: "access/1.1", accounts: proposedAccounts }
+      registry: { schemaVersion: "access/1.2", accounts: proposedAccounts }
     });
     var after = account_(validated, id);
     var beforeAssignments = before.assignments.map(key_).sort();
@@ -160,7 +160,7 @@ function AKS_createAccessAccountDetailService_(options) {
           return JSON.parse(value);
         })
       },
-      proposed: detail_({ revision: view.revision, schemaVersion: "access/1.1" }, after).account
+      proposed: detail_({ revision: view.revision, schemaVersion: "access/1.2" }, after).account
     });
   }
 
@@ -195,7 +195,7 @@ function AKS_createAccessAccountDetailService_(options) {
         summary: preview.summary
       },
       registry: {
-        schemaVersion: "access/1.1",
+        schemaVersion: "access/1.2",
         accounts: proposedAccounts_(view, preview.accountId, command)
       }
     });

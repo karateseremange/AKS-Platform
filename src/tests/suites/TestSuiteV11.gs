@@ -468,6 +468,16 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / catalogue fermé immuable", test: AKS_testAccess002Schema11_exposesClosedImmutableCatalogue_ }
     ,{ name: "ACCESS-002-04 / écriture canonique access 1.1", test: AKS_testAccess002Schema11_canonicalizesAuthorizedWrite_ }
     ,{ name: "ACCESS-002-04 / écriture Analytics historique non sûre refusée", test: AKS_testAccess002Schema11_rejectsUnsafeLegacyAnalyticsWrite_ }
+    ,{ name: "ACCESS-002-06 / lecture access 1.1 sans écriture", test: AKS_testAccess002Schema12_reads11WithoutWrite_ }
+    ,{ name: "ACCESS-002-06 / catalogue Administration", test: AKS_testAccess002Schema12_exposesAdministrationCatalogue_ }
+    ,{ name: "ACCESS-002-06 / Administration explicite", test: AKS_testAccess002Schema12_authorizesExplicitAdministration_ }
+    ,{ name: "ACCESS-002-06 / Administration interdite en access 1.1", test: AKS_testAccess002Schema12_rejectsAdministrationIn11_ }
+    ,{ name: "ACCESS-002-06 / Config incohérent refusé", test: AKS_testAccess002Schema12_rejectsIncoherentConfigWrites_ }
+    ,{ name: "ACCESS-002-06 / Config cohérent accepté", test: AKS_testAccess002Schema12_acceptsCoherentConfigPreview_ }
+    ,{ name: "ACCESS-002-06 / Analytics incohérent refusé", test: AKS_testAccess002Schema12_rejectsIncoherentAnalyticsWrites_ }
+    ,{ name: "ACCESS-002-06 / Analytics access 1.1 préservé", test: AKS_testAccess002Schema12_preservesIncoherent11Read_ }
+    ,{ name: "ACCESS-002-06 / AUDIT_READ non attribuable", test: AKS_testAccess002Schema12_keepsAuditReadUnassignable_ }
+    ,{ name: "ACCESS-002-06 / restauration exacte access 1.1", test: AKS_testAccess002Schema12_restoresExact11AfterFailure_ }
     ,{ name: "ACCESS-002-04 / fiche minimisée et catalogues", test: AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_ }
     ,{ name: "ACCESS-002-04 / cible invalide ou inconnue", test: AKS_testAccess002Detail_rejectsInvalidOrUnknownTarget_ }
     ,{ name: "ACCESS-002-04 / refus administratif de fiche", test: AKS_testAccess002Detail_propagatesAdministrativeRefusal_ }

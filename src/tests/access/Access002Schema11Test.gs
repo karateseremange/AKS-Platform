@@ -39,7 +39,7 @@ function AKS_testAccess002Schema11_readsAccess10WithoutWrite_() {
     identity: "manager@example.com"
   });
   var view = fixture.service.readRegistry();
-  assertEquals_("access/1.1", view.schemaVersion);
+  assertEquals_("access/1.2", view.schemaVersion);
   assertEquals_(0, fixture.writes());
 }
 
@@ -98,8 +98,8 @@ function AKS_testAccess002Schema11_preservesLegacyAnalyticsRead_() {
 
 function AKS_testAccess002Schema11_exposesClosedImmutableCatalogue_() {
   var catalogue = AKS.Core.AccessModelCatalogue.get();
-  assertEquals_("access/1.1", catalogue.schemaVersion);
-  assertEquals_(JSON.stringify(["access/1.0", "access/1.1"]),
+  assertEquals_("access/1.2", catalogue.schemaVersion);
+  assertEquals_(JSON.stringify(["access/1.0", "access/1.1", "access/1.2"]),
     JSON.stringify(catalogue.readableSchemaVersions));
   assertEquals_(JSON.stringify(["ANALYTICS_READ", "ANALYTICS_PREVIEW", "ANALYTICS_PUBLISH"]),
     JSON.stringify(catalogue.modules.ANALYTICS.capabilities));
@@ -120,8 +120,8 @@ function AKS_testAccess002Schema11_canonicalizesAuthorizedWrite_() {
   var result = fixture.service.updateRegistry({
     expectedRevision: before.revision, registry: proposed
   });
-  assertEquals_("access/1.1", result.schemaVersion);
-  assertEquals_("access/1.1", fixture.registry().schemaVersion);
+  assertEquals_("access/1.2", result.schemaVersion);
+  assertEquals_("access/1.2", fixture.registry().schemaVersion);
   assertEquals_(1, fixture.writes());
 }
 

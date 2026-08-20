@@ -1,7 +1,7 @@
 var AKS = AKS || {};
 AKS.Core = AKS.Core || {};
 
-/** ACCESS-002-04 closed administration catalogue. */
+/** ACCESS-002-06 closed administration catalogue. */
 AKS.Core.AccessModelCatalogue = Object.freeze({
   get: function () {
     function freeze_(value) {
@@ -10,8 +10,8 @@ AKS.Core.AccessModelCatalogue = Object.freeze({
       return Object.freeze(value);
     }
     return freeze_({
-      schemaVersion: "access/1.1",
-      readableSchemaVersions: ["access/1.0", "access/1.1"],
+      schemaVersion: "access/1.2",
+      readableSchemaVersions: ["access/1.0", "access/1.1", "access/1.2"],
       roles: ["ADMINISTRATEUR", "ASSISTANT_AFA", "CONSULTATION", "PROFESSEUR"],
       modules: {
         ATTENDANCE: {
@@ -37,6 +37,10 @@ AKS.Core.AccessModelCatalogue = Object.freeze({
         },
         ACCESS: {
           storageModule: "ACCESS", scope: [], capabilities: ["ACCESS_MANAGE"]
+        },
+        ADMINISTRATION: {
+          storageModule: "ADMINISTRATION", scope: [],
+          capabilities: ["CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET", "LOG_READ"]
         }
       }
     });

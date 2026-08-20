@@ -31,7 +31,7 @@ function AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_() {
   assertEquals_(true, result.account.editable);
   assertEquals_("ATTENDANCE", result.account.assignments[0].module);
   assertEquals_(undefined, result.account.email);
-  assertEquals_("access/1.1", result.catalogues.schemaVersion);
+  assertEquals_("access/1.2", result.catalogues.schemaVersion);
   assertTrue_(Object.isFrozen(result));
   assertTrue_(Object.isFrozen(result.catalogues.modules));
 }

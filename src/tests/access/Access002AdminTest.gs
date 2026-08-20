@@ -148,7 +148,7 @@ function AKS_testAccess002Catalogue_preservesAccess10Compatibility_() {
 function AKS_testAccess002Admin_readsRegistryWithAccessManage_() {
   var fixture = AKS_access002AdminFixture_();
   var view = fixture.service.readRegistry();
-  assertEquals_("access/1.1", view.schemaVersion);
+  assertEquals_("access/1.2", view.schemaVersion);
   assertEquals_(2, view.accounts.length);
   assertEquals_("admin@example.com", view.accounts[0].updatedBy);
   assertEquals_(false, view.bootstrap);
@@ -256,7 +256,7 @@ function AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_() {
     });
   }, "ACCESS_AUDIT_REQUIRED");
   assertEquals_(2, fixture.writes());
-  assertEquals_("", fixture.registry().accounts[1].displayName);
+  assertEquals_(undefined, fixture.registry().accounts[1].displayName);
   assertEquals_(2, fixture.auditEvents.length);
   assertEquals_("INTENTION", fixture.auditEvents[0].result);
   assertEquals_("ECHEC", fixture.auditEvents[1].result);

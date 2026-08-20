@@ -87,7 +87,7 @@ function AKS_createAccess002HabilitationRecipe_(ports) {
           entry.summary.rolesAdded.indexOf("CONSULTATION") !== -1 &&
           entry.summary.assignmentsAdded === 1;
       });
-      if (verified.schemaVersion !== "access/1.1" || analytics.length !== 1 ||
+      if (verified.schemaVersion !== "access/1.2" || analytics.length !== 1 ||
           verified.account.roles.indexOf("CONSULTATION") === -1 || proof.length < 1) {
         throw failure_("ACCESS_HABILITATION_RECIPE_VERIFICATION_FAILED",
           "La fiche ou son historique fonctionnel n'est pas vérifié.");
