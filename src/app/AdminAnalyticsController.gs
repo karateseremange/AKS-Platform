@@ -246,3 +246,13 @@ function AKS_publishAdminAnalyticsReports(request) {
 function AKS_includeAdminAnalyticsFile_(path) {
   return HtmlService.createHtmlOutputFromFile(path).getContent();
 }
+
+/**
+ * Reads an unevaluated Analytics template for structural tests.
+ *
+ * Unlike createHtmlOutputFromFile(), this accepts Apps Script template
+ * scriptlets and must never be used to serve a response directly.
+ */
+function AKS_getAdminAnalyticsTemplateSource_(path) {
+  return HtmlService.createTemplateFromFile(path).getRawContent();
+}
