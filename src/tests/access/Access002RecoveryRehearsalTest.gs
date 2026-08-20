@@ -26,6 +26,11 @@ function AKS_access002RecoveryFixture_(options) {
   var base = {
     preflight: function () {
       calls.push("base:preflight");
+      if (options.auditUnavailable) {
+        var auditError = new Error("audit unavailable");
+        auditError.code = "ACCESS_RECIPE_AUDIT_REQUIRED";
+        throw auditError;
+      }
       return {
         environment: "RECETTE",
         scriptIdSuffix: "eIRxs4",
@@ -82,6 +87,18 @@ function AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_() {
   assertTrue_(fixture.calls.indexOf("base:restore") === -1);
 }
 
+function AKS_testAccess002Recovery_reportsMissingPersistentAudit_() {
+  var fixture = AKS_access002RecoveryFixture_({ auditUnavailable: true });
+  var result = fixture.rehearsal.preflight();
+  assertEquals_(false, result.ok);
+  assertEquals_("PERSISTENT_AUDIT_REQUIRED", result.blocker);
+  assertEquals_(false, result.writePerformed);
+  assertTrue_(fixture.calls.indexOf("base:apply") === -1);
+  assertThrows_(function () {
+    fixture.rehearsal.runReversible();
+  }, "ACCESS_RECOVERY_REHEARSAL_PREFLIGHT_BLOCKED");
+}
+
 function AKS_testAccess002Recovery_restoresAccess11RawExactly_() {
   var fixture = AKS_access002RecoveryFixture_();
   var result = fixture.rehearsal.runReversible();
@@ -136,6 +153,7 @@ function AKS_testAccess002Recovery_exposesNonExecutableRealProcedure_() {
 function AKS_runAccess002RecoveryRehearsalSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-06 — récupération réversible", [
     { name: "précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ },
+    { name: "audit persistant manquant diagnostiqué", test: AKS_testAccess002Recovery_reportsMissingPersistentAudit_ },
     { name: "restauration brute access/1.1 exacte", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ },
     { name: "propriétés temporaires supprimées", test: AKS_testAccess002Recovery_removesTemporaryProperties_ },
     { name: "échec applicatif auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ },
