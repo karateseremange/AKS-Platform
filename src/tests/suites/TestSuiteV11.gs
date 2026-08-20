@@ -116,6 +116,7 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / read-only parameter", test: AKS_testConfig001AdminUi_marksReadOnlyParameter_ },
     { name: "CONFIG-001 / authenticated mutation actor", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
     { name: "CONFIG-001 / administration restores default", test: AKS_testConfig001AdminUi_restoresDefault_ },
+    { name: "CONFIG-001 / administration navigation", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
     { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ },
     { name: "ACCESS-002-06 / Config vue adaptée aux permissions", test: AKS_testConfig001AdminUi_viewAdaptsToServerPermissions_ },
 
