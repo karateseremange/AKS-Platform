@@ -68,6 +68,28 @@ function AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_() {
   }));
 }
 
+function AKS_testAccess002Portal_showsLogsForExplicitLogRead_() {
+  var model = AKS_access002PortalFixture_({
+    email: "logs@example.com", roles: ["CONSULTATION"], bootstrap: false,
+    assignments: [{
+      module: "ADMINISTRATION", capabilities: ["LOG_READ"]
+    }]
+  }).service.getPortalModel();
+  assertEquals_(JSON.stringify(["admin.logs"]),
+    JSON.stringify(model.destinations.map(function (entry) { return entry.id; })));
+  assertEquals_(false, model.destinations[0].transitional);
+}
+
+function AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_() {
+  var model = AKS_access002PortalFixture_({
+    email: "legacy@example.com", roles: ["ADMINISTRATEUR"],
+    assignments: [], bootstrap: false
+  }, true).service.getPortalModel();
+  assertEquals_(false, model.destinations.some(function (entry) {
+    return entry.id === "admin.logs";
+  }));
+}
+
 function AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_() {
   var model = AKS_access002PortalFixture_({
     email: "manager@example.com", roles: ["ADMINISTRATEUR"], bootstrap: false,
@@ -146,6 +168,8 @@ function AKS_runAccess002PortalProjectionSuite() {
     { name: "Analytics visible pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ },
     { name: "Paramétrage visible pour toute capacité", test: AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_ },
     { name: "Paramétrage historique borné au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_ },
+    { name: "Journaux visibles avec LOG_READ", test: AKS_testAccess002Portal_showsLogsForExplicitLogRead_ },
+    { name: "Journaux historiques bornés au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_ },
     { name: "ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ },
     { name: "historique borné", test: AKS_testAccess002Portal_preservesBoundedHistoricalDestinations_ },
     { name: "état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ },
