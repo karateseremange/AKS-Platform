@@ -97,6 +97,12 @@ function AKS_createAccessRecoveryRehearsal_(ports) {
 
   function runReversible() {
     var preview = preflight();
+    if (preview.ok !== true) {
+      throw failure_(
+        "ACCESS_RECOVERY_REHEARSAL_PREFLIGHT_BLOCKED",
+        "Le précontrôle de récupération doit être validé avant la recette."
+      );
+    }
     var rawBefore = propertyStore.getProperty(REGISTRY_KEY);
     var applyResult = null;
     var primaryFailure = null;
