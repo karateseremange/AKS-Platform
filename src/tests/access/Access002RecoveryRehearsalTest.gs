@@ -1,12 +1,15 @@
 function AKS_access002RecoveryFixture_(options) {
   options = options || {};
   var calls = [];
-  var initialRaw = options.initialRaw || JSON.stringify({
+  var initialRaw = Object.prototype.hasOwnProperty.call(options, "initialRaw")
+    ? options.initialRaw
+    : JSON.stringify({
     schemaVersion: "access/1.1",
     revision: "rev-initial",
     accounts: []
   });
-  var values = { AKS_ACCESS_REGISTRY: initialRaw };
+  var values = {};
+  if (initialRaw !== null) values.AKS_ACCESS_REGISTRY = initialRaw;
 
   var store = {
     getProperty: function (key) {
@@ -55,7 +58,10 @@ function AKS_access002RecoveryFixture_(options) {
       if (options.failRestore) {
         throw new Error("restore failure");
       }
-      values.AKS_ACCESS_REGISTRY = options.restoreRaw || initialRaw;
+      var restoredRaw = Object.prototype.hasOwnProperty.call(options, "restoreRaw")
+        ? options.restoreRaw : initialRaw;
+      if (restoredRaw === null) delete values.AKS_ACCESS_REGISTRY;
+      else values.AKS_ACCESS_REGISTRY = restoredRaw;
       delete values.AKS_ACCESS002_RECIPE_BACKUP;
       if (options.leaveTemporaryState) {
         values.AKS_ACCESS002_RECOVERY_BACKUP = "remaining";
@@ -109,6 +115,28 @@ function AKS_testAccess002Recovery_restoresAccess11RawExactly_() {
   assertEquals_(false, result.realRecoveryExecuted);
 }
 
+function AKS_testAccess002Recovery_restoresAbsentRegistryExactly_() {
+  var fixture = AKS_access002RecoveryFixture_({ initialRaw: null });
+  var result = fixture.rehearsal.runReversible();
+  assertEquals_(null, result.initialSchemaVersion);
+  assertEquals_(true, result.exactRestore);
+  assertEquals_(undefined, fixture.values.AKS_ACCESS_REGISTRY);
+}
+
+function AKS_testAccess002Recovery_reportsRestoreFailure_() {
+  var fixture = AKS_access002RecoveryFixture_({ failRestore: true });
+  assertThrows_(function () {
+    fixture.rehearsal.runReversible();
+  }, "ACCESS_RECOVERY_REHEARSAL_RESTORE_FAILED");
+}
+
+function AKS_testAccess002Recovery_refusesRemainingTemporaryState_() {
+  var fixture = AKS_access002RecoveryFixture_({ leaveTemporaryState: true });
+  assertThrows_(function () {
+    fixture.rehearsal.runReversible();
+  }, "ACCESS_RECOVERY_REHEARSAL_TEMPORARY_STATE_REMAINS");
+}
+
 function AKS_testAccess002Recovery_removesTemporaryProperties_() {
   var fixture = AKS_access002RecoveryFixture_();
   var result = fixture.rehearsal.runReversible();
@@ -155,6 +183,9 @@ function AKS_runAccess002RecoveryRehearsalSuite() {
     { name: "précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ },
     { name: "audit persistant manquant diagnostiqué", test: AKS_testAccess002Recovery_reportsMissingPersistentAudit_ },
     { name: "restauration brute access/1.1 exacte", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ },
+    { name: "registre absent restauré exactement", test: AKS_testAccess002Recovery_restoresAbsentRegistryExactly_ },
+    { name: "échec de restauration explicite", test: AKS_testAccess002Recovery_reportsRestoreFailure_ },
+    { name: "résidu temporaire refusé", test: AKS_testAccess002Recovery_refusesRemainingTemporaryState_ },
     { name: "propriétés temporaires supprimées", test: AKS_testAccess002Recovery_removesTemporaryProperties_ },
     { name: "échec applicatif auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ },
     { name: "restauration inexacte refusée", test: AKS_testAccess002Recovery_refusesInexactRestore_ },
