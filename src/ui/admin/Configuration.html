@@ -9,20 +9,28 @@
     <main
       class="aks-config-shell"
       data-configuration-target="<?= viewModel.navigation.configurationTarget ?>"
+      data-can-read="<?= viewModel.permissions.read ? "true" : "false" ?>"
+      data-can-write="<?= viewModel.permissions.write ? "true" : "false" ?>"
+      data-can-reset="<?= viewModel.permissions.reset ? "true" : "false" ?>"
     >
       <header class="aks-config-header">
         <div>
           <p class="aks-config-eyebrow">Administration</p>
           <h1>Paramétrage</h1>
-          <p>Consultez les valeurs effectives et modifiez uniquement les paramètres autorisés.</p>
+          <p>Consultez les valeurs effectives et utilisez uniquement les actions autorisées.</p>
         </div>
         <a class="aks-config-back" href="<?= viewModel.navigation.homeTarget ?>">
           Retour au Centre de pilotage
         </a>
       </header>
 
-      <div id="aks-config-message" class="aks-config-message" role="status" aria-live="polite"></div>
+      <div id="aks-config-message" class="aks-config-message" role="status" aria-live="polite">
+        <? if (!viewModel.permissions.read) { ?>
+          Votre affectation Paramétrage est incomplète : la consultation exige CONFIG_READ.
+        <? } ?>
+      </div>
 
+      <? if (viewModel.permissions.read) { ?>
       <section class="aks-config-list" aria-label="Paramètres de la plateforme">
         <? viewModel.parameters.forEach(function (parameter) { ?>
           <article class="aks-config-card" data-key="<?= parameter.key ?>">
@@ -48,7 +56,7 @@
 
             <? if (parameter.sensitive) { ?>
               <p class="aks-config-sensitive">Valeur sensible masquée.</p>
-            <? } else if (parameter.administrable) { ?>
+            <? } else if (parameter.administrable && viewModel.permissions.write) { ?>
               <form class="aks-config-form" data-type="<?= parameter.type ?>">
                 <label for="value-<?= parameter.key ?>">Valeur</label>
                 <? if (parameter.type === "boolean") { ?>
@@ -67,7 +75,7 @@
                 <? } ?>
                 <div class="aks-config-actions">
                   <button type="submit">Enregistrer</button>
-                  <? if (parameter.canReset) { ?>
+                  <? if (viewModel.permissions.reset && parameter.canReset) { ?>
                     <button type="button" class="aks-config-reset">Restaurer la valeur par défaut</button>
                   <? } ?>
                 </div>
@@ -75,12 +83,13 @@
             <? } else { ?>
               <p class="aks-config-readonly">
                 <?= parameter.value === null ? "Valeur non disponible" : parameter.value ?>
-                <span>Non modifiable depuis l’administration</span>
+                <span><?= parameter.administrable ? "Consultation seule" : "Non modifiable depuis l’administration" ?></span>
               </p>
             <? } ?>
           </article>
         <? }); ?>
       </section>
+      <? } ?>
     </main>
     <?!= AKS_includeAdminConfigurationFile_("ui/admin/ConfigurationClient"); ?>
   </body>
