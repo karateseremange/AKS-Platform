@@ -204,6 +204,20 @@ function AKS_testConfig001AdminUi_restoresDefault_() {
   assertEquals_("default", result.parameter.source);
 }
 
+function AKS_testConfig001AdminUi_publishesNavigationDestination_() {
+  var model = AKS.Admin.Navigation.getModel("https://example.test/app");
+  var administration = model.families.filter(function (family) {
+    return family.id === "administration";
+  })[0];
+
+  assertEquals_("admin.config", administration.destinations[0].id);
+  assertEquals_("https://example.test/app?app=config",
+    administration.destinations[0].target);
+  assertEquals_("admin.logs", administration.destinations[1].id);
+  assertEquals_("https://example.test/app?app=logs",
+    administration.destinations[1].target);
+}
+
 function AKS_testConfig001AdminUi_masksSensitiveValue_() {
   var registry = AKS_createParameterRegistry_();
   registry.register({
@@ -247,6 +261,7 @@ function AKS_runConfigAdminUiSuite() {
     { name: "paramètre en lecture seule", test: AKS_testConfig001AdminUi_marksReadOnlyParameter_ },
     { name: "acteur authentifié", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
     { name: "restauration par défaut", test: AKS_testConfig001AdminUi_restoresDefault_ },
+    { name: "navigation administrative", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
     { name: "valeur sensible masquée", test: AKS_testConfig001AdminUi_masksSensitiveValue_ },
     { name: "vue adaptée aux permissions", test: AKS_testConfig001AdminUi_viewAdaptsToServerPermissions_ }
   ]);
