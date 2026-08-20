@@ -525,6 +525,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / recette échec écriture auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresFailedSave_ }
     ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
     ,{ name: "ACCESS-002-06 / récupération précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ }
+    ,{ name: "ACCESS-002-06 / récupération audit persistant requis", test: AKS_testAccess002Recovery_reportsMissingPersistentAudit_ }
     ,{ name: "ACCESS-002-06 / récupération access/1.1 restaurée exactement", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ }
     ,{ name: "ACCESS-002-06 / récupération état temporaire supprimé", test: AKS_testAccess002Recovery_removesTemporaryProperties_ }
     ,{ name: "ACCESS-002-06 / récupération échec auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ }
