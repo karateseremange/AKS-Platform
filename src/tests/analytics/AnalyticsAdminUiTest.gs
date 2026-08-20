@@ -242,7 +242,7 @@ function AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_() {
 }
 
 function AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_() {
-  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
   assertEquals_(true, source.indexOf("viewModel.permissions.diagnose") !== -1);
   assertEquals_(true, source.indexOf("viewModel.permissions.preview") !== -1);
   assertEquals_(true, source.indexOf("viewModel.permissions.publish") !== -1);
@@ -252,7 +252,7 @@ function AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_() {
 }
 
 function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
-  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
   assertEquals_(true, source.indexOf('role="status"') !== -1);
   assertEquals_(true, source.indexOf('aria-live="polite"') !== -1);
   assertEquals_(true, source.indexOf("Je confirme la publication") !== -1);
@@ -260,7 +260,7 @@ function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
 }
 
 function AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_() {
-  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
   var style = AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle");
   assertEquals_(true, source.indexOf('ui/admin/DashboardStyle') !== -1);
   assertEquals_(true, source.indexOf('aks-admin-card__header') !== -1);
