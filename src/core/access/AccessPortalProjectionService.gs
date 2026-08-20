@@ -6,7 +6,6 @@ function AKS_createAccessPortalProjectionService_(options) {
   "use strict";
   options = options || {};
   var accessService = options.accessService;
-  var legacyAdministrator = options.legacyAdministrator || function () { return false; };
   var baseUrlProvider = options.baseUrlProvider || function () { return ""; };
   var DESTINATIONS = [
     { id: "module.analytics.attendance", label: "Saisie des présences",
@@ -23,17 +22,14 @@ function AKS_createAccessPortalProjectionService_(options) {
       bootstrapHistorical: true },
     { id: "admin.logs", label: "Journaux", family: "administration",
       target: "?app=logs", priority: 30, capabilities: ["LOG_READ"],
-      bootstrapHistorical: true },
-    { id: "module.health-questionnaire", label: "Questionnaire santé",
-      family: "modules", target: "?app=health-questionnaire", priority: 40,
-      historical: true }
+      bootstrapHistorical: true }
   ];
 
   function error_(code, message) {
     var failure = new Error(message); failure.code = code; return failure;
   }
   if (!accessService || typeof accessService.getEffectiveAccessSnapshot !== "function" ||
-      typeof legacyAdministrator !== "function" || typeof baseUrlProvider !== "function") {
+      typeof baseUrlProvider !== "function") {
     throw error_("ACCESS_PORTAL_UNAVAILABLE", "Portail privé indisponible.");
   }
   function immutable_(value) {
@@ -57,7 +53,7 @@ function AKS_createAccessPortalProjectionService_(options) {
   }
   function getPortalModel() {
     var snapshot = accessService.getEffectiveAccessSnapshot();
-    var historical = legacyAdministrator(snapshot.email) === true;
+    var bootstrap = snapshot.bootstrap === true;
     var capabilities = capabilities_(snapshot);
     var baseUrl = String(baseUrlProvider() || "").trim();
     function hasEntryCapability_(entry) {
@@ -68,16 +64,15 @@ function AKS_createAccessPortalProjectionService_(options) {
     var destinations = DESTINATIONS.filter(function (entry) {
       if (entry.bootstrapHistorical === true) {
         return hasEntryCapability_(entry) ||
-          snapshot.bootstrap === true && historical;
+          bootstrap;
       }
-      return entry.historical === true ? historical : hasEntryCapability_(entry);
+      return hasEntryCapability_(entry);
     }).map(function (entry) {
       var explicit = hasEntryCapability_(entry);
       return {
         id: entry.id, label: entry.label, family: entry.family,
         target: target_(baseUrl, entry.target), priority: entry.priority,
-        transitional: entry.historical === true ||
-          entry.bootstrapHistorical === true && !explicit
+        transitional: entry.bootstrapHistorical === true && !explicit
       };
     }).filter(function (entry) { return !!entry.target; }).sort(function (left, right) {
       return left.priority - right.priority || (left.id < right.id ? -1 : 1);
@@ -86,7 +81,8 @@ function AKS_createAccessPortalProjectionService_(options) {
       identity: { email: snapshot.email },
       state: destinations.length ? "AUTHORIZED" : "NO_ACCESS",
       hasEffectiveAccess: snapshot.assignments.length > 0,
-      legacyAdministrativeAccess: historical,
+      bootstrapAccess: bootstrap,
+      legacyAdministrativeAccess: bootstrap,
       destinations: destinations
     });
   }
