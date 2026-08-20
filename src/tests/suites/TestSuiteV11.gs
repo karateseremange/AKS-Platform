@@ -524,6 +524,12 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / recette restauration exacte", test: AKS_testAccess002HabilitationRecipe_restoresExactInitialState_ }
     ,{ name: "ACCESS-002-04 / recette échec écriture auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresFailedSave_ }
     ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
+    ,{ name: "ACCESS-002-06 / récupération précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ }
+    ,{ name: "ACCESS-002-06 / récupération access/1.1 restaurée exactement", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ }
+    ,{ name: "ACCESS-002-06 / récupération état temporaire supprimé", test: AKS_testAccess002Recovery_removesTemporaryProperties_ }
+    ,{ name: "ACCESS-002-06 / récupération échec auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ }
+    ,{ name: "ACCESS-002-06 / récupération restauration inexacte refusée", test: AKS_testAccess002Recovery_refusesInexactRestore_ }
+    ,{ name: "ACCESS-002-06 / récupération réelle non exécutable", test: AKS_testAccess002Recovery_exposesNonExecutableRealProcedure_ }
     ,{ name: "ACCESS-002-05 / portail Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ }
     ,{ name: "ACCESS-002-05 / portail Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ }
     ,{ name: "ACCESS-002-06 / carte Analytics pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ }
