@@ -65,7 +65,23 @@ function AKS_createAccessRecoveryRehearsal_(ports) {
 
   function preflight() {
     var rawBefore = propertyStore.getProperty(REGISTRY_KEY);
-    var base = baseRecipe.preflight();
+    var base;
+    try {
+      base = baseRecipe.preflight();
+    } catch (error) {
+      if (error && error.code === "ACCESS_RECIPE_AUDIT_REQUIRED") {
+        return freeze_({
+          ok: false,
+          phase: "PREFLIGHT",
+          blocker: "PERSISTENT_AUDIT_REQUIRED",
+          initialSchemaVersion: schemaVersion_(rawBefore),
+          writePerformed: false,
+          realRecoveryExecutable: false,
+          restorationRequired: true
+        });
+      }
+      throw error;
+    }
     return freeze_({
       ok: true,
       phase: "PREFLIGHT",
