@@ -475,14 +475,20 @@ function AKS_createLog001AdminFixture_(options) {
   options = options || {};
   var events = options.events || [];
   var reads = 0;
+  var calls = { assertions: [], identity: 0 };
   var access = {
-    assertCurrentUserAuthorized: function () {
+    assertAdministrationCapability: function (capability) {
+      calls.assertions.push(capability);
       if (options.denied) {
-        var error = new Error("Accès refusé.");
-        error.code = "ADMIN001_ACCESS_DENIED";
+        var error = new Error("Journaux non autorisés.");
+        error.code = "ACCESS_CAPABILITY_DENIED";
         throw error;
       }
-      return "admin@example.com";
+      return true;
+    },
+    getCurrentIdentity: function () {
+      calls.identity += 1;
+      return options.email || "reader@example.com";
     }
   };
   return {
@@ -491,12 +497,14 @@ function AKS_createLog001AdminFixture_(options) {
       {
         listRecent: function (limit) {
           reads += 1;
+          if (options.storageFailure) throw new Error("Stockage indisponible");
           return events.slice(0, limit);
         }
       },
       function () { return "https://example.test/app"; }
     ),
-    reads: function () { return reads; }
+    reads: function () { return reads; },
+    calls: calls
   };
 }
 
@@ -505,7 +513,27 @@ function AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_() {
 
   assertThrows_(function () {
     fixture.controller.getViewModel();
-  }, "ADMIN001_ACCESS_DENIED");
+  }, "ACCESS_CAPABILITY_DENIED");
+  assertEquals_(0, fixture.reads());
+  assertEquals_(0, fixture.calls.identity);
+}
+
+function AKS_testLog001Admin_reauthorizesEveryReadWithLogRead_() {
+  var fixture = AKS_createLog001AdminFixture_();
+  fixture.controller.getViewModel();
+  fixture.controller.getDashboardModel();
+
+  assertEquals_(JSON.stringify(["LOG_READ", "LOG_READ"]),
+    JSON.stringify(fixture.calls.assertions));
+  assertEquals_(2, fixture.calls.identity);
+  assertEquals_(2, fixture.reads());
+}
+
+function AKS_testLog001Admin_dashboardDenialIsNotDegraded_() {
+  var fixture = AKS_createLog001AdminFixture_({ denied: true });
+  assertThrows_(function () {
+    fixture.controller.getDashboardModel();
+  }, "ACCESS_CAPABILITY_DENIED");
   assertEquals_(0, fixture.reads());
 }
 
@@ -567,32 +595,26 @@ function AKS_testLog001Admin_presentsMaskedDetailsReadOnly_() {
 }
 
 function AKS_testLog001Admin_buildsReadOnlyNavigation_() {
-  var model = AKS_createLog001AdminFixture_().controller.getViewModel();
+  var model = AKS_createLog001AdminFixture_({
+    email: "logs@example.com"
+  }).controller.getViewModel();
 
-  assertEquals_("admin@example.com", model.administrator.email);
-  assertEquals_(
-    "https://example.test/app?app=admin",
-    model.navigation.homeTarget
-  );
-  assertEquals_(
-    "https://example.test/app?app=logs",
-    model.navigation.logsTarget
-  );
+  assertEquals_("logs@example.com", model.administrator.email);
+  assertEquals_("https://example.test/app?app=admin",
+    model.navigation.homeTarget);
+  assertEquals_("https://example.test/app?app=logs",
+    model.navigation.logsTarget);
   assertEquals_(undefined, model.actions);
 }
 
 function AKS_testLog001Admin_dashboardDegradesWithoutStorage_() {
-  var controller = AKS_createAdminLogController_(
-    { assertCurrentUserAuthorized: function () { return "admin@example.com"; } },
-    { listRecent: function () { throw new Error("Stockage indisponible"); } },
-    function () { return "https://example.test/app"; }
-  );
-  var model = controller.getDashboardModel();
+  var fixture = AKS_createLog001AdminFixture_({ storageFailure: true });
+  var model = fixture.controller.getDashboardModel();
 
   assertEquals_(false, model.available);
   assertEquals_(0, model.events.length);
-  assertEquals_(
-    "https://example.test/app?app=logs",
-    model.navigation.logsTarget
-  );
+  assertEquals_("https://example.test/app?app=logs",
+    model.navigation.logsTarget);
+  assertEquals_(JSON.stringify(["LOG_READ"]),
+    JSON.stringify(fixture.calls.assertions));
 }
