@@ -6,7 +6,8 @@ function AKS_runVersion001Tests() {
     { name: "Copies défensives", run: AKS_testVersion001ReturnsDefensiveCopies_ },
     { name: "Provider invalide", run: AKS_testVersion001RejectsInvalidProvider_ },
     { name: "Métadonnées invalides", run: AKS_testVersion001RejectsInvalidProviderResult_ },
-    { name: "Normalisation", run: AKS_testVersion001NormalizesRequiredStrings_ }
+    { name: "Normalisation", run: AKS_testVersion001NormalizesRequiredStrings_ },
+    { name: "Candidate exacte", run: AKS_testVersion001ExposesExactReleaseCandidate_ }
   ];
   var passed = 0;
   var failures = [];
