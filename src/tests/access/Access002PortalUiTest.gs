@@ -3,12 +3,19 @@ function AKS_access002PortalUiModel_(overrides) {
   return AKS_buildPortalDashboardViewModel_({
     identity: { email: overrides.email || "user@example.com" },
     state: overrides.state || "AUTHORIZED",
+    bootstrapAccess: overrides.bootstrap === true,
     legacyAdministrativeAccess: overrides.legacy === true,
     destinations: overrides.destinations || [{ id: "module.analytics", label: "Analytics",
       family: "modules", target: "https://example.test/exec?app=analytics",
       priority: 20, transitional: false }]
   }, { version: "1.3.0", releaseName: "Test" }, "https://example.test/exec",
     overrides.logs || null);
+}
+
+function AKS_testAccess002PortalUi_hidesMyAccessDuringBootstrap_() {
+  var model = AKS_access002PortalUiModel_({ bootstrap: true });
+  var ids = model.actions.map(function (entry) { return entry.id; });
+  assertEquals_(-1, ids.indexOf("access.my-access"));
 }
 
 function AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_() {
@@ -74,6 +81,7 @@ function AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_() {
 function AKS_runAccess002PortalUiSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-05 — Portail AKS", [
     { name: "Mes accès toujours visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ },
+    { name: "Mes accès masqué pendant le bootstrap", test: AKS_testAccess002PortalUi_hidesMyAccessDuringBootstrap_ },
     { name: "destinations projetées uniquement", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ },
     { name: "état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ },
     { name: "journaux selon destination projetée", test: AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_ },
