@@ -42,6 +42,10 @@ function AKS_createDefaultAuditService_() {
       getResourceId: function () { return gateway_().getResourceId(); },
       getResourceName: function () { return gateway_().getResourceName(); },
       getHeaders: function () { return gateway_().getHeaders(); },
+      getRowCount: function () { return gateway_().getRowCount(); },
+      getPermissionSnapshot: function () {
+        return gateway_().getPermissionSnapshot();
+      },
       findRowsByAuditId: function (auditId) {
         return gateway_().findRowsByAuditId(auditId);
       },
@@ -51,6 +55,7 @@ function AKS_createDefaultAuditService_() {
     resolveActor: activeIdentity_,
     authorizeActor: authorizeActor_,
     resolveTechnicalActor: technicalIdentity_,
+    resolveScriptId: function () { return ScriptApp.getScriptId(); },
     idProvider: function () { return Utilities.getUuid(); },
     technicalLogger: function (event) {
       if (AKS.Logging && typeof AKS.Logging.emit === "function") AKS.Logging.emit(event);
@@ -127,6 +132,10 @@ AKS.Core.Audit = Object.freeze({
   isPersistentRecipeAudit: function () {
     return AKS_createDefaultAuditService_().isPersistentRecipeAudit();
   },
+  isPersistentAuditAvailable: function () {
+    return AKS_createDefaultAuditService_().isPersistentAuditAvailable();
+  },
+  preflight: function () { return AKS_createDefaultAuditService_().preflight(); },
   getSchema: function () {
     return Object.freeze({
       version: AKS_AUDIT_CATALOGS_.schemaVersion,

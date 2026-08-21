@@ -849,8 +849,8 @@ function AKS_createAccessService_(options) {
   function assertPersistentAudit_() {
     if (!audit || typeof audit.record !== "function" ||
         typeof audit.recordUnderExistingLock !== "function" ||
-        typeof audit.isPersistentRecipeAudit !== "function" ||
-        audit.isPersistentRecipeAudit() !== true) {
+        typeof audit.isPersistentAuditAvailable !== "function" ||
+        audit.isPersistentAuditAvailable() !== true) {
       throw error_("ACCESS_AUDIT_REQUIRED", "Audit persistant des accès indisponible.");
     }
   }

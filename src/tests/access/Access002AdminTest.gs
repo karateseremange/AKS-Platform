@@ -104,6 +104,9 @@ function AKS_access002AdminFixture_(overrides) {
       },
       isPersistentRecipeAudit: function () {
         return overrides.persistentAudit !== false;
+      },
+      isPersistentAuditAvailable: function () {
+        return overrides.persistentAudit !== false;
       }
     },
     registryLock: {

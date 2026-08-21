@@ -5,8 +5,10 @@ function AKS_audit001Headers_() {
 function AKS_audit001Config_(overrides) {
   var values = {
     "audit.environment": "RECETTE",
+    "audit.scriptId": "1ScriptIdAbCdEfGhIjKlMnOpQrStUvWxYz01",
     "audit.spreadsheetId": "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789",
-    "audit.schemaVersion": "aks-audit/1.0"
+    "audit.schemaVersion": "aks-audit/1.0",
+    "audit.retentionDays": "1095"
   };
   Object.keys(overrides || {}).forEach(function (key) { values[key] = overrides[key]; });
   return {
@@ -67,6 +69,13 @@ function AKS_audit001Fixture_(overrides) {
     getHeaders: function () {
       return (overrides.headers || AKS_audit001Headers_()).slice();
     },
+    getRowCount: function () { return rows.length; },
+    getPermissionSnapshot: function () {
+      return overrides.permissions || {
+        available: true, sharingAccess: "PRIVATE", sharingPermission: "VIEW",
+        ownerEmail: "owner@example.com", editorEmails: []
+      };
+    },
     findRowsByAuditId: function (auditId) {
       return rows.filter(function (row) { return row[1] === auditId; })
         .map(function (row) { return row.slice(); });
@@ -96,6 +105,9 @@ function AKS_audit001Fixture_(overrides) {
     authorizeActor: overrides.authorizeActor || function () { return true; },
     resolveTechnicalActor: overrides.resolveTechnicalActor || function () {
       return "system.audit@example.com";
+    },
+    resolveScriptId: overrides.resolveScriptId || function () {
+      return "1ScriptIdAbCdEfGhIjKlMnOpQrStUvWxYz01";
     },
     clock: overrides.clock || function () { return dates.shift(); },
     idProvider: overrides.idProvider || function () {
@@ -135,10 +147,20 @@ function AKS_testAudit001_registersTechnicalConfiguration_() {
   var spreadsheet = audit.filter(function (definition) {
     return definition.key === "audit.spreadsheetId";
   })[0];
-  assertEquals_(3, audit.length);
+  var scriptId = audit.filter(function (definition) {
+    return definition.key === "audit.scriptId";
+  })[0];
+  var retention = audit.filter(function (definition) {
+    return definition.key === "audit.retentionDays";
+  })[0];
+  assertEquals_(5, audit.length);
   assertEquals_("enum", environment.type);
+  assertEquals_(JSON.stringify(["RECETTE", "PRODUCTION"]),
+    JSON.stringify(environment.allowedValues));
   assertEquals_(false, environment.administrable);
   assertEquals_(true, spreadsheet.sensitive);
+  assertEquals_(true, scriptId.sensitive);
+  assertEquals_(false, retention.administrable);
   assertEquals_(false, spreadsheet.hasDefault);
 }
 
@@ -360,19 +382,20 @@ function AKS_testAudit001_reducesUnknownReason_() {
   assertEquals_("UNEXPECTED_ERROR", proof.reason_code);
 }
 
-function AKS_testAudit001_rejectsNonRecipeBeforeLock_() {
+function AKS_testAudit001_acceptsExactProductionSupport_() {
   var fixture = AKS_audit001Fixture_({
-    configValues: { "audit.environment": "PRODUCTION" }
+    configValues: { "audit.environment": "PRODUCTION" },
+    resourceName: "AKS Audit PRODUCTION"
   });
-  assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-    "AUDIT_RECIPE_REQUIRED");
-  assertEquals_(0, fixture.lockAttempts());
+  var proof = fixture.service.record(AKS_audit001Event_());
+  assertEquals_("PRODUCTION", proof.environment);
+  assertEquals_(1, fixture.lockAttempts());
 }
 
 function AKS_testAudit001_rejectsResourceMismatch_() {
   var fixture = AKS_audit001Fixture_({ resourceId: "other-resource" });
   assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-    "AUDIT_RECIPE_REQUIRED");
+    "AUDIT_SUPPORT_MISMATCH");
 }
 
 function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
@@ -380,7 +403,7 @@ function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
     .forEach(function (name) {
     var fixture = AKS_audit001Fixture_({ resourceName: name });
     assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-      "AUDIT_RECIPE_REQUIRED");
+      "AUDIT_SUPPORT_MISMATCH");
     assertEquals_(0, fixture.lockAttempts());
     });
 }
@@ -388,7 +411,7 @@ function AKS_testAudit001_rejectsAmbiguousRecipeNames_() {
 function AKS_testAudit001_rejectsPaddedExactRecipeName_() {
   var fixture = AKS_audit001Fixture_({ resourceName: "  AKS Audit RECETTE  " });
   assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-    "AUDIT_RECIPE_REQUIRED");
+    "AUDIT_SUPPORT_MISMATCH");
   assertEquals_(0, fixture.lockAttempts());
 }
 
@@ -398,7 +421,7 @@ function AKS_testAudit001_rejectsNonExactRecipeEnvironment_() {
       configValues: { "audit.environment": environment }
     });
     assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-      "AUDIT_RECIPE_REQUIRED");
+      "AUDIT_ENVIRONMENT_INVALID");
     assertEquals_(0, fixture.lockAttempts());
   });
 }
@@ -486,7 +509,7 @@ function AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_() {
     resourceId: "x"
   });
   assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
-    "AUDIT_RECIPE_REQUIRED");
+    "AUDIT_SUPPORT_MISMATCH");
   assertEquals_(0, fixture.lockAttempts());
 }
 
@@ -589,12 +612,59 @@ function AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_() {
   assertEquals_(0, fixture.lockAttempts());
 }
 
+function AKS_testAudit001_preflightProductionPerformsNoWrite_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.environment": "PRODUCTION" },
+    resourceName: "AKS Audit PRODUCTION"
+  });
+  var result = fixture.service.preflight();
+  assertEquals_(true, result.ok);
+  assertEquals_(false, result.writePerformed);
+  assertEquals_("PRODUCTION", result.environment);
+  assertEquals_(1095, result.retentionDays);
+  assertEquals_(0, result.rowCount);
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_rejectsWrongScriptBeforeWrite_() {
+  var fixture = AKS_audit001Fixture_({
+    resolveScriptId: function () { return "1DifferentScriptIdAbCdEfGhIjKlMnOpQrSt"; }
+  });
+  assertThrows_(function () { fixture.service.preflight(); }, "AUDIT_SCRIPT_MISMATCH");
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_rejectsInvalidRetentionBeforeWrite_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.retentionDays": "365" }
+  });
+  assertThrows_(function () { fixture.service.preflight(); }, "AUDIT_RETENTION_INVALID");
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_rejectsPublicProductionSupport_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.environment": "PRODUCTION" },
+    resourceName: "AKS Audit PRODUCTION",
+    permissions: {
+      available: true, sharingAccess: "ANYONE_WITH_LINK", sharingPermission: "VIEW",
+      ownerEmail: "owner@example.com", editorEmails: []
+    }
+  });
+  assertThrows_(function () { fixture.service.preflight(); }, "AUDIT_PERMISSION_INVALID");
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
 function AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_() {
   var fixture = AKS_audit001Fixture_({
     configValues: { "audit.environment": "PRODUCTION" }
   });
   assertThrows_(function () { fixture.service.isPersistentRecipeAudit(); },
-    "AUDIT_RECIPE_REQUIRED");
+    "AUDIT_SUPPORT_MISMATCH");
   assertEquals_(0, fixture.rows.length);
   assertEquals_(0, fixture.lockAttempts());
 }
@@ -603,6 +673,9 @@ function AKS_testAudit001_exposesPersistentCommonPort_() {
   assertTrue_(AKS.Core.Audit && typeof AKS.Core.Audit.record === "function");
   assertTrue_(typeof AKS.Core.Audit.recordUnderExistingLock === "function");
   assertTrue_(typeof AKS.Core.Audit.isPersistentRecipeAudit === "function");
+  assertTrue_(typeof AKS.Core.Audit.isPersistentAuditAvailable === "function");
+  assertTrue_(typeof AKS.Core.Audit.preflight === "function");
+  assertEquals_("undefined", typeof AKS.Core.Audit.purge);
   assertEquals_(16, AKS.Core.Audit.getSchema().headers.length);
 }
 
@@ -754,6 +827,7 @@ function AKS_audit001RecipeFixture_(overrides) {
       return overrides.denied ? "" : actor;
     },
     clock: function () { return new Date("2026-08-08T15:00:00.000Z"); },
+    resolveScriptId: function () { return "1ScriptIdAbCdEfGhIjKlMnOpQrStUvWxYz01"; },
     idProvider: function () { return "recipe-uuid-001"; }
   });
   return {
@@ -917,6 +991,8 @@ function AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_() {
 function AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_() {
   var keys = [
     "AKS_CONFIG_VALUE.audit.environment",
+    "AKS_CONFIG_VALUE.audit.retentionDays",
+    "AKS_CONFIG_VALUE.audit.scriptId",
     "AKS_CONFIG_VALUE.audit.spreadsheetId",
     "AKS_CONFIG_VALUE.audit.schemaVersion"
   ];
@@ -954,7 +1030,7 @@ function AKS_runAudit001Tests() {
     { name: "valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ },
     { name: "catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ },
     { name: "motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ },
-    { name: "production refusée avant verrou", test: AKS_testAudit001_rejectsNonRecipeBeforeLock_ },
+    { name: "support production exact accepté", test: AKS_testAudit001_acceptsExactProductionSupport_ },
     { name: "ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ },
     { name: "marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ },
     { name: "nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ },
@@ -976,6 +1052,10 @@ function AKS_runAudit001Tests() {
     { name: "preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ },
     { name: "preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ },
     { name: "support persistant validé sans écriture", test: AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_ },
+    { name: "précontrôle production sans écriture", test: AKS_testAudit001_preflightProductionPerformsNoWrite_ },
+    { name: "projet Apps Script incompatible refusé", test: AKS_testAudit001_rejectsWrongScriptBeforeWrite_ },
+    { name: "conservation incompatible refusée", test: AKS_testAudit001_rejectsInvalidRetentionBeforeWrite_ },
+    { name: "support production public refusé", test: AKS_testAudit001_rejectsPublicProductionSupport_ },
     { name: "support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ },
     { name: "port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ },
     { name: "adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ },

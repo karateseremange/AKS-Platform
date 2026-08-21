@@ -8,9 +8,10 @@ AKS.Core = AKS.Core || {};
  *
  * @param {Object} spreadsheet
  * @param {string=} sheetName
+ * @param {Object=} driveFile
  * @returns {Object}
  */
-function AKS_createAuditSheetsGateway_(spreadsheet, sheetName) {
+function AKS_createAuditSheetsGateway_(spreadsheet, sheetName, driveFile) {
   sheetName = sheetName || "AKS_Audit";
 
   function error_(code, message) {
@@ -57,10 +58,35 @@ function AKS_createAuditSheetsGateway_(spreadsheet, sheetName) {
       .map(function (row) { return row.map(String); });
   }
 
+  function email_(principal) {
+    return principal && typeof principal.getEmail === "function"
+      ? String(principal.getEmail() || "").trim().toLowerCase()
+      : "";
+  }
+
+  function permissionSnapshot_() {
+    if (!driveFile || typeof driveFile.getSharingAccess !== "function" ||
+        typeof driveFile.getSharingPermission !== "function" ||
+        typeof driveFile.getOwner !== "function" ||
+        typeof driveFile.getEditors !== "function") {
+      return Object.freeze({ available: false });
+    }
+    var editors = driveFile.getEditors().map(email_).filter(Boolean).sort();
+    return Object.freeze({
+      available: true,
+      sharingAccess: String(driveFile.getSharingAccess()),
+      sharingPermission: String(driveFile.getSharingPermission()),
+      ownerEmail: email_(driveFile.getOwner()),
+      editorEmails: Object.freeze(editors)
+    });
+  }
+
   return Object.freeze({
     getResourceId: function () { return String(spreadsheet.getId()); },
     getResourceName: function () { return String(spreadsheet.getName()); },
     getHeaders: headers_,
+    getRowCount: function () { return Math.max(0, sheet_().getLastRow() - 1); },
+    getPermissionSnapshot: permissionSnapshot_,
     findRowsByAuditId: findRowsByAuditId_,
     listRows: listRows_,
     appendRow: function (row) {
@@ -70,5 +96,9 @@ function AKS_createAuditSheetsGateway_(spreadsheet, sheetName) {
 }
 
 function AKS_createConfiguredAuditSheetsGateway_(spreadsheetId) {
-  return AKS_createAuditSheetsGateway_(SpreadsheetApp.openById(spreadsheetId));
+  return AKS_createAuditSheetsGateway_(
+    SpreadsheetApp.openById(spreadsheetId),
+    "AKS_Audit",
+    DriveApp.getFileById(spreadsheetId)
+  );
 }

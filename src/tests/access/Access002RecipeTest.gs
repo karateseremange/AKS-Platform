@@ -44,6 +44,10 @@ function AKS_access002RecipeFixture_(overrides) {
     isPersistentRecipeAudit: function () {
       if (overrides.persistentAuditFailure) throw overrides.persistentAuditFailure;
       return overrides.persistentAudit !== false;
+    },
+    isPersistentAuditAvailable: function () {
+      if (overrides.persistentAuditFailure) throw overrides.persistentAuditFailure;
+      return overrides.persistentAudit !== false;
     }
   };
   function accessService_(identity, lockAlreadyHeld) {

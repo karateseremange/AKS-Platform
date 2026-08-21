@@ -75,7 +75,7 @@ function AKS_testConfig001AdminUi_buildsAuthorizedViewModel_() {
   assertEquals_("https://example.test/app?app=admin", model.navigation.homeTarget);
   assertEquals_("https://example.test/app?app=config",
     model.navigation.configurationTarget);
-  assertEquals_(14, model.parameters.length);
+  assertEquals_(16, model.parameters.length);
   var retention = model.parameters.filter(function (parameter) {
     return parameter.key === "logging.retentionDays";
   })[0];
@@ -94,7 +94,7 @@ function AKS_testConfig001AdminUi_adaptsExplicitCapabilityCombinations_() {
   assertEquals_(true, readOnly.permissions.read);
   assertEquals_(false, readOnly.permissions.write);
   assertEquals_(false, readOnly.permissions.reset);
-  assertEquals_(14, readOnly.parameters.length);
+  assertEquals_(16, readOnly.parameters.length);
 
   var writeWithoutRead = AKS_createConfig001AdminUiFixture_({
     capabilities: ["CONFIG_WRITE"]
