@@ -73,7 +73,7 @@ function AKS_audit001Fixture_(overrides) {
     getPermissionSnapshot: function () {
       return overrides.permissions || {
         available: true, sharingAccess: "PRIVATE", sharingPermission: "VIEW",
-        ownerEmail: "owner@example.com", editorEmails: []
+        ownerEmail: "system.audit@example.com", editorEmails: []
       };
     },
     findRowsByAuditId: function (auditId) {
@@ -392,6 +392,22 @@ function AKS_testAudit001_acceptsExactProductionSupport_() {
   assertEquals_(1, fixture.lockAttempts());
 }
 
+function AKS_testAudit001_rejectsExactCrossedSupports_() {
+  [
+    { environment: "RECETTE", resourceName: "AKS Audit PRODUCTION" },
+    { environment: "PRODUCTION", resourceName: "AKS Audit RECETTE" }
+  ].forEach(function (scenario) {
+    var fixture = AKS_audit001Fixture_({
+      configValues: { "audit.environment": scenario.environment },
+      resourceName: scenario.resourceName
+    });
+    assertThrows_(function () { fixture.service.preflight(); },
+      "AUDIT_SUPPORT_MISMATCH");
+    assertEquals_(0, fixture.rows.length);
+    assertEquals_(0, fixture.lockAttempts());
+  });
+}
+
 function AKS_testAudit001_rejectsResourceMismatch_() {
   var fixture = AKS_audit001Fixture_({ resourceId: "other-resource" });
   assertThrows_(function () { fixture.service.record(AKS_audit001Event_()); },
@@ -657,6 +673,91 @@ function AKS_testAudit001_rejectsPublicProductionSupport_() {
   assertThrows_(function () { fixture.service.preflight(); }, "AUDIT_PERMISSION_INVALID");
   assertEquals_(0, fixture.rows.length);
   assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_acceptsTechnicalEditorForProduction_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.environment": "PRODUCTION" },
+    resourceName: "AKS Audit PRODUCTION",
+    permissions: {
+      available: true, sharingAccess: "PRIVATE", sharingPermission: "VIEW",
+      ownerEmail: "owner@example.com", editorEmails: ["system.audit@example.com"]
+    }
+  });
+  var result = fixture.service.preflight();
+  assertEquals_(true, result.permissions.technicalWriterPresent);
+  assertEquals_(0, fixture.rows.length);
+}
+
+function AKS_testAudit001_rejectsProductionWithoutTechnicalWriter_() {
+  var fixture = AKS_audit001Fixture_({
+    configValues: { "audit.environment": "PRODUCTION" },
+    resourceName: "AKS Audit PRODUCTION",
+    permissions: {
+      available: true, sharingAccess: "PRIVATE", sharingPermission: "VIEW",
+      ownerEmail: "owner@example.com", editorEmails: ["other@example.com"]
+    }
+  });
+  assertThrows_(function () { fixture.service.preflight(); },
+    "AUDIT_PERMISSION_INVALID");
+  assertEquals_(0, fixture.rows.length);
+  assertEquals_(0, fixture.lockAttempts());
+}
+
+function AKS_testAudit001_separatesProductionPreflightAndControlledWrite_() {
+  var records = [];
+  var service = {
+    preflight: function () {
+      return { ok: true, environment: "PRODUCTION", writePerformed: false };
+    },
+    record: function (event) {
+      records.push(event);
+      return {
+        audit_id: "aud-production-test-001", environment: "PRODUCTION",
+        action: event.action, correlation_id: event.correlationId
+      };
+    }
+  };
+  var operations = AKS_createAudit001ProductionOperations_({
+    createAuditService: function () { return service; },
+    idProvider: function () { return "controlled-001"; },
+    resolveOperator: function () { return "manager@example.com"; },
+    authorizeOperator: function (operator) {
+      return operator === "manager@example.com";
+    }
+  });
+  var preflight = operations.preflight();
+  assertEquals_(false, preflight.writePerformed);
+  assertEquals_(0, records.length);
+  assertThrows_(function () { operations.runControlledWriteRead(); },
+    "AUDIT_PRODUCTION_WRITE_CONFIRMATION_REQUIRED");
+  assertEquals_(0, records.length);
+  var result = operations.runControlledWriteRead(
+    "CONFIRMER_TEST_ECRITURE_AUDIT_PRODUCTION");
+  assertEquals_(true, result.controlledProof);
+  assertEquals_(false, result.businessOperation);
+  assertEquals_(1, records.length);
+  assertEquals_("AUDIT_SUPPORT_TEST", records[0].action);
+}
+
+function AKS_testAudit001_refusesUnauthorizedProductionOperator_() {
+  var serviceCalls = 0;
+  var operations = AKS_createAudit001ProductionOperations_({
+    createAuditService: function () {
+      serviceCalls += 1;
+      return { preflight: function () { return {}; } };
+    },
+    idProvider: function () { return "controlled-002"; },
+    resolveOperator: function () { return "intruder@example.com"; },
+    authorizeOperator: function () { return false; }
+  });
+  assertThrows_(function () { operations.preflight(); },
+    "AUDIT_PRODUCTION_ACCESS_DENIED");
+  assertThrows_(function () {
+    operations.runControlledWriteRead(
+      "CONFIRMER_TEST_ECRITURE_AUDIT_PRODUCTION");
+  }, "AUDIT_PRODUCTION_ACCESS_DENIED");
+  assertEquals_(0, serviceCalls);
 }
 
 function AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_() {
@@ -1031,6 +1132,7 @@ function AKS_runAudit001Tests() {
     { name: "catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ },
     { name: "motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ },
     { name: "support production exact accepté", test: AKS_testAudit001_acceptsExactProductionSupport_ },
+    { name: "supports exacts croisés refusés", test: AKS_testAudit001_rejectsExactCrossedSupports_ },
     { name: "ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ },
     { name: "marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ },
     { name: "nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ },
@@ -1056,6 +1158,10 @@ function AKS_runAudit001Tests() {
     { name: "projet Apps Script incompatible refusé", test: AKS_testAudit001_rejectsWrongScriptBeforeWrite_ },
     { name: "conservation incompatible refusée", test: AKS_testAudit001_rejectsInvalidRetentionBeforeWrite_ },
     { name: "support production public refusé", test: AKS_testAudit001_rejectsPublicProductionSupport_ },
+    { name: "éditeur technique de production accepté", test: AKS_testAudit001_acceptsTechnicalEditorForProduction_ },
+    { name: "production sans écrivain technique refusée", test: AKS_testAudit001_rejectsProductionWithoutTechnicalWriter_ },
+    { name: "précontrôle et écriture contrôlée séparés", test: AKS_testAudit001_separatesProductionPreflightAndControlledWrite_ },
+    { name: "opérateur production non autorisé refusé", test: AKS_testAudit001_refusesUnauthorizedProductionOperator_ },
     { name: "support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ },
     { name: "port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ },
     { name: "adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ },

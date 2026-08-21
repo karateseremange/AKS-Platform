@@ -660,6 +660,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }
     ,{ name: "AUDIT-001 / motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ }
     ,{ name: "AUDIT-001 / support production exact accepté", test: AKS_testAudit001_acceptsExactProductionSupport_ }
+    ,{ name: "AUDIT-001 / supports exacts croisés refusés", test: AKS_testAudit001_rejectsExactCrossedSupports_ }
     ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
     ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
     ,{ name: "AUDIT-001 / nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ }
@@ -685,6 +686,10 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / projet Apps Script incompatible refusé", test: AKS_testAudit001_rejectsWrongScriptBeforeWrite_ }
     ,{ name: "AUDIT-001 / conservation incompatible refusée", test: AKS_testAudit001_rejectsInvalidRetentionBeforeWrite_ }
     ,{ name: "AUDIT-001 / support production public refusé", test: AKS_testAudit001_rejectsPublicProductionSupport_ }
+    ,{ name: "AUDIT-001 / éditeur technique de production accepté", test: AKS_testAudit001_acceptsTechnicalEditorForProduction_ }
+    ,{ name: "AUDIT-001 / production sans écrivain technique refusée", test: AKS_testAudit001_rejectsProductionWithoutTechnicalWriter_ }
+    ,{ name: "AUDIT-001 / précontrôle et écriture contrôlée séparés", test: AKS_testAudit001_separatesProductionPreflightAndControlledWrite_ }
+    ,{ name: "AUDIT-001 / opérateur production non autorisé refusé", test: AKS_testAudit001_refusesUnauthorizedProductionOperator_ }
     ,{ name: "AUDIT-001 / support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ }
     ,{ name: "AUDIT-001 / port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ }
     ,{ name: "AUDIT-001 / adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ }

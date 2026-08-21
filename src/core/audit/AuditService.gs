@@ -129,24 +129,35 @@ function AKS_createAuditService_(options) {
     }
     var permissions = typeof gateway.getPermissionSnapshot === "function"
       ? gateway.getPermissionSnapshot() : Object.freeze({ available: false });
-    if (environment === "PRODUCTION") assertProductionPermissions_(permissions);
+    var technicalWriterPresent = environment === "PRODUCTION"
+      ? assertProductionPermissions_(permissions) : null;
     return Object.freeze({
       environment: environment,
       resourceId: resourceId,
       resourceName: expectedNames[environment],
       schemaVersion: schemaVersion,
       retentionDays: 1095,
-      permissions: permissions
+      permissions: permissions,
+      technicalWriterPresent: technicalWriterPresent
     });
   }
 
   function assertProductionPermissions_(permissions) {
     var access = permissions && rawText_(permissions.sharingAccess);
-    var owner = permissions && text_(permissions.ownerEmail);
+    var owner = permissions && text_(permissions.ownerEmail).toLowerCase();
+    var editors = permissions && Array.isArray(permissions.editorEmails)
+      ? permissions.editorEmails.map(function (email) {
+          return text_(email).toLowerCase();
+        }) : [];
+    var technicalActor = technicalActor_();
+    var technicalWriterPresent = owner === technicalActor ||
+      editors.indexOf(technicalActor) !== -1;
     if (!permissions || permissions.available !== true || !owner ||
-        access === "ANYONE" || access === "ANYONE_WITH_LINK") {
+        access === "ANYONE" || access === "ANYONE_WITH_LINK" ||
+        technicalWriterPresent !== true) {
       throw error_("AUDIT_PERMISSION_INVALID", "Les permissions du support d'audit sont incompatibles.");
     }
+    return true;
   }
 
   function preflight() {
@@ -168,7 +179,8 @@ function AKS_createAuditService_(options) {
         sharingAccess: rawText_(permissions.sharingAccess),
         sharingPermission: rawText_(permissions.sharingPermission),
         ownerPresent: !!text_(permissions.ownerEmail),
-        editorCount: Array.isArray(permissions.editorEmails) ? permissions.editorEmails.length : 0
+        editorCount: Array.isArray(permissions.editorEmails) ? permissions.editorEmails.length : 0,
+        technicalWriterPresent: support.technicalWriterPresent === true
       }
     });
   }
@@ -206,6 +218,9 @@ function AKS_createAuditService_(options) {
       return normalized;
     }
     if (targetType === "ACCESS_REGISTRY" && normalized === "AKS_ACCESS_REGISTRY") {
+      return normalized;
+    }
+    if (targetType === "AUDIT_SUPPORT" && normalized === "AKS_AUDIT_SUPPORT") {
       return normalized;
     }
     throw error_("AUDIT_EVENT_INVALID", "Identifiant de ressource d'audit non conforme.");
