@@ -3,8 +3,10 @@ AKS.Admin = AKS.Admin || {};
 
 function AKS_buildPortalDashboardViewModel_(portal, releaseInfo, baseUrl, recentLogs) {
   var destinations = portal.destinations.slice();
-  destinations.push({ id: "access.my-access", label: "Mes accès", family: "personal",
-    target: baseUrl + "?app=my-access", priority: 1, transitional: false });
+  if (portal.bootstrapAccess !== true) {
+    destinations.push({ id: "access.my-access", label: "Mes accès", family: "personal",
+      target: baseUrl + "?app=my-access", priority: 1, transitional: false });
+  }
   var order = ["personal", "administration", "modules"];
   var labels = { personal: "Mon espace", administration: "Administration", modules: "Modules" };
   var families = order.map(function (family) {

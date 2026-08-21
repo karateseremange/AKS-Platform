@@ -557,6 +557,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-05 / Mes accès route lecture seule", test: AKS_testAccess002MyAccess_exposesReadOnlyRouteAndView_ }
     ,{ name: "ACCESS-002-05 / Mes accès refus générique", test: AKS_testAccess002MyAccess_deniedViewLeaksNoIdentity_ }
     ,{ name: "ACCESS-002-05 / Portail Mes accès visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ }
+    ,{ name: "ACCESS-002-06 / Portail Mes accès masqué au bootstrap", test: AKS_testAccess002PortalUi_hidesMyAccessDuringBootstrap_ }
     ,{ name: "ACCESS-002-05 / Portail destinations projetées", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ }
     ,{ name: "ACCESS-002-05 / Portail état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ }
     ,{ name: "ACCESS-002-06 / Portail journaux selon destination projetée", test: AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_ }

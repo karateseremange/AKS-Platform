@@ -9,14 +9,14 @@ La version stable de production est **AKS Platform V1.2.0**, publiée le
 
 - tag : `v1.2.0` ;
 - commit : `47bb3ca83eb902bc9db0867c8d41affffd3ceb47` ;
-- prochaine évolution applicative : candidate `1.4.0-rc.1` décrite ci-dessous.
+- prochaine évolution applicative : candidate `1.4.0-rc.2` décrite ci-dessous.
 
 ## Candidate en préparation
 
-La branche `develop` prépare **AKS Platform 1.4.0-rc.1**. Cette candidate n’est
+La branche `develop` prépare **AKS Platform 1.4.0-rc.2**. Cette candidate n’est
 ni publiée sur `main`, ni déployée, ni activée en production.
 
-- base validée avant préparation : `ab52dc6200ca5e138883d182cfcd700352276dad` ;
+- base validée avant préparation : `b13fc202300af6f7ce0c99b65403fa83117ed34b` ;
 - périmètre principal : ACCESS, migration des fonctions administratives et AUDIT
   multi-environnement ;
 - Présences est inclus dans l’écart cumulatif depuis `v1.2.0` ;
@@ -62,10 +62,10 @@ Dans Apps Script, exécuter :
 AKS_runValidationSuiteV11
 ```
 
-La base `ab52dc6` a été validée dans l’environnement Apps Script de recette à
-**62/62** pour AUDIT et **660/660** pour la campagne cumulative. La candidate
-ajoute un contrôle de cohérence de version ; la prochaine campagne attend donc
-**8/8** pour VERSION-001 et **661/661** cumulés.
+La candidate RC1 `b13fc20` a été validée dans l’environnement Apps Script de
+recette à **8/8** pour VERSION-001, **62/62** pour AUDIT et **661/661** pour la
+campagne cumulative. RC2 corrige la destination « Mes accès » en phase de
+bootstrap et porte la prochaine campagne cumulative attendue à **662/662**.
 
 La publication reste soumise au Quality Gate défini dans `RELEASE-001`.
 
