@@ -72,7 +72,8 @@ function AKS_access001Fixture_(overrides) {
     audit: {
       record: recordAudit_,
       recordUnderExistingLock: recordAudit_,
-      isPersistentRecipeAudit: function () { return true; }
+      isPersistentRecipeAudit: function () { return true; },
+      isPersistentAuditAvailable: function () { return true; }
     },
     correlationIdProvider: function () { return "corr-access-001"; }
   });

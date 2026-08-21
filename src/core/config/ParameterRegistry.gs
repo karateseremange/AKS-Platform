@@ -173,16 +173,36 @@ function AKS_createPlatformParameterRegistry_() {
       required: true,
       sensitive: false,
       administrable: false,
-      allowedValues: ["RECETTE"]
+      allowedValues: ["RECETTE", "PRODUCTION"]
     },
     {
-      key: "audit.spreadsheetId",
-      label: "Classeur d'audit",
-      description: "Identifiant restreint du classeur de recette portant AKS_Audit.",
+      key: "audit.scriptId",
+      label: "Projet Apps Script d'audit",
+      description: "Identifiant exact du projet Apps Script autorisé à utiliser le support d'audit.",
       type: "resourceId",
       scope: "environment",
       required: true,
       sensitive: true,
+      administrable: false
+    },
+    {
+      key: "audit.spreadsheetId",
+      label: "Classeur d'audit",
+      description: "Identifiant restreint du classeur portant AKS_Audit dans l'environnement déclaré.",
+      type: "resourceId",
+      scope: "environment",
+      required: true,
+      sensitive: true,
+      administrable: false
+    },
+    {
+      key: "audit.retentionDays",
+      label: "Durée de conservation de l'audit",
+      description: "Durée initiale contrôlée de conservation des preuves d'audit.",
+      type: "integer",
+      scope: "environment",
+      required: true,
+      sensitive: false,
       administrable: false
     },
     {

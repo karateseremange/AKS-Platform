@@ -22,10 +22,11 @@ function AKS_createAuditCatalogs_() {
     ]),
     actorTypes: frozenSet_(["USER", "ADMIN", "SERVICE", "SYSTEM"]),
     actions: frozenSet_([
-      "DOSSIER_CREATE", "DOSSIER_UPDATE", "ACCESS_REGISTRY_UPDATE"
+      "DOSSIER_CREATE", "DOSSIER_UPDATE", "ACCESS_REGISTRY_UPDATE",
+      "AUDIT_SUPPORT_TEST"
     ]),
-    modules: frozenSet_(["INSCRIPTIONS", "ACCESS"]),
-    targetTypes: frozenSet_(["DOSSIER", "ACCESS_REGISTRY"]),
+    modules: frozenSet_(["INSCRIPTIONS", "ACCESS", "AUDIT"]),
+    targetTypes: frozenSet_(["DOSSIER", "ACCESS_REGISTRY", "AUDIT_SUPPORT"]),
     results: frozenSet_(["INTENTION", "REUSSI", "ECHEC", "REFUSE", "ANNULE"]),
     reasonCodes: frozenSet_([
       "", "INSCRIPTIONS_COMMAND_FAILED", "INSCRIPTIONS_CONTROL_FAILED",
@@ -43,6 +44,7 @@ function AKS_createAuditCatalogs_() {
     metadataSchemas: Object.freeze({
       DOSSIER_CREATE: frozenSet_(["attemptCount", "status"]),
       DOSSIER_UPDATE: frozenSet_(["attemptCount", "status"]),
+      AUDIT_SUPPORT_TEST: frozenSet_(["attemptCount", "status"]),
       ACCESS_REGISTRY_UPDATE: frozenSet_([
         "beforeRevision", "proposedRevision", "afterRevision",
         "changedAccountIds", "changedCount", "selfModification", "restored",

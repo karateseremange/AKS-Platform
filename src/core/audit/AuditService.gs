@@ -22,6 +22,7 @@ function AKS_createAuditService_(options) {
   var clock = options.clock || function () { return new Date(); };
   var idProvider = options.idProvider;
   var technicalLogger = options.technicalLogger || function () {};
+  var resolveScriptId = options.resolveScriptId;
   var lockTimeoutMs = Number(options.lockTimeoutMs || 5000);
 
   function error_(code, message) {
@@ -40,7 +41,7 @@ function AKS_createAuditService_(options) {
         methods.some(function (method) { return typeof gateway[method] !== "function"; }) ||
         !lock || typeof lock.tryLock !== "function" || typeof lock.releaseLock !== "function" ||
         typeof resolveActor !== "function" || typeof authorizeActor !== "function" ||
-        typeof resolveTechnicalActor !== "function" ||
+        typeof resolveTechnicalActor !== "function" || typeof resolveScriptId !== "function" ||
         typeof idProvider !== "function" || !isFinite(lockTimeoutMs) ||
         lockTimeoutMs < 1000 || lockTimeoutMs > 30000) {
       throw error_("AUDIT_REQUIRED", "Le service d'audit commun est indisponible.");
@@ -99,21 +100,94 @@ function AKS_createAuditService_(options) {
 
   function assertSupport_() {
     var environment = configuredValue_("audit.environment");
+    var configuredScriptId = configuredValue_("audit.scriptId");
     var resourceId = configuredValue_("audit.spreadsheetId");
     var schemaVersion = configuredValue_("audit.schemaVersion");
-    if (environment !== "RECETTE") {
-      throw error_("AUDIT_RECIPE_REQUIRED", "Une ressource d'audit de recette est obligatoire.");
+    var retentionDays = configuredValue_("audit.retentionDays");
+    var expectedNames = {
+      RECETTE: "AKS Audit RECETTE",
+      PRODUCTION: "AKS Audit PRODUCTION"
+    };
+    if (!expectedNames[environment]) {
+      throw error_("AUDIT_ENVIRONMENT_INVALID", "L'environnement d'audit est invalide.");
+    }
+    if (!googleResourceId_(configuredScriptId) ||
+        rawText_(resolveScriptId()) !== configuredScriptId) {
+      throw error_("AUDIT_SCRIPT_MISMATCH", "Le projet Apps Script d'audit est incompatible.");
     }
     if (!googleResourceId_(resourceId) ||
         rawText_(gateway.getResourceId()) !== resourceId ||
-        rawText_(gateway.getResourceName()) !== "AKS Audit RECETTE") {
-      throw error_("AUDIT_RECIPE_REQUIRED", "La ressource d'audit n'est pas une recette autorisée.");
+        rawText_(gateway.getResourceName()) !== expectedNames[environment]) {
+      throw error_("AUDIT_SUPPORT_MISMATCH", "La ressource d'audit est incompatible.");
     }
     if (schemaVersion !== catalogs.schemaVersion ||
         !sameTexts_(gateway.getHeaders(), catalogs.headers)) {
       throw error_("AUDIT_SCHEMA_MISMATCH", "Le schéma du support d'audit est incompatible.");
     }
-    return Object.freeze({ environment: environment, resourceId: resourceId });
+    if (retentionDays !== "1095") {
+      throw error_("AUDIT_RETENTION_INVALID", "La conservation d'audit est incompatible.");
+    }
+    var permissions = typeof gateway.getPermissionSnapshot === "function"
+      ? gateway.getPermissionSnapshot() : Object.freeze({ available: false });
+    var technicalWriterPresent = environment === "PRODUCTION"
+      ? assertProductionPermissions_(permissions) : null;
+    return Object.freeze({
+      environment: environment,
+      resourceId: resourceId,
+      resourceName: expectedNames[environment],
+      schemaVersion: schemaVersion,
+      retentionDays: 1095,
+      permissions: permissions,
+      technicalWriterPresent: technicalWriterPresent
+    });
+  }
+
+  function assertProductionPermissions_(permissions) {
+    var access = permissions && rawText_(permissions.sharingAccess);
+    var owner = permissions && text_(permissions.ownerEmail).toLowerCase();
+    var editors = permissions && Array.isArray(permissions.editorEmails)
+      ? permissions.editorEmails.map(function (email) {
+          return text_(email).toLowerCase();
+        }) : [];
+    var technicalActor = technicalActor_();
+    var technicalWriterPresent = owner === technicalActor ||
+      editors.indexOf(technicalActor) !== -1;
+    if (!permissions || permissions.available !== true || !owner ||
+        access === "ANYONE" || access === "ANYONE_WITH_LINK" ||
+        technicalWriterPresent !== true) {
+      throw error_("AUDIT_PERMISSION_INVALID", "Les permissions du support d'audit sont incompatibles.");
+    }
+    return true;
+  }
+
+  function preflight() {
+    var support = assertSupport_();
+    var permissions = support.permissions || {};
+    var rowCount = typeof gateway.getRowCount === "function" ? gateway.getRowCount() : null;
+    return deepFreeze_({
+      ok: true,
+      writePerformed: false,
+      environment: support.environment,
+      scriptIdSuffix: suffix_(configuredValue_("audit.scriptId")),
+      spreadsheetIdSuffix: suffix_(support.resourceId),
+      resourceName: support.resourceName,
+      schemaVersion: support.schemaVersion,
+      retentionDays: support.retentionDays,
+      rowCount: rowCount,
+      permissions: {
+        available: permissions.available === true,
+        sharingAccess: rawText_(permissions.sharingAccess),
+        sharingPermission: rawText_(permissions.sharingPermission),
+        ownerPresent: !!text_(permissions.ownerEmail),
+        editorCount: Array.isArray(permissions.editorEmails) ? permissions.editorEmails.length : 0,
+        technicalWriterPresent: support.technicalWriterPresent === true
+      }
+    });
+  }
+
+  function suffix_(value) {
+    var normalized = rawText_(value);
+    return normalized.slice(Math.max(0, normalized.length - 6));
   }
 
   function requiredCatalog_(value, catalog) {
@@ -144,6 +218,9 @@ function AKS_createAuditService_(options) {
       return normalized;
     }
     if (targetType === "ACCESS_REGISTRY" && normalized === "AKS_ACCESS_REGISTRY") {
+      return normalized;
+    }
+    if (targetType === "AUDIT_SUPPORT" && normalized === "AKS_AUDIT_SUPPORT") {
       return normalized;
     }
     throw error_("AUDIT_EVENT_INVALID", "Identifiant de ressource d'audit non conforme.");
@@ -399,10 +476,14 @@ function AKS_createAuditService_(options) {
   return Object.freeze({
     record: record,
     recordUnderExistingLock: recordUnderExistingLock,
-    isPersistentRecipeAudit: function () {
+    isPersistentAuditAvailable: function () {
       assertSupport_();
       return true;
     },
+    isPersistentRecipeAudit: function () {
+      return assertSupport_().environment === "RECETTE";
+    },
+    preflight: preflight,
     getSchema: function () {
       return Object.freeze({
         version: catalogs.schemaVersion,

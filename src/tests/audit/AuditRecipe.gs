@@ -24,6 +24,7 @@ function AKS_createAudit001Recipe_(ports) {
   var authorizeActor = ports.authorizeActor;
   var clock = ports.clock || function () { return new Date(); };
   var idProvider = ports.idProvider;
+  var resolveScriptId = ports.resolveScriptId;
   var targetPropertyKey = ports.targetPropertyKey ||
     "AKS_AUDIT001_RECIPE_SPREADSHEET_ID";
   var resourceName = "AKS Audit RECETTE";
@@ -32,7 +33,8 @@ function AKS_createAudit001Recipe_(ports) {
   var accessBackupKey = "AKS_ACCESS002_RECIPE_BACKUP";
   var configValues = {
     "audit.environment": "RECETTE",
-    "audit.schemaVersion": catalogs.schemaVersion
+    "audit.schemaVersion": catalogs.schemaVersion,
+    "audit.retentionDays": "1095"
   };
 
   function failure_(code, message) {
@@ -50,7 +52,7 @@ function AKS_createAudit001Recipe_(ports) {
         typeof createAuditService !== "function" ||
         typeof resolveActor !== "function" ||
         typeof authorizeActor !== "function" ||
-        typeof idProvider !== "function") {
+        typeof idProvider !== "function" || typeof resolveScriptId !== "function") {
       throw failure_("AUDIT_RECIPE_UNAVAILABLE", "La recette AUDIT-001 est indisponible.");
     }
   }
@@ -156,6 +158,7 @@ function AKS_createAudit001Recipe_(ports) {
       throw failure_("AUDIT_RECIPE_CLOCK_INVALID", "L'horodatage de recette est invalide.");
     }
     configValues["audit.spreadsheetId"] = targetId;
+    configValues["audit.scriptId"] = resolveScriptId();
     Object.keys(configValues).sort().forEach(function (key) {
       var storageKey = configPrefix + key;
       var previous = propertyStore.getProperty(storageKey);
@@ -266,8 +269,10 @@ function AKS_createAudit001Recipe_(ports) {
     }
     var values = {
       "audit.environment": "RECETTE",
+      "audit.retentionDays": "1095",
       "audit.spreadsheetId": targetId,
-      "audit.schemaVersion": catalogs.schemaVersion
+      "audit.schemaVersion": catalogs.schemaVersion,
+      "audit.scriptId": resolveScriptId()
     };
     var serialized = {};
     Object.keys(values).sort().forEach(function (key) {
@@ -280,8 +285,10 @@ function AKS_createAudit001Recipe_(ports) {
   function connectionKeys_() {
     return [
       configPrefix + "audit.environment",
+      configPrefix + "audit.retentionDays",
       configPrefix + "audit.schemaVersion",
-      configPrefix + "audit.spreadsheetId"
+      configPrefix + "audit.spreadsheetId",
+      configPrefix + "audit.scriptId"
     ].sort();
   }
 
@@ -294,8 +301,10 @@ function AKS_createAudit001Recipe_(ports) {
     try {
       var expected = {
         "audit.environment": "RECETTE",
+        "audit.retentionDays": "1095",
         "audit.schemaVersion": catalogs.schemaVersion,
-        "audit.spreadsheetId": backup.targetId
+        "audit.spreadsheetId": backup.targetId,
+        "audit.scriptId": resolveScriptId()
       };
       return connectionKeys_().every(function (storageKey) {
         var record = JSON.parse(backup.installed[storageKey]);
@@ -464,6 +473,7 @@ function AKS_createDefaultAudit001Recipe_() {
     authorizeActor: function (actor) {
       return AKS.Admin.Access.assertAuthorized(actor);
     },
+    resolveScriptId: function () { return ScriptApp.getScriptId(); },
     idProvider: function () { return Utilities.getUuid(); }
   });
 }
