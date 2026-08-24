@@ -173,6 +173,17 @@ function AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_() {
   assertEquals_(-1, client.indexOf("metadata_json"));
 }
 
+function AKS_testAccess002AdminUi_displaysHistoryFailureLocally_() {
+  var html = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccounts");
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  assertTrue_(html.indexOf('id="access-history-message"') !== -1);
+  assertTrue_(html.indexOf('role="alert"') !== -1);
+  assertTrue_(html.indexOf('aria-live="assertive"') !== -1);
+  assertTrue_(client.indexOf("function failHistory(error)") !== -1);
+  assertTrue_(client.indexOf("withFailureHandler(failHistory)") !== -1);
+  assertTrue_(client.indexOf("historyMessage.focus()") !== -1);
+}
+
 function AKS_runAccess002AdminUiSuite() {
   return AKS_runNamedTestSuite_("ACCESS-002-03 — interface d’administration", [
     { name: "route refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ },
@@ -189,5 +200,6 @@ function AKS_runAccess002AdminUiSuite() {
     ,{ name: "échappement et confirmation", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
     ,{ name: "cases compactes et ACCESS unique", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
     ,{ name: "historique fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
+    ,{ name: "erreur d’historique affichée localement", test: AKS_testAccess002AdminUi_displaysHistoryFailureLocally_ }
   ]);
 }
