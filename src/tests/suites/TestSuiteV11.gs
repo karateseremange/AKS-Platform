@@ -702,6 +702,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
     ,{ name: "AUDIT-001 / recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
     ,{ name: "AUDIT-001 / recette connexion persistante sans preuve", test: AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_ }
+    ,{ name: "AUDIT-001 / recette conservation via configuration réelle", test: AKS_testAudit001Recipe_connectsRetentionThroughRealConfiguration_ }
     ,{ name: "AUDIT-001 / recette connexion persistante idempotente", test: AKS_testAudit001Recipe_connectionIsIdempotent_ }
     ,{ name: "AUDIT-001 / recette déconnexion restaure exactement", test: AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_ }
     ,{ name: "AUDIT-001 / recette déconnexion interdite avant restauration ACCESS", test: AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_ }

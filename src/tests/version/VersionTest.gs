@@ -122,12 +122,12 @@ function AKS_testVersion001NormalizesRequiredStrings_() {
 
 function AKS_testVersion001ExposesExactReleaseCandidate_() {
   var releaseInfo = AKS.Version.getReleaseInfo();
-  AKS_assertVersion001_(releaseInfo.version === "1.4.0-rc.2",
-    "La version embarquée doit identifier exactement la candidate RC2.");
-  AKS_assertVersion001_(releaseInfo.build === "20260821.rc2.b13fc20",
+  AKS_assertVersion001_(releaseInfo.version === "1.4.0-rc.3",
+    "La version embarquée doit identifier exactement la candidate RC3.");
+  AKS_assertVersion001_(releaseInfo.build === "20260824.rc3.8ae1b0c",
     "Le build RC doit rester explicite et traçable sans prétendre être le build final.");
   AKS_assertVersion001_(releaseInfo.releaseName ===
-    "ACCESS et administration sécurisée — RC2",
+    "ACCESS et administration sécurisée — RC3",
     "Le nom de release doit identifier explicitement la candidate.");
   AKS_assertVersion001_(AKS.version === releaseInfo.version,
     "Le marqueur historique et l'API de version doivent rester alignés.");
