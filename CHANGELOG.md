@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0-rc.3 — ACCESS et administration sécurisée — Candidate non publiée
+## 1.4.0 — ACCESS et administration sécurisée — Stable en finalisation, non publiée
 
 ### ACCESS
 
@@ -33,12 +33,13 @@
 
 ### Validation et limites
 
-- base préalable validée à **62/62** pour AUDIT et **660/660** cumulés ;
-- RC1 validée à **661/661**, RC2 à **662/662** et RC3 attendue à **663/663** ;
+- RC5 `52024ab` admise par le Quality Gate P4 après **8/8** VERSION-001,
+  **15/15** ACCESS administration et **665/665** tests cumulés ;
+- finalisation stable limitée aux marqueurs et documents de version ;
 - aucune publication sur `main`, aucun tag, aucun déploiement et aucune opération
   de production réalisés à ce stade ;
-- numéro stable et build final à confirmer après Quality Gate et inventaire du
-  déploiement public réel.
+- AUDIT de production, amorçage ACCESS et attribution de capacités réelles restent
+  interdits sans leurs autorisations distinctes.
 
 ## 1.2.0 — AKS Analytics — Publiée le 28 juillet 2026
 

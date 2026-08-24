@@ -122,13 +122,13 @@ function AKS_testVersion001NormalizesRequiredStrings_() {
 
 function AKS_testVersion001ExposesExactReleaseCandidate_() {
   var releaseInfo = AKS.Version.getReleaseInfo();
-  AKS_assertVersion001_(releaseInfo.version === "1.4.0-rc.5",
-    "La version embarquée doit identifier exactement la candidate RC5.");
-  AKS_assertVersion001_(releaseInfo.build === "20260824.rc5.206c436",
-    "Le build RC doit rester explicite et traçable sans prétendre être le build final.");
+  AKS_assertVersion001_(releaseInfo.version === "1.4.0",
+    "La version embarquée doit identifier exactement la version stable.");
+  AKS_assertVersion001_(releaseInfo.build === "20260824.1",
+    "Le build stable doit être explicite et traçable.");
   AKS_assertVersion001_(releaseInfo.releaseName ===
-    "ACCESS et administration sécurisée — RC5",
-    "Le nom de release doit identifier explicitement la candidate.");
+    "ACCESS et administration sécurisée",
+    "Le nom de release doit identifier explicitement la version stable.");
   AKS_assertVersion001_(AKS.version === releaseInfo.version,
     "Le marqueur historique et l'API de version doivent rester alignés.");
 }
