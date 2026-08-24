@@ -521,6 +521,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-04 / métadonnées AUDIT fonctionnelles", test: AKS_testAudit001_acceptsAccessFunctionalHistoryMetadata_ }
     ,{ name: "ACCESS-002-04 / historique UI fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
     ,{ name: "ACCESS-002-06 / AUDIT différé et erreur minimisée", test: AKS_testAccess002AdminUi_defersAndMinimizesAuditFailure_ }
+    ,{ name: "ACCESS-002-06 / erreur d’historique affichée localement", test: AKS_testAccess002AdminUi_displaysHistoryFailureLocally_ }
     ,{ name: "ACCESS-002-04 / recette précontrôle sans écriture", test: AKS_testAccess002HabilitationRecipe_preflightIsReadOnly_ }
     ,{ name: "ACCESS-002-04 / recette fiche et historique vérifiés", test: AKS_testAccess002HabilitationRecipe_verifiesDetailAndHistory_ }
     ,{ name: "ACCESS-002-04 / recette restauration exacte", test: AKS_testAccess002HabilitationRecipe_restoresExactInitialState_ }
