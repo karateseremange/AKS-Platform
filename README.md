@@ -2,33 +2,32 @@
 
 Plateforme numérique officielle de l’Association Karaté Serémange.
 
-## Version publiée
+## Version Git publiée
 
-La version stable applicative de référence est **AKS Platform V1.2.0**, publiée
-le 28 juillet 2026.
+La référence Git stable est **AKS Platform V1.4.0 — ACCESS et administration
+sécurisée**, publiée le 24 août 2026.
 
-- tag : `v1.2.0` ;
-- commit : `47bb3ca83eb902bc9db0867c8d41affffd3ceb47` ;
-- la production Apps Script historique reste sur la version 53 jusqu’au
-  déploiement séparément autorisé de V1.4.0.
+- tag : `v1.4.0` ;
+- commit `main` : `fa8876fcc57dcc46b943c8a3ce451e006bfa5bb5` ;
+- build : `20260824.1` ;
+- candidate admise : `1.4.0-rc.5` au commit
+  `52024aba72a76247179bb801cfb93006151ebbb9`.
 
-## Version 1.4.0 en finalisation
+Le tag et le commit `main` ont été vérifiés comme strictement identiques.
 
-La branche `develop` prépare **AKS Platform 1.4.0 — ACCESS et administration
-sécurisée**. Cette version stable est dérivée de la candidate
-`1.4.0-rc.5` admise par le Quality Gate P4 au commit
-`52024aba72a76247179bb801cfb93006151ebbb9`.
+## Statut de production
 
-Elle n’est pas encore publiée sur `main`, taguée, déployée ni activée en
-production.
+La publication Git V1.4.0 ne constitue pas un déploiement Apps Script.
+La production historique reste sur la version Apps Script **53** et n'exécute
+pas encore V1.4.0.
 
-- build stable embarqué : `20260824.1` ;
-- périmètre principal : ACCESS, migration des fonctions administratives et AUDIT
-  multi-environnement ;
-- Présences est inclus dans l’écart cumulatif depuis `v1.2.0` ;
+- aucun `clasp push` de production n'a été effectué ;
+- aucune nouvelle version Apps Script ni modification du déploiement public
+  n'a été réalisée ;
+- AUDIT de production n'est pas configuré ;
+- ACCESS n'est pas amorcé et aucun compte réel n'a reçu de capacité ;
 - les fondations Inscriptions 007 à 010 restent internes, sans route publiée ;
-- la publication Git, le déploiement Apps Script, la configuration AUDIT et
-  l’amorçage ACCESS restent des étapes distinctes.
+- P6 et chaque opération de production exigent leurs autorisations propres.
 
 ## Fonctionnalités
 
@@ -76,8 +75,13 @@ La candidate RC5 exacte `52024ab` a réussi :
 - ACCESS administration : **15/15** ;
 - campagne cumulative : **665/665**.
 
-La finalisation stable modifie uniquement les marqueurs et documents de version.
-Elle doit être validée séparément avant toute publication sur `main`.
+La finalisation stable exacte `5f16d907` a ensuite réussi **8/8**
+VERSION-001 et **665/665** tests cumulés après synchronisation de **261
+fichiers** en RECETTE. Elle a été intégrée dans `develop` à `32a511a`,
+publiée dans `main` à `fa8876f` et taguée `v1.4.0`.
+
+Ces validations et cette publication Git n'autorisent aucune opération de
+production.
 
 ## Branches
 
