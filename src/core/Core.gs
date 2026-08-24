@@ -1,2 +1,2 @@
 var AKS = AKS || {};
-AKS.version = "1.4.0-rc.3";
+AKS.version = "1.4.0-rc.4";
