@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0 — ACCESS et administration sécurisée — Stable en finalisation, non publiée
+## 1.4.0 — ACCESS et administration sécurisée — Publiée sur Git le 24 août 2026
 
 ### ACCESS
 
@@ -35,11 +35,15 @@
 
 - RC5 `52024ab` admise par le Quality Gate P4 après **8/8** VERSION-001,
   **15/15** ACCESS administration et **665/665** tests cumulés ;
-- finalisation stable limitée aux marqueurs et documents de version ;
-- aucune publication sur `main`, aucun tag, aucun déploiement et aucune opération
-  de production réalisés à ce stade ;
-- AUDIT de production, amorçage ACCESS et attribution de capacités réelles restent
-  interdits sans leurs autorisations distinctes.
+- finalisation stable `5f16d907` validée à **8/8** VERSION-001 et
+  **665/665** tests cumulés après synchronisation de **261 fichiers** en
+  RECETTE ;
+- publication sur `main` au commit
+  `fa8876fcc57dcc46b943c8a3ce451e006bfa5bb5` ;
+- tag léger `v1.4.0` vérifié sur ce même commit ;
+- aucun déploiement Apps Script ni aucune opération de production réalisés ;
+- AUDIT de production, amorçage ACCESS et attribution de capacités réelles
+  restent interdits sans leurs autorisations distinctes.
 
 ## 1.2.0 — AKS Analytics — Publiée le 28 juillet 2026
 
