@@ -34,7 +34,7 @@ function AKS_runValidationSuiteV11() {
     { name: "VERSION-001 / invalid provider", test: AKS_testVersion001RejectsInvalidProvider_ },
     { name: "VERSION-001 / invalid provider result", test: AKS_testVersion001RejectsInvalidProviderResult_ },
     { name: "VERSION-001 / string normalization", test: AKS_testVersion001NormalizesRequiredStrings_ },
-    { name: "VERSION-001 / exact release candidate", test: AKS_testVersion001ExposesExactReleaseCandidate_ },
+    { name: "VERSION-001 / exact stable release", test: AKS_testVersion001ExposesExactStableRelease_ },
 
     { name: "ADMIN-001 / configured administrator", test: AKS_testAdminDashboard_authorizesConfiguredAdministrator },
     { name: "ADMIN-001 / unknown administrator", test: AKS_testAdminDashboard_rejectsUnknownAdministrator },

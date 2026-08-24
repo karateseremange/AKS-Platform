@@ -7,9 +7,9 @@ var AKS = AKS || {};
  * and must never be modified at runtime.
  */
 var AKS_RELEASE_INFO_ = Object.freeze({
-  version: "1.4.0-rc.5",
-  build: "20260824.rc5.206c436",
-  releaseName: "ACCESS et administration sécurisée — RC5"
+  version: "1.4.0",
+  build: "20260824.1",
+  releaseName: "ACCESS et administration sécurisée"
 });
 
 /**
