@@ -9,6 +9,7 @@ function AKS_createAdminAccessAccountController_(options) {
   var projection = options.projection;
   var detail = options.detail;
   var history = options.history;
+  var historyProvider = options.historyProvider || function () { return history; };
   var lifecycle = options.lifecycle;
   var baseUrlProvider = options.baseUrlProvider || function () { return ""; };
 
@@ -64,7 +65,20 @@ function AKS_createAdminAccessAccountController_(options) {
     },
     getAccountHistory: function (accountId, cursor) {
       authorize_();
-      return history.getAccountHistory(accountId, cursor || "");
+      try {
+        var historyService = historyProvider();
+        if (!historyService ||
+            typeof historyService.getAccountHistory !== "function") {
+          throw new Error("Historique indisponible.");
+        }
+        return historyService.getAccountHistory(accountId, cursor || "");
+      } catch (failure) {
+        var unavailable = new Error(
+          "L’historique des modifications est temporairement indisponible."
+        );
+        unavailable.code = "ACCESS_HISTORY_UNAVAILABLE";
+        throw unavailable;
+      }
     },
     createAccount: function (command) { return command_("createAccount", command); },
     deactivateAccount: function (command) { return command_("deactivateAccount", command); },
@@ -79,7 +93,7 @@ function AKS_createProductionAdminAccessAccountController_() {
     accessService: accessService,
     projection: AKS.Core.AccessAccountProjection.create({ accessAdmin: admin }),
     detail: AKS.Core.AccessAccountDetail.create({ accessAdmin: admin }),
-    history: AKS_createDefaultAccessAccountHistoryService_(),
+    historyProvider: AKS_createDefaultAccessAccountHistoryService_,
     lifecycle: AKS.Core.AccessAccountLifecycle.create({ accessAdmin: admin }),
     baseUrlProvider: function () { return ScriptApp.getService().getUrl() || ""; }
   });
