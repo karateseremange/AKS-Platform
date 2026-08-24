@@ -120,7 +120,7 @@ function AKS_testVersion001NormalizesRequiredStrings_() {
   AKS_assertVersion001_(releaseInfo.releaseName === "Release V1.1", "releaseName doit être normalisé.");
 }
 
-function AKS_testVersion001ExposesExactReleaseCandidate_() {
+function AKS_testVersion001ExposesExactStableRelease_() {
   var releaseInfo = AKS.Version.getReleaseInfo();
   AKS_assertVersion001_(releaseInfo.version === "1.4.0",
     "La version embarquée doit identifier exactement la version stable.");

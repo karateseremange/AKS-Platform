@@ -7,7 +7,7 @@ function AKS_runVersion001Tests() {
     { name: "Provider invalide", run: AKS_testVersion001RejectsInvalidProvider_ },
     { name: "Métadonnées invalides", run: AKS_testVersion001RejectsInvalidProviderResult_ },
     { name: "Normalisation", run: AKS_testVersion001NormalizesRequiredStrings_ },
-    { name: "Candidate exacte", run: AKS_testVersion001ExposesExactReleaseCandidate_ }
+    { name: "Version stable exacte", run: AKS_testVersion001ExposesExactStableRelease_ }
   ];
   var passed = 0;
   var failures = [];
