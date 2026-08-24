@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0-rc.1 — ACCESS et administration sécurisée — Candidate non publiée
+## 1.4.0-rc.3 — ACCESS et administration sécurisée — Candidate non publiée
 
 ### ACCESS
 
@@ -34,7 +34,7 @@
 ### Validation et limites
 
 - base préalable validée à **62/62** pour AUDIT et **660/660** cumulés ;
-- candidate attendue à **8/8** pour VERSION-001 et **661/661** cumulés ;
+- RC1 validée à **661/661**, RC2 à **662/662** et RC3 attendue à **663/663** ;
 - aucune publication sur `main`, aucun tag, aucun déploiement et aucune opération
   de production réalisés à ce stade ;
 - numéro stable et build final à confirmer après Quality Gate et inventaire du

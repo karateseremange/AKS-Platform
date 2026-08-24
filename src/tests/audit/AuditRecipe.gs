@@ -34,7 +34,7 @@ function AKS_createAudit001Recipe_(ports) {
   var configValues = {
     "audit.environment": "RECETTE",
     "audit.schemaVersion": catalogs.schemaVersion,
-    "audit.retentionDays": "1095"
+    "audit.retentionDays": 1095
   };
 
   function failure_(code, message) {
@@ -269,7 +269,7 @@ function AKS_createAudit001Recipe_(ports) {
     }
     var values = {
       "audit.environment": "RECETTE",
-      "audit.retentionDays": "1095",
+      "audit.retentionDays": 1095,
       "audit.spreadsheetId": targetId,
       "audit.schemaVersion": catalogs.schemaVersion,
       "audit.scriptId": resolveScriptId()
@@ -301,7 +301,7 @@ function AKS_createAudit001Recipe_(ports) {
     try {
       var expected = {
         "audit.environment": "RECETTE",
-        "audit.retentionDays": "1095",
+        "audit.retentionDays": 1095,
         "audit.schemaVersion": catalogs.schemaVersion,
         "audit.spreadsheetId": backup.targetId,
         "audit.scriptId": resolveScriptId()

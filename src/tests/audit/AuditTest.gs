@@ -994,6 +994,28 @@ function AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_() {
   assertTrue_(!!fixture.values.AKS_AUDIT001_RECIPE_CONNECTION_BACKUP);
 }
 
+function AKS_testAudit001Recipe_connectsRetentionThroughRealConfiguration_() {
+  var fixture = AKS_audit001RecipeFixture_();
+  fixture.recipe.connect();
+  var propertyStore = {
+    getProperty: function (key) {
+      return Object.prototype.hasOwnProperty.call(fixture.values, key)
+        ? fixture.values[key] : null;
+    },
+    setProperty: function (key, value) { fixture.values[key] = value; },
+    deleteProperty: function (key) { delete fixture.values[key]; }
+  };
+  var configuration = AKS_createConfigurationService_(
+    AKS_createPlatformParameterRegistry_(),
+    AKS_createParameterValueStore_(propertyStore)
+  );
+  var retention = configuration.resolve("audit.retentionDays");
+  assertEquals_("number", typeof retention.value);
+  assertEquals_(1095, retention.value);
+  assertEquals_(true, retention.explicit);
+  fixture.recipe.disconnect();
+}
+
 function AKS_testAudit001Recipe_connectionIsIdempotent_() {
   var fixture = AKS_audit001RecipeFixture_();
   fixture.recipe.connect();
@@ -1172,6 +1194,7 @@ function AKS_runAudit001Tests() {
     ,{ name: "recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
     ,{ name: "recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
     ,{ name: "recette connexion persistante sans preuve", test: AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_ }
+    ,{ name: "recette conservation validée par la configuration réelle", test: AKS_testAudit001Recipe_connectsRetentionThroughRealConfiguration_ }
     ,{ name: "recette connexion persistante idempotente", test: AKS_testAudit001Recipe_connectionIsIdempotent_ }
     ,{ name: "recette déconnexion restaure exactement", test: AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_ }
     ,{ name: "recette déconnexion interdite avant restauration ACCESS", test: AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_ }
