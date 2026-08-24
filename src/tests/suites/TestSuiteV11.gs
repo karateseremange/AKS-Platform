@@ -8,6 +8,23 @@ var AKS = AKS || {};
  * foundation tests and emits
  * a consolidated execution report in the Apps Script logs.
  */
+function AKS_testSuiteV11_includesRealAuditPreflightCoverage_() {
+  var source = AKS_runValidationSuiteV11.toString();
+  [
+    "AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_",
+    "AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_",
+    "AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_",
+    "AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_",
+    "AKS_testAudit001Recipe_connectionIsIdempotent_",
+    "AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_",
+    "AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_",
+    "AKS_testAudit001Recipe_recoversPartialConnectionRestore_"
+  ].forEach(function (testName) {
+    assertTrue_(source.indexOf(testName) !== -1,
+      "Test critique absent de la suite cumulative : " + testName);
+  });
+}
+
 function AKS_runValidationSuiteV11() {
   return AKS_runNamedTestSuite_("AKS Platform V1.1", [
     { name: "VERSION-001 / API exists", test: AKS_testVersion001ApiExists_ },
@@ -17,6 +34,7 @@ function AKS_runValidationSuiteV11() {
     { name: "VERSION-001 / invalid provider", test: AKS_testVersion001RejectsInvalidProvider_ },
     { name: "VERSION-001 / invalid provider result", test: AKS_testVersion001RejectsInvalidProviderResult_ },
     { name: "VERSION-001 / string normalization", test: AKS_testVersion001NormalizesRequiredStrings_ },
+    { name: "VERSION-001 / exact stable release", test: AKS_testVersion001ExposesExactStableRelease_ },
 
     { name: "ADMIN-001 / configured administrator", test: AKS_testAdminDashboard_authorizesConfiguredAdministrator },
     { name: "ADMIN-001 / unknown administrator", test: AKS_testAdminDashboard_rejectsUnknownAdministrator },
@@ -89,14 +107,19 @@ function AKS_runValidationSuiteV11() {
     { name: "CONFIG-001 / required delete protection", test: AKS_testConfig001_protectsRequiredValueFromDeletion_ },
     { name: "CONFIG-001 / corrupted persistence", test: AKS_testConfig001_detectsCorruptedPersistentValue_ },
     { name: "CONFIG-001 / persistence lock release", test: AKS_testConfig001_releasesPersistenceLockAfterFailure_ },
-    { name: "CONFIG-001 / authorized administration model", test: AKS_testConfig001AdminUi_buildsAuthorizedViewModel_ },
-    { name: "CONFIG-001 / administration access denied", test: AKS_testConfig001AdminUi_rejectsUnauthorizedUser_ },
+    { name: "ACCESS-002-06 / Config modèle autorisé", test: AKS_testConfig001AdminUi_buildsAuthorizedViewModel_ },
+    { name: "ACCESS-002-06 / Config combinaisons explicites", test: AKS_testConfig001AdminUi_adaptsExplicitCapabilityCombinations_ },
+    { name: "ACCESS-002-06 / Config bootstrap historique borné", test: AKS_testConfig001AdminUi_preservesBoundedBootstrapAccess_ },
+    { name: "ACCESS-002-06 / Config route sans capacité refusée", test: AKS_testConfig001AdminUi_rejectsRouteWithoutConfigCapability_ },
+    { name: "ACCESS-002-06 / Config mutations réautorisées", test: AKS_testConfig001AdminUi_reauthorizesEveryMutation_ },
+    { name: "ACCESS-002-06 / Config refus avant stockage", test: AKS_testConfig001AdminUi_stopsDeniedMutationBeforeStorage_ },
     { name: "CONFIG-001 / invalid required parameter status", test: AKS_testConfig001AdminUi_reportsInvalidRequiredParameter_ },
     { name: "CONFIG-001 / read-only parameter", test: AKS_testConfig001AdminUi_marksReadOnlyParameter_ },
     { name: "CONFIG-001 / authenticated mutation actor", test: AKS_testConfig001AdminUi_usesAuthenticatedActor_ },
     { name: "CONFIG-001 / administration restores default", test: AKS_testConfig001AdminUi_restoresDefault_ },
     { name: "CONFIG-001 / administration navigation", test: AKS_testConfig001AdminUi_publishesNavigationDestination_ },
     { name: "CONFIG-001 / sensitive value masking", test: AKS_testConfig001AdminUi_masksSensitiveValue_ },
+    { name: "ACCESS-002-06 / Config vue adaptée aux permissions", test: AKS_testConfig001AdminUi_viewAdaptsToServerPermissions_ },
 
     { name: "LOG-001 / structured immutable event", test: AKS_testLog001_buildsStructuredImmutableEvent_ },
     { name: "LOG-001 / correlation propagation", test: AKS_testLog001_propagatesValidCorrelationId_ },
@@ -119,6 +142,8 @@ function AKS_runValidationSuiteV11() {
     { name: "LOG-001 / invalid retention policy", test: AKS_testLog001Retention_rejectsInvalidPolicy_ },
     { name: "LOG-001 / controlled purge trace", test: AKS_testLog001Retention_tracesControlledPurge_ },
     { name: "LOG-001 / consultation authorization", test: AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_ },
+    { name: "ACCESS-002-06 / Journaux LOG_READ sur chaque lecture", test: AKS_testLog001Admin_reauthorizesEveryReadWithLogRead_ },
+    { name: "ACCESS-002-06 / Journaux refus non dégradé", test: AKS_testLog001Admin_dashboardDenialIsNotDegraded_ },
     { name: "LOG-001 / controlled filters", test: AKS_testLog001Admin_normalizesControlledFilters_ },
     { name: "LOG-001 / filtered recent events", test: AKS_testLog001Admin_filtersAndLimitsRecentEvents_ },
     { name: "LOG-001 / masked read-only details", test: AKS_testLog001Admin_presentsMaskedDetailsReadOnly_ },
@@ -314,13 +339,18 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ANALYTICS / publication concurrente", test: AKS_testAnalyticsOperational_rejectsConcurrentPublication_ }
     ,{ name: "ANALYTICS / chaîne réelle composée", test: AKS_testAnalyticsOperational_composesRealAnalyticsChain_ }
     ,{ name: "ANALYTICS / actions administratives protégées", test: AKS_testAnalyticsAdmin_protectsEveryServerAction_ }
-    ,{ name: "ANALYTICS / saison et navigation", test: AKS_testAnalyticsAdmin_buildsNavigationAndSeason_ }
+    ,{ name: "ANALYTICS / saison navigation et permissions", test: AKS_testAnalyticsAdmin_buildsNavigationSeasonAndPermissions_ }
+    ,{ name: "ACCESS-002-06 / Analytics permissions historiques partielles", test: AKS_testAnalyticsAdmin_adaptsPartialHistoricalPermissions_ }
+    ,{ name: "ACCESS-002-06 / Analytics bootstrap historique borné", test: AKS_testAnalyticsAdmin_preservesBoundedBootstrapAccess_ }
+    ,{ name: "ACCESS-002-06 / Analytics route sans capacité refusée", test: AKS_testAnalyticsAdmin_rejectsRouteWithoutAnalyticsCapability_ }
+    ,{ name: "ACCESS-002-06 / Analytics appel direct refusé", test: AKS_testAnalyticsAdmin_directRefusalStopsBusinessService_ }
     ,{ name: "ANALYTICS / diagnostics sans données individuelles", test: AKS_testAnalyticsAdmin_diagnosticContainsNoIndividualData_ }
     ,{ name: "ANALYTICS / aperçu sans publication", test: AKS_testAnalyticsAdmin_previewDelegatesWithoutPublishing_ }
     ,{ name: "ANALYTICS / confirmation UI obligatoire", test: AKS_testAnalyticsAdmin_requiresExplicitConfirmation_ }
     ,{ name: "ANALYTICS / jeton et racine configurée", test: AKS_testAnalyticsAdmin_forwardsPreviewTokenAndConfiguredRoot_ }
     ,{ name: "ANALYTICS / saison invalide bloquée", test: AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_ }
     ,{ name: "ANALYTICS / client anti-doublon et aperçu périmé", test: AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_ }
+    ,{ name: "ACCESS-002-06 / Analytics vue adaptée aux permissions", test: AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_ }
     ,{ name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ }
     ,{ name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ }
     ,{ name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }
@@ -331,7 +361,7 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / professeur limité", test: AKS_testAccess001_limitsTeacherToAssignment_ }
     ,{ name: "ACCESS-001 / assistant limité", test: AKS_testAccess001_limitsAssistant_ }
     ,{ name: "ACCESS-001 / consultation seule", test: AKS_testAccess001_keepsConsultationReadOnly_ }
-    ,{ name: "ACCESS-001 / administrateur global", test: AKS_testAccess001_grantsAdministratorGlobalScope_ }
+    ,{ name: "ACCESS-001 / rôle administrateur descriptif", test: AKS_testAccess001_keepsAdministratorRoleDescriptive_ }
     ,{ name: "ACCESS-001 / périmètre invalide", test: AKS_testAccess001_rejectsInvalidScope_ }
     ,{ name: "ACCESS-001 / rôle inconnu", test: AKS_testAccess001_rejectsUnknownRole_ }
     ,{ name: "ACCESS-001 / schéma inconnu", test: AKS_testAccess001_rejectsUnknownSchema_ }
@@ -342,6 +372,40 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / registre audité", test: AKS_testAccess001_savesAndAuditsRegistry_ }
     ,{ name: "ACCESS-001 / écriture registre refusée", test: AKS_testAccess001_rejectsUnauthorizedRegistryWrite_ }
     ,{ name: "ACCESS-001 / affectation expirée", test: AKS_testAccess001_rejectsExpiredAssignment_ }
+    ,{ name: "ACCESS-002-01 / lecture globale protégée", test: AKS_testAccess002Admin_readsRegistryWithAccessManage_ }
+    ,{ name: "ACCESS-002-01 / lecture globale refusée", test: AKS_testAccess002Admin_rejectsGlobalReadWithoutAccessManage_ }
+    ,{ name: "ACCESS-002-01 / bootstrap historique en lecture seule", test: AKS_testAccess002Admin_preservesLegacyBootstrapReadOnly_ }
+    ,{ name: "ACCESS-002-01 / vue défensive immuable", test: AKS_testAccess002Admin_returnsImmutableDefensiveView_ }
+    ,{ name: "ACCESS-002-01 / écriture atomique et métadonnées serveur", test: AKS_testAccess002Admin_writesAtomicallyWithServerMetadata_ }
+    ,{ name: "ACCESS-002-01 / audit persistant avant après corrélé", test: AKS_testAccess002Admin_persistsCorrelatedBeforeAfterAudit_ }
+    ,{ name: "ACCESS-002-01 / audit persistant obligatoire avant mutation", test: AKS_testAccess002Admin_refusesMutationWithoutPersistentAudit_ }
+    ,{ name: "ACCESS-002-01 / restauration après échec de preuve finale", test: AKS_testAccess002Admin_restoresRegistryWhenFinalAuditFails_ }
+    ,{ name: "ACCESS-002-01 / refus audité sans écriture", test: AKS_testAccess002Admin_auditsRefusalWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / refus métier audité sans écriture", test: AKS_testAccess002Admin_recordsLifecycleRefusalWithoutRegistryWrite_ }
+    ,{ name: "ACCESS-002-01 / écriture refusée avant verrou", test: AKS_testAccess002Admin_rejectsWriteBeforeLockWithoutAccessManage_ }
+    ,{ name: "ACCESS-002-01 / validation stricte avant verrou", test: AKS_testAccess002Admin_rejectsInvalidIdentityDatesAndScope_ }
+    ,{ name: "ACCESS-002-01 / conflit de révision", test: AKS_testAccess002Admin_rejectsConcurrentRevision_ }
+    ,{ name: "ACCESS-002-01 / restauration après échec de vérification", test: AKS_testAccess002Admin_restoresPreviousRegistryAfterVerificationFailure_ }
+    ,{ name: "ACCESS-002-01 / verrou indisponible", test: AKS_testAccess002Admin_rejectsUnavailableLockWithoutWrite_ }
+    ,{ name: "ACCESS-002-01 / dernier gestionnaire effectif", test: AKS_testAccess002Admin_preservesLastEffectiveManager_ }
+    ,{ name: "ACCESS-002-01 / réactivation sans anciennes habilitations", test: AKS_testAccess002Admin_reactivationClearsFormerAssignments_ }
+    ,{ name: "ACCESS-002-01 / périmètre historique inactif conservé", test: AKS_testAccess002Admin_preservesInactiveHistoricalScope_ }
+    ,{ name: "ACCESS-002-02 / précontrôle recette sans écriture", test: AKS_testAccess002Recipe_preflightIsReadOnlyAndMinimized_ }
+    ,{ name: "ACCESS-002-02 / audit persistant requis au précontrôle", test: AKS_testAccess002Recipe_rejectsUnavailablePersistentAudit_ }
+    ,{ name: "ACCESS-002-02 / échec de validation audit converti", test: AKS_testAccess002Recipe_mapsAuditValidationFailureWithoutWrite_ }
+    ,{ name: "ACCESS-002-02 / garde de couverture audit réelle", test: AKS_testSuiteV11_includesRealAuditPreflightCoverage_ }
+    ,{ name: "ACCESS-002-02 / cible recette confirmée", test: AKS_testAccess002Recipe_rejectsUnconfirmedTarget_ }
+    ,{ name: "ACCESS-002-02 / identité refus privilégiée rejetée", test: AKS_testAccess002Recipe_rejectsInvalidOrPrivilegedDeniedIdentity_ }
+    ,{ name: "ACCESS-002-02 / sauvegarde avant mutation", test: AKS_testAccess002Recipe_verifiesBackupBeforeRegistryMutation_ }
+    ,{ name: "ACCESS-002-02 / administrateur et ACCESS_MANAGE explicite uniquement", test: AKS_testAccess002Recipe_bootstrapsAdministratorWithExplicitManageOnly_ }
+    ,{ name: "ACCESS-002-02 / administrateur sans capacité implicite", test: AKS_testAccess002Recipe_grantsNoImplicitAdministratorCapability_ }
+    ,{ name: "ACCESS-002-02 / application idempotente", test: AKS_testAccess002Recipe_applyIsIdempotentWhileBackupMatches_ }
+    ,{ name: "ACCESS-002-02 / concurrence sérialisée", test: AKS_testAccess002Recipe_concurrentApplyCannotUndoSuccessfulApply_ }
+    ,{ name: "ACCESS-002-02 / registre absent restauré", test: AKS_testAccess002Recipe_restoresExactMissingRegistryAndRemovesBackup_ }
+    ,{ name: "ACCESS-002-02 / sérialisation restaurée", test: AKS_testAccess002Recipe_restoresExactExistingSerialization_ }
+    ,{ name: "ACCESS-002-02 / conflit de restauration", test: AKS_testAccess002Recipe_refusesRestoreAfterConcurrentChange_ }
+    ,{ name: "ACCESS-002-02 / auto-restauration après échec", test: AKS_testAccess002Recipe_autoRestoresWhenDecisionVerificationFails_ }
+    ,{ name: "ACCESS-002-02 / audit final de restauration", test: AKS_testAccess002Recipe_rollsBackFailedFinalRestoreAudit_ }
     ,{ name: "ANALYTICS-SAISIE-003 / refus avant lecture", test: AKS_testAnalyticsSaisie003_deniesBeforeWorkspaceRead_ }
     ,{ name: "ANALYTICS-SAISIE-003 / périmètre invalide", test: AKS_testAnalyticsSaisie003_rejectsInvalidWorkspaceScope_ }
     ,{ name: "ANALYTICS-SAISIE-003 / espace nettoyé", test: AKS_testAnalyticsSaisie003_returnsSafeWorkspace_ }
@@ -364,6 +428,291 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-001 / API refus nettoyé", test: AKS_testAttendanceServer_refusesBeforeWrite_ }
     ,{ name: "ACCESS-001 / API dépendances ignorées", test: AKS_testAttendanceServer_ignoresClientDependencies_ }
     ,{ name: "ACCESS-001 / API erreur masquée", test: AKS_testAttendanceServer_hidesUnexpectedFailure_ }
+    ,{ name: "ACCESS-002-01 / capacités Analytics indépendantes", test: AKS_testAccess002Catalogue_exposesIndependentAnalyticsCapabilities_ }
+    ,{ name: "ACCESS-002-01 / compatibilité access/1.0", test: AKS_testAccess002Catalogue_preservesAccess10Compatibility_ }
+    ,{ name: "ACCESS-002-02 / affectation transverse autorisée", test: AKS_testAccess002ExplicitManage_authorizesTransverseAssignment_ }
+    ,{ name: "ACCESS-002-02 / rôle seul refusé", test: AKS_testAccess002ExplicitManage_rejectsRoleWithoutAssignment_ }
+    ,{ name: "ACCESS-002-02 / affectation inactive ou hors période refusée", test: AKS_testAccess002ExplicitManage_rejectsInactiveOrOutOfPeriodAssignment_ }
+    ,{ name: "ACCESS-002-02 / forme transverse invalide refusée", test: AKS_testAccess002ExplicitManage_rejectsInvalidTransverseShape_ }
+    ,{ name: "ACCESS-002-02 / rôle d'affectation non détenu refusé", test: AKS_testAccess002ExplicitManage_rejectsRoleNotHeldByAccount_ }
+    ,{ name: "ACCESS-002-02 / dernier gestionnaire explicite préservé", test: AKS_testAccess002ExplicitManage_preservesLastExplicitManager_ }
+    ,{ name: "ACCESS-002-02 / gestionnaire historique migré vers habilitation explicite", test: AKS_testAccess002ExplicitManage_migratesHistoricalManager_ }
+    ,{ name: "ACCESS-002-03 / synthèse effective sûre", test: AKS_testAccess002Projection_buildsSafeEffectiveSummary_ }
+    ,{ name: "ACCESS-002-03 / gestionnaire explicite effectif", test: AKS_testAccess002Projection_marksManagerOnlyFromEffectiveAssignment_ }
+    ,{ name: "ACCESS-002-03 / recherche et filtres combinés", test: AKS_testAccess002Projection_normalizesSearchAndCombinedFilters_ }
+    ,{ name: "ACCESS-002-03 / états futur et sans habilitation", test: AKS_testAccess002Projection_filtersFutureAndWithoutAssignment_ }
+    ,{ name: "ACCESS-002-03 / affectation future non effective", test: AKS_testAccess002Projection_marksFutureWhenNoAssignmentIsEffective_ }
+    ,{ name: "ACCESS-002-03 / modules issus des capacités effectives", test: AKS_testAccess002Projection_derivesModulesFromEffectiveCapabilities_ }
+    ,{ name: "ACCESS-002-03 / tri stable", test: AKS_testAccess002Projection_sortsActiveThenNameThenEmail_ }
+    ,{ name: "ACCESS-002-03 / filtres inconnus refusés", test: AKS_testAccess002Projection_rejectsUnknownFiltersBeforeRead_ }
+    ,{ name: "ACCESS-002-03 / refus administratif propagé", test: AKS_testAccess002Projection_propagatesAdministrativeRefusal_ }
+    ,{ name: "ACCESS-002-03 / projection profondément immuable", test: AKS_testAccess002Projection_returnsDeeplyImmutableDefensiveView_ }
+    ,{ name: "ACCESS-002-03 / lecture seule", test: AKS_testAccess002Projection_isReadOnly_ }
+    ,{ name: "ACCESS-002-03 / création inactive sans habilitation", test: AKS_testAccess002Lifecycle_createsInactiveAccountWithoutAssignments_ }
+    ,{ name: "ACCESS-002-03 / création invalide refusée", test: AKS_testAccess002Lifecycle_rejectsInvalidCreateBeforeRead_ }
+    ,{ name: "ACCESS-002-03 / doublon refusé", test: AKS_testAccess002Lifecycle_rejectsDuplicateAccount_ }
+    ,{ name: "ACCESS-002-03 / désactivation avec historique", test: AKS_testAccess002Lifecycle_deactivatesAndPreservesHistory_ }
+    ,{ name: "ACCESS-002-03 / compte inconnu refusé", test: AKS_testAccess002Lifecycle_rejectsUnknownAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / désactivation idempotente", test: AKS_testAccess002Lifecycle_returnsInactiveAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / idempotence sous révision courante", test: AKS_testAccess002Lifecycle_rejectsStaleIdempotentCommand_ }
+    ,{ name: "ACCESS-002-03 / effacement confirmé requis", test: AKS_testAccess002Lifecycle_requiresConfirmedAssignmentClear_ }
+    ,{ name: "ACCESS-002-03 / réactivation sans anciennes habilitations", test: AKS_testAccess002Lifecycle_reactivatesWithoutOldAssignments_ }
+    ,{ name: "ACCESS-002-03 / réactivation idempotente", test: AKS_testAccess002Lifecycle_returnsActiveAccountWithoutWrite_ }
+    ,{ name: "ACCESS-002-03 / refus du socle audité propagé", test: AKS_testAccess002Lifecycle_propagatesAuditedBoundaryFailure_ }
+    ,{ name: "ACCESS-002-03 / révision transmise au socle", test: AKS_testAccess002Lifecycle_passesExpectedRevisionToBoundary_ }
+    ,{ name: "ACCESS-002-03 / résultat de cycle de vie immuable", test: AKS_testAccess002Lifecycle_returnsImmutableResult_ }
+    ,{ name: "ACCESS-002-03 / route UI refusée avant projection", test: AKS_testAccess002AdminUi_deniesRouteBeforeProjection_ }
+    ,{ name: "ACCESS-002-03 / modèle UI protégé", test: AKS_testAccess002AdminUi_buildsProtectedViewModel_ }
+    ,{ name: "ACCESS-002-03 / commandes UI réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ }
+    ,{ name: "ACCESS-002-03 / navigation UI conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ }
+    ,{ name: "ACCESS-002-03 / états UI sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
+    ,{ name: "ACCESS-002-03 / recette précontrôle sans écriture", test: AKS_testAccess002AccountRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-03 / recette compte existant refusé", test: AKS_testAccess002AccountRecipe_rejectsExistingAccount_ }
+    ,{ name: "ACCESS-002-03 / recette cycle vérifié", test: AKS_testAccess002AccountRecipe_runsVerifiedLifecycle_ }
+    ,{ name: "ACCESS-002-03 / recette restauration exacte", test: AKS_testAccess002AccountRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-03 / recette échec auto-restauré", test: AKS_testAccess002AccountRecipe_autoRestoresFailedCycle_ }
+    ,{ name: "ACCESS-002-04 / lecture access 1.0 sans écriture", test: AKS_testAccess002Schema11_readsAccess10WithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / version de schéma inconnue refusée", test: AKS_testAccess002Schema11_rejectsUnknownSchema_ }
+    ,{ name: "ACCESS-002-04 / Analytics autonome", test: AKS_testAccess002Schema11_authorizesIndependentAnalytics_ }
+    ,{ name: "ACCESS-002-04 / publication Analytics", test: AKS_testAccess002Schema11_acceptsAnalyticsPublish_ }
+    ,{ name: "ACCESS-002-04 / Analytics hors module refusé", test: AKS_testAccess002Schema11_rejectsAnalyticsOutsideModule_ }
+    ,{ name: "ACCESS-002-04 / forme Analytics fermée", test: AKS_testAccess002Schema11_rejectsInvalidAnalyticsScopeOrCapability_ }
+    ,{ name: "ACCESS-002-04 / lecture Analytics historique", test: AKS_testAccess002Schema11_preservesLegacyAnalyticsRead_ }
+    ,{ name: "ACCESS-002-04 / catalogue fermé immuable", test: AKS_testAccess002Schema11_exposesClosedImmutableCatalogue_ }
+    ,{ name: "ACCESS-002-04 / écriture canonique access 1.1", test: AKS_testAccess002Schema11_canonicalizesAuthorizedWrite_ }
+    ,{ name: "ACCESS-002-04 / écriture Analytics historique non sûre refusée", test: AKS_testAccess002Schema11_rejectsUnsafeLegacyAnalyticsWrite_ }
+    ,{ name: "ACCESS-002-06 / lecture access 1.1 sans écriture", test: AKS_testAccess002Schema12_reads11WithoutWrite_ }
+    ,{ name: "ACCESS-002-06 / catalogue Administration", test: AKS_testAccess002Schema12_exposesAdministrationCatalogue_ }
+    ,{ name: "ACCESS-002-06 / Administration explicite", test: AKS_testAccess002Schema12_authorizesExplicitAdministration_ }
+    ,{ name: "ACCESS-002-06 / Administration interdite en access 1.1", test: AKS_testAccess002Schema12_rejectsAdministrationIn11_ }
+    ,{ name: "ACCESS-002-06 / Config incohérent refusé", test: AKS_testAccess002Schema12_rejectsIncoherentConfigWrites_ }
+    ,{ name: "ACCESS-002-06 / Config cohérent accepté", test: AKS_testAccess002Schema12_acceptsCoherentConfigPreview_ }
+    ,{ name: "ACCESS-002-06 / Analytics incohérent refusé", test: AKS_testAccess002Schema12_rejectsIncoherentAnalyticsWrites_ }
+    ,{ name: "ACCESS-002-06 / Analytics access 1.1 préservé", test: AKS_testAccess002Schema12_preservesIncoherent11Read_ }
+    ,{ name: "ACCESS-002-06 / AUDIT_READ non attribuable", test: AKS_testAccess002Schema12_keepsAuditReadUnassignable_ }
+    ,{ name: "ACCESS-002-06 / restauration exacte access 1.1", test: AKS_testAccess002Schema12_restoresExact11AfterFailure_ }
+    ,{ name: "ACCESS-002-04 / fiche minimisée et catalogues", test: AKS_testAccess002Detail_returnsMinimizedTargetAndCatalogues_ }
+    ,{ name: "ACCESS-002-04 / cible invalide ou inconnue", test: AKS_testAccess002Detail_rejectsInvalidOrUnknownTarget_ }
+    ,{ name: "ACCESS-002-04 / refus administratif de fiche", test: AKS_testAccess002Detail_propagatesAdministrativeRefusal_ }
+    ,{ name: "ACCESS-002-04 / prévisualisation des rôles", test: AKS_testAccess002Detail_previewsRolesWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / prévisualisation Analytics autonome", test: AKS_testAccess002Detail_previewsIndependentAnalytics_ }
+    ,{ name: "ACCESS-002-04 / synthèse sans changement", test: AKS_testAccess002Detail_returnsNoChangeSummary_ }
+    ,{ name: "ACCESS-002-04 / révision obsolète refusée", test: AKS_testAccess002Detail_rejectsStalePreview_ }
+    ,{ name: "ACCESS-002-04 / proposition invalide refusée", test: AKS_testAccess002Detail_rejectsInvalidProposalWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / compte inactif non modifiable", test: AKS_testAccess002Detail_rejectsInactiveModification_ }
+    ,{ name: "ACCESS-002-04 / API fiche et aperçu réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ }
+    ,{ name: "ACCESS-002-04 / enregistrement ciblé audité", test: AKS_testAccess002Detail_savesOnlyTargetWithAuditContext_ }
+    ,{ name: "ACCESS-002-04 / absence de changement refusée", test: AKS_testAccess002Detail_rejectsNoChangeWithoutWrite_ }
+    ,{ name: "ACCESS-002-04 / confirmation ACCESS_MANAGE", test: AKS_testAccess002Detail_requiresSensitiveManageConfirmation_ }
+    ,{ name: "ACCESS-002-04 / confirmation auto-modification", test: AKS_testAccess002Detail_requiresSelfModificationConfirmation_ }
+    ,{ name: "ACCESS-002-04 / double soumission bornée", test: AKS_testAccess002Detail_doubleSubmissionMutatesOnce_ }
+    ,{ name: "ACCESS-002-04 / métadonnées de commande bornées", test: AKS_testAccess002Detail_rejectsInvalidRequestMetadata_ }
+    ,{ name: "ACCESS-002-04 / quatre cartes d'habilitations UI", test: AKS_testAccess002AdminUi_exposesFourAccessCards_ }
+    ,{ name: "ACCESS-002-04 / workflow de fiche UI protégé", test: AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_ }
+    ,{ name: "ACCESS-002-04 / dates commentaire et synthèse UI", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
+    ,{ name: "ACCESS-002-04 / fiche inactive UI en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
+    ,{ name: "ACCESS-002-04 / échappement et confirmation UI", test: AKS_testAccess002AdminUi_escapesAttributesAndConfirmsSave_ }
+    ,{ name: "ACCESS-002-04 / cases compactes et ACCESS unique UI", test: AKS_testAccess002AdminUi_keepsCheckboxesCompactAndManageUnique_ }
+    ,{ name: "ACCESS-002-04 / historique ciblé minimisé", test: AKS_testAccess002History_returnsMinimizedMatchingProofs_ }
+    ,{ name: "ACCESS-002-04 / historique paginé décroissant", test: AKS_testAccess002History_paginatesNewestFirst_ }
+    ,{ name: "ACCESS-002-04 / historique réautorisé par page", test: AKS_testAccess002History_reauthorizesEveryPage_ }
+    ,{ name: "ACCESS-002-04 / historique cible curseur schéma refusés", test: AKS_testAccess002History_rejectsInvalidTargetCursorAndSchema_ }
+    ,{ name: "ACCESS-002-04 / historique immuable", test: AKS_testAccess002History_returnsImmutableView_ }
+    ,{ name: "ACCESS-002-04 / métadonnées AUDIT fonctionnelles", test: AKS_testAudit001_acceptsAccessFunctionalHistoryMetadata_ }
+    ,{ name: "ACCESS-002-04 / historique UI fonctionnel paginé", test: AKS_testAccess002AdminUi_exposesMinimizedPaginatedHistory_ }
+    ,{ name: "ACCESS-002-06 / AUDIT différé et erreur minimisée", test: AKS_testAccess002AdminUi_defersAndMinimizesAuditFailure_ }
+    ,{ name: "ACCESS-002-06 / erreur d’historique affichée localement", test: AKS_testAccess002AdminUi_displaysHistoryFailureLocally_ }
+    ,{ name: "ACCESS-002-04 / recette précontrôle sans écriture", test: AKS_testAccess002HabilitationRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-04 / recette fiche et historique vérifiés", test: AKS_testAccess002HabilitationRecipe_verifiesDetailAndHistory_ }
+    ,{ name: "ACCESS-002-04 / recette restauration exacte", test: AKS_testAccess002HabilitationRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-04 / recette échec écriture auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresFailedSave_ }
+    ,{ name: "ACCESS-002-04 / recette historique absent auto-restauré", test: AKS_testAccess002HabilitationRecipe_autoRestoresMissingHistory_ }
+    ,{ name: "ACCESS-002-06 / récupération précontrôle sans écriture", test: AKS_testAccess002Recovery_preflightIsStrictlyReadOnly_ }
+    ,{ name: "ACCESS-002-06 / récupération audit persistant requis", test: AKS_testAccess002Recovery_reportsMissingPersistentAudit_ }
+    ,{ name: "ACCESS-002-06 / récupération access/1.1 restaurée exactement", test: AKS_testAccess002Recovery_restoresAccess11RawExactly_ }
+    ,{ name: "ACCESS-002-06 / récupération registre absent restauré exactement", test: AKS_testAccess002Recovery_restoresAbsentRegistryExactly_ }
+    ,{ name: "ACCESS-002-06 / récupération échec de restauration explicite", test: AKS_testAccess002Recovery_reportsRestoreFailure_ }
+    ,{ name: "ACCESS-002-06 / récupération résidu temporaire refusé", test: AKS_testAccess002Recovery_refusesRemainingTemporaryState_ }
+    ,{ name: "ACCESS-002-06 / récupération état temporaire supprimé", test: AKS_testAccess002Recovery_removesTemporaryProperties_ }
+    ,{ name: "ACCESS-002-06 / récupération échec auto-restauré", test: AKS_testAccess002Recovery_autoRestoresAfterApplyFailure_ }
+    ,{ name: "ACCESS-002-06 / récupération restauration inexacte refusée", test: AKS_testAccess002Recovery_refusesInexactRestore_ }
+    ,{ name: "ACCESS-002-06 / récupération réelle non exécutable", test: AKS_testAccess002Recovery_exposesNonExecutableRealProcedure_ }
+    ,{ name: "ACCESS-002-05 / portail Présences uniquement", test: AKS_testAccess002Portal_projectsAttendanceOnly_ }
+    ,{ name: "ACCESS-002-05 / portail Analytics indépendant", test: AKS_testAccess002Portal_keepsAnalyticsIndependent_ }
+    ,{ name: "ACCESS-002-06 / carte Analytics pour toute capacité", test: AKS_testAccess002Portal_showsAnalyticsForAnyExplicitCapability_ }
+    ,{ name: "ACCESS-002-06 / carte Paramétrage pour toute capacité", test: AKS_testAccess002Portal_showsConfigForAnyExplicitCapability_ }
+    ,{ name: "ACCESS-002-06 / Paramétrage historique borné au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalConfigWithRegistry_ }
+    ,{ name: "ACCESS-002-06 / carte Journaux avec LOG_READ", test: AKS_testAccess002Portal_showsLogsForExplicitLogRead_ }
+    ,{ name: "ACCESS-002-06 / Journaux historiques bornés au bootstrap", test: AKS_testAccess002Portal_doesNotUseHistoricalLogsWithRegistry_ }
+    ,{ name: "ACCESS-002-05 / portail ACCESS explicite", test: AKS_testAccess002Portal_exposesAccessManageOnlyExplicitly_ }
+    ,{ name: "ACCESS-002-06 / bootstrap borné sans questionnaire privé", test: AKS_testAccess002Portal_preservesBootstrapDestinationsOnly_ }
+    ,{ name: "ACCESS-002-05 / portail état neutre fermé", test: AKS_testAccess002Portal_returnsNeutralClosedModel_ }
+    ,{ name: "ACCESS-002-05 / projection affectations effectives", test: AKS_testAccess002Portal_snapshotContainsOnlyEffectiveAssignments_ }
+    ,{ name: "ACCESS-002-05 / projection rôle sans héritage", test: AKS_testAccess002Portal_snapshotDoesNotInheritFromAccountRole_ }
+    ,{ name: "ACCESS-002-05 / projection immuable", test: AKS_testAccess002Portal_snapshotIsDeeplyImmutable_ }
+    ,{ name: "ACCESS-002-05 / Mes accès projection effective", test: AKS_testAccess002MyAccess_returnsEffectiveProjection_ }
+    ,{ name: "ACCESS-002-05 / Mes accès état vide neutre", test: AKS_testAccess002MyAccess_returnsNeutralEmptyState_ }
+    ,{ name: "ACCESS-002-05 / Mes accès bootstrap refusé", test: AKS_testAccess002MyAccess_rejectsBootstrapIdentity_ }
+    ,{ name: "ACCESS-002-05 / Mes accès vue immuable", test: AKS_testAccess002MyAccess_returnsDeeplyImmutableView_ }
+    ,{ name: "ACCESS-002-05 / Mes accès contrôleur personnel", test: AKS_testAccess002MyAccess_controllerBuildsPersonalModel_ }
+    ,{ name: "ACCESS-002-05 / Mes accès API sans cible", test: AKS_testAccess002MyAccess_publicApiAcceptsNoTargetIdentity_ }
+    ,{ name: "ACCESS-002-05 / Mes accès route lecture seule", test: AKS_testAccess002MyAccess_exposesReadOnlyRouteAndView_ }
+    ,{ name: "ACCESS-002-05 / Mes accès refus générique", test: AKS_testAccess002MyAccess_deniedViewLeaksNoIdentity_ }
+    ,{ name: "ACCESS-002-05 / Portail Mes accès visible", test: AKS_testAccess002PortalUi_addsMyAccessForEveryKnownAccount_ }
+    ,{ name: "ACCESS-002-06 / Portail Mes accès masqué au bootstrap", test: AKS_testAccess002PortalUi_hidesMyAccessDuringBootstrap_ }
+    ,{ name: "ACCESS-002-05 / Portail destinations projetées", test: AKS_testAccess002PortalUi_keepsOnlyProjectedDestinations_ }
+    ,{ name: "ACCESS-002-05 / Portail état neutre", test: AKS_testAccess002PortalUi_returnsNeutralNoAccessState_ }
+    ,{ name: "ACCESS-002-06 / Portail journaux selon destination projetée", test: AKS_testAccess002PortalUi_identifiesProjectedLogsDestination_ }
+    ,{ name: "ACCESS-002-05 / Portail modèle immuable", test: AKS_testAccess002PortalUi_modelIsDeeplyImmutable_ }
+    ,{ name: "ACCESS-002-05 / Portail renommage route stable", test: AKS_testAccess002PortalUi_renamesDashboardWithoutChangingRoute_ }
+    ,{ name: "ACCESS-002-05 / Portail refus générique", test: AKS_testAccess002PortalUi_deniedViewLeaksNoIdentityOrLink_ }
+    ,{ name: "ACCESS-002-05 / recette précontrôle sans écriture", test: AKS_testAccess002PortalRecipe_preflightIsReadOnly_ }
+    ,{ name: "ACCESS-002-05 / recette profils vérifiés", test: AKS_testAccess002PortalRecipe_verifiesMultipleProfiles_ }
+    ,{ name: "ACCESS-002-05 / recette restauration exacte", test: AKS_testAccess002PortalRecipe_restoresExactInitialState_ }
+    ,{ name: "ACCESS-002-05 / recette identités distinctes", test: AKS_testAccess002PortalRecipe_rejectsDuplicateIdentities_ }
+    ,{ name: "ACCESS-002-05 / recette échec auto-restauré", test: AKS_testAccess002PortalRecipe_autoRestoresProjectionFailure_ }
+    ,{ name: "INSCRIPTIONS / corpus versionné", test: AKS_testInscriptionsGold_coversVersionedCorpus_ }
+    ,{ name: "INSCRIPTIONS / immutabilité profonde", test: AKS_testInscriptionsGold_isDeeplyImmutable_ }
+    ,{ name: "INSCRIPTIONS / empreintes vérifiées", test: AKS_testInscriptionsGold_verifiesFingerprints_ }
+    ,{ name: "INSCRIPTIONS / catalogue réellement exécuté", test: AKS_testInscriptionsGold_executesValidatedCatalogue_ }
+    ,{ name: "INSCRIPTIONS / identifiants canoniques uniques", test: AKS_testInscriptionsGold_allocatesUniqueCanonicalIdentifiers_ }
+    ,{ name: "INSCRIPTIONS / conformité des oracles", test: AKS_testInscriptionsGold_matchesEveryExecutableOracle_ }
+    ,{ name: "INSCRIPTIONS / Questionnaire santé minimisé", test: AKS_testInscriptionsGold_minimizesQuestionnaireSante_ }
+    ,{ name: "INSCRIPTIONS / fabrique sans API Google", test: AKS_testInscriptionsGold_factoryContainsNoGoogleService_ }
+    ,{ name: "INSCRIPTIONS-008 / catalogue exact", test: AKS_testInscriptions008_exposesExactCapabilityCatalogue_ }
+    ,{ name: "INSCRIPTIONS-008 / compatibilité Présences", test: AKS_testInscriptions008_preservesAttendanceAssignments_ }
+    ,{ name: "INSCRIPTIONS-008 / aucun octroi implicite", test: AKS_testInscriptions008_grantsNoImplicitRoleCapability_ }
+    ,{ name: "INSCRIPTIONS-008 / capacités séparées", test: AKS_testInscriptions008_separatesExplicitCapabilities_ }
+    ,{ name: "INSCRIPTIONS-008 / rôle d'affectation porté par le compte", test: AKS_testInscriptions008_requiresAssignmentRoleOnAccount_ }
+    ,{ name: "INSCRIPTIONS-008 / six capacités et leurs portées", test: AKS_testInscriptions008_authorizesSixCapabilitiesWithTheirScopes_ }
+    ,{ name: "INSCRIPTIONS-008 / matrice de portée fermée", test: AKS_testInscriptions008_validatesClosedScopeMatrix_ }
+    ,{ name: "INSCRIPTIONS-008 / limites saison section cours", test: AKS_testInscriptions008_honorsSeasonSectionAndCourse_ }
+    ,{ name: "INSCRIPTIONS-008 / périmètres expiré et ambigu", test: AKS_testInscriptions008_rejectsExpiredAndAmbiguousScopes_ }
+    ,{ name: "INSCRIPTIONS-008 / refus avant lecture", test: AKS_testInscriptions008_deniesBeforeRepositoryRead_ }
+    ,{ name: "INSCRIPTIONS-008 / périmètre serveur", test: AKS_testInscriptions008_readsTrustedScopeOnly_ }
+    ,{ name: "INSCRIPTIONS-008 / intention avant commit", test: AKS_testInscriptions008_requiresIntentionBeforeCommit_ }
+    ,{ name: "INSCRIPTIONS-008 / cours obligatoire pour affectation", test: AKS_testInscriptions008_requiresCourseForAssignmentWrite_ }
+    ,{ name: "INSCRIPTIONS-008 / cycle réussi ordonné", test: AKS_testInscriptions008_ordersSuccessfulCommand_ }
+    ,{ name: "INSCRIPTIONS-008 / audit final obligatoire", test: AKS_testInscriptions008_doesNotConfirmWithoutFinalAudit_ }
+    ,{ name: "INSCRIPTIONS-008 / échec de contrôle récupérable", test: AKS_testInscriptions008_recordsRecoverableControlFailure_ }
+    ,{ name: "INSCRIPTIONS-008 / audit minimisé", test: AKS_testInscriptions008_minimizesAuditEvents_ }
+    ,{ name: "INSCRIPTIONS-008 / aucune API Google", test: AKS_testInscriptions008_containsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-008 / INS-GOLD-011 réussi", test: AKS_testInscriptions008_promotesGold011AfterProof_ }
+    ,{ name: "INSCRIPTIONS-009 / enregistrement versionné minimisé", test: AKS_testInscriptions009_minimizesVersionedRecord_ }
+    ,{ name: "INSCRIPTIONS-009 / cycle nominal unique", test: AKS_testInscriptions009_runsNominalCycleOnce_ }
+    ,{ name: "INSCRIPTIONS-009 / rejeu confirmé sans commit", test: AKS_testInscriptions009_replaysConfirmedWithoutCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / réservation idempotente unique", test: AKS_testInscriptions009_reservesIdempotencyKeyOnce_ }
+    ,{ name: "INSCRIPTIONS-009 / état de journal inconnu refusé", test: AKS_testInscriptions009_rejectsUnknownJournalState_ }
+    ,{ name: "INSCRIPTIONS-009 / identité idempotente complète", test: AKS_testInscriptions009_rejectsEveryIdentityConflict_ }
+    ,{ name: "INSCRIPTIONS-009 / refus avant lecture du journal", test: AKS_testInscriptions009_deniesBeforeJournalRead_ }
+    ,{ name: "INSCRIPTIONS-009 / autorisation avant validation détaillée", test: AKS_testInscriptions009_authorizesBeforeDetailedValidation_ }
+    ,{ name: "INSCRIPTIONS-009 / capacité imposée par l'action", test: AKS_testInscriptions009_imposesCapabilityFromAction_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise INTENTION reconstruite", test: AKS_testInscriptions009_resumesIntentionAfterReconstruction_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise EN_COURS avant commit", test: AKS_testInscriptions009_resumesRunningBeforeCommit_ }
+    ,{ name: "INSCRIPTIONS-009 / droit retiré avant reprise", test: AKS_testInscriptions009_deniesRevokedRecoveryBeforeRepository_ }
+    ,{ name: "INSCRIPTIONS-009 / réconciliation appliquée sans rejeu", test: AKS_testInscriptions009_reconcilesAppliedBeforeRetry_ }
+    ,{ name: "INSCRIPTIONS-009 / reprise absente après reconstruction", test: AKS_testInscriptions009_retriesAbsentAfterReconstruction_ }
+    ,{ name: "INSCRIPTIONS-009 / réconciliation ambiguë refusée", test: AKS_testInscriptions009_rejectsAmbiguousReconciliation_ }
+    ,{ name: "INSCRIPTIONS-009 / échec final à trois tentatives", test: AKS_testInscriptions009_stopsAfterThirdMutationFailure_ }
+    ,{ name: "INSCRIPTIONS-009 / contrôle et audit final obligatoires", test: AKS_testInscriptions009_doesNotConfirmFailedControlOrAudit_ }
+    ,{ name: "INSCRIPTIONS-009 / corrélation de bout en bout", test: AKS_testInscriptions009_preservesCorrelationEverywhere_ }
+    ,{ name: "INSCRIPTIONS-009 / conflit de version optimiste", test: AKS_testInscriptions009_rejectsOptimisticConflict_ }
+    ,{ name: "INSCRIPTIONS-009 / aucune API Google", test: AKS_testInscriptions009_containsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-010 / schéma exact", test: AKS_testInscriptions010_exposesExactSchema_ }
+    ,{ name: "INSCRIPTIONS-010 / recette exacte", test: AKS_testInscriptions010_acceptsExactRecipe_ }
+    ,{ name: "INSCRIPTIONS-010 / production refusée avant mutation", test: AKS_testInscriptions010_rejectsNonRecipeBeforeMutation_ }
+    ,{ name: "INSCRIPTIONS-010 / ressource incohérente", test: AKS_testInscriptions010_rejectsResourceMismatch_ }
+    ,{ name: "INSCRIPTIONS-010 / onglet inattendu", test: AKS_testInscriptions010_rejectsUnexpectedSheet_ }
+    ,{ name: "INSCRIPTIONS-010 / en-têtes figés", test: AKS_testInscriptions010_rejectsHeaderDrift_ }
+    ,{ name: "INSCRIPTIONS-010 / fuseau physique figé", test: AKS_testInscriptions010_rejectsSpreadsheetTimezoneDrift_ }
+    ,{ name: "INSCRIPTIONS-010 / métadonnée inconnue", test: AKS_testInscriptions010_rejectsUnknownMetadata_ }
+    ,{ name: "INSCRIPTIONS-010 / métadonnée dupliquée", test: AKS_testInscriptions010_rejectsDuplicateMetadata_ }
+    ,{ name: "INSCRIPTIONS-010 / audit commun persistant", test: AKS_testInscriptions010_requiresPersistentCommonAudit_ }
+    ,{ name: "INSCRIPTIONS-010 / journal projeté", test: AKS_testInscriptions010_loadsProjectedJournal_ }
+    ,{ name: "INSCRIPTIONS-010 / réservation unique verrouillée", test: AKS_testInscriptions010_reservesOnceUnderLock_ }
+    ,{ name: "INSCRIPTIONS-010 / réservation altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalReservation_ }
+    ,{ name: "INSCRIPTIONS-010 / doublon de journal", test: AKS_testInscriptions010_rejectsDuplicateJournalRows_ }
+    ,{ name: "INSCRIPTIONS-010 / mise à jour versionnée", test: AKS_testInscriptions010_updatesExpectedJournalVersion_ }
+    ,{ name: "INSCRIPTIONS-010 / mise à jour altérée détectée", test: AKS_testInscriptions010_rejectsAlteredJournalUpdate_ }
+    ,{ name: "INSCRIPTIONS-010 / auteurs techniques distincts", test: AKS_testInscriptions010_preservesCreatedByOnUpdate_ }
+    ,{ name: "INSCRIPTIONS-010 / version périmée", test: AKS_testInscriptions010_rejectsStaleJournalVersion_ }
+    ,{ name: "INSCRIPTIONS-010 / identité de journal immuable", test: AKS_testInscriptions010_rejectsJournalIdentityChange_ }
+    ,{ name: "INSCRIPTIONS-010 / état inconnu", test: AKS_testInscriptions010_rejectsInvalidJournalState_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence globale monotone", test: AKS_testInscriptions010_allocatesMonotoneGlobalSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / acteur de séquence injecté", test: AKS_testInscriptions010_usesInjectedSequenceActor_ }
+    ,{ name: "INSCRIPTIONS-010 / écriture de séquence altérée", test: AKS_testInscriptions010_rejectsAlteredSequenceWrite_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence saisonnière", test: AKS_testInscriptions010_formatsSeasonSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence import typée", test: AKS_testInscriptions010_formatsTypedImportSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / portée de séquence invalide", test: AKS_testInscriptions010_rejectsInvalidSequenceScope_ }
+    ,{ name: "INSCRIPTIONS-010 / séquence dupliquée", test: AKS_testInscriptions010_rejectsDuplicateSequence_ }
+    ,{ name: "INSCRIPTIONS-010 / verrou indisponible", test: AKS_testInscriptions010_rejectsLockTimeoutWithoutMutation_ }
+    ,{ name: "INSCRIPTIONS-010 / échec avant verrou", test: AKS_testInscriptions010_releasesLockAfterWriteFailure_ }
+    ,{ name: "INSCRIPTIONS-010 / noyau sans API Google", test: AKS_testInscriptions010_automaticCoreContainsNoGoogleApi_ }
+    ,{ name: "INSCRIPTIONS-010 / recette hors suite automatique", test: AKS_testInscriptions010_recipeFunctionsStayOutOfAutomaticSuite_ }
+    ,{ name: "INSCRIPTIONS-010 / configuration contrôlée", test: AKS_testInscriptions010_registersControlledConfiguration_ }
+    ,{ name: "AUDIT-001 / catalogues figés", test: AKS_testAudit001_exposesFrozenCatalogs_ }
+    ,{ name: "AUDIT-001 / configuration technique", test: AKS_testAudit001_registersTechnicalConfiguration_ }
+    ,{ name: "AUDIT-001 / preuve complète relue", test: AKS_testAudit001_persistsAndRereadsCompleteProof_ }
+    ,{ name: "AUDIT-001 / identités serveur", test: AKS_testAudit001_resolvesServerIdentities_ }
+    ,{ name: "AUDIT-001 / horodatages serveur", test: AKS_testAudit001_usesServerTimestamps_ }
+    ,{ name: "AUDIT-001 / JSON canonique", test: AKS_testAudit001_serializesMetadataDeterministically_ }
+    ,{ name: "AUDIT-001 / preuve registre ACCESS minimisée", test: AKS_testAudit001_persistsMinimizedAccessRegistryProof_ }
+    ,{ name: "AUDIT-001 / métadonnées ACCESS invalides refusées", test: AKS_testAudit001_rejectsInvalidAccessRegistryMetadata_ }
+    ,{ name: "AUDIT-001 / cycle ACCESS persistant de bout en bout", test: AKS_testAudit001_persistsAccessServiceCycleEndToEnd_ }
+    ,{ name: "AUDIT-001 / schéma fermé de métadonnées", test: AKS_testAudit001_rejectsMetadataOutsideClosedSchema_ }
+    ,{ name: "AUDIT-001 / valeur JSON invalide refusée", test: AKS_testAudit001_rejectsInvalidMetadataValue_ }
+    ,{ name: "AUDIT-001 / catalogue inconnu refusé", test: AKS_testAudit001_rejectsUnknownCatalogValue_ }
+    ,{ name: "AUDIT-001 / motif inconnu réduit", test: AKS_testAudit001_reducesUnknownReason_ }
+    ,{ name: "AUDIT-001 / support production exact accepté", test: AKS_testAudit001_acceptsExactProductionSupport_ }
+    ,{ name: "AUDIT-001 / supports exacts croisés refusés", test: AKS_testAudit001_rejectsExactCrossedSupports_ }
+    ,{ name: "AUDIT-001 / ressource inattendue refusée", test: AKS_testAudit001_rejectsResourceMismatch_ }
+    ,{ name: "AUDIT-001 / marqueur recette ambigu refusé", test: AKS_testAudit001_rejectsAmbiguousRecipeNames_ }
+    ,{ name: "AUDIT-001 / nom recette avec espaces refusé", test: AKS_testAudit001_rejectsPaddedExactRecipeName_ }
+    ,{ name: "AUDIT-001 / environnement recette non exact refusé", test: AKS_testAudit001_rejectsNonExactRecipeEnvironment_ }
+    ,{ name: "AUDIT-001 / version de schéma non exacte refusée", test: AKS_testAudit001_rejectsNonExactSchemaVersion_ }
+    ,{ name: "AUDIT-001 / administrateur non habilité refusé", test: AKS_testAudit001_rejectsUnauthorizedAdminActor_ }
+    ,{ name: "AUDIT-001 / utilisateur sans autorité refusé", test: AKS_testAudit001_rejectsUncontrolledUserOnDefaultPort_ }
+    ,{ name: "AUDIT-001 / cible personnelle refusée", test: AKS_testAudit001_rejectsPersonalTargetIdentifier_ }
+    ,{ name: "AUDIT-001 / corrélation personnelle refusée", test: AKS_testAudit001_rejectsPersonalCorrelationIdentifier_ }
+    ,{ name: "AUDIT-001 / identifiant Google invalide refusé", test: AKS_testAudit001_rejectsInvalidGoogleSpreadsheetIdentifier_ }
+    ,{ name: "AUDIT-001 / cycle corrélé complet", test: AKS_testAudit001_persistsCorrelatedCompleteCycle_ }
+    ,{ name: "AUDIT-001 / en-tête incompatible refusé", test: AKS_testAudit001_rejectsHeaderMismatch_ }
+    ,{ name: "AUDIT-001 / configuration absente refusée", test: AKS_testAudit001_rejectsMissingConfiguration_ }
+    ,{ name: "AUDIT-001 / configuration non explicite refusée", test: AKS_testAudit001_rejectsNonExplicitConfiguration_ }
+    ,{ name: "AUDIT-001 / standard sans dégradation", test: AKS_testAudit001_persistsStandardWithoutDegradation_ }
+    ,{ name: "AUDIT-001 / verrou indisponible refusé", test: AKS_testAudit001_rejectsUnavailableLock_ }
+    ,{ name: "AUDIT-001 / verrou libéré après panne", test: AKS_testAudit001_releasesLockAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / identifiant dupliqué refusé", test: AKS_testAudit001_rejectsDuplicateIdentifier_ }
+    ,{ name: "AUDIT-001 / preuve altérée refusée", test: AKS_testAudit001_rejectsAlteredPersistedProof_ }
+    ,{ name: "AUDIT-001 / preuve immuable", test: AKS_testAudit001_returnsDeeplyImmutableProof_ }
+    ,{ name: "AUDIT-001 / support persistant validé sans écriture", test: AKS_testAudit001_validatesPersistentRecipeSupportWithoutWrite_ }
+    ,{ name: "AUDIT-001 / précontrôle production sans écriture", test: AKS_testAudit001_preflightProductionPerformsNoWrite_ }
+    ,{ name: "AUDIT-001 / projet Apps Script incompatible refusé", test: AKS_testAudit001_rejectsWrongScriptBeforeWrite_ }
+    ,{ name: "AUDIT-001 / conservation incompatible refusée", test: AKS_testAudit001_rejectsInvalidRetentionBeforeWrite_ }
+    ,{ name: "AUDIT-001 / support production public refusé", test: AKS_testAudit001_rejectsPublicProductionSupport_ }
+    ,{ name: "AUDIT-001 / éditeur technique de production accepté", test: AKS_testAudit001_acceptsTechnicalEditorForProduction_ }
+    ,{ name: "AUDIT-001 / production sans écrivain technique refusée", test: AKS_testAudit001_rejectsProductionWithoutTechnicalWriter_ }
+    ,{ name: "AUDIT-001 / précontrôle et écriture contrôlée séparés", test: AKS_testAudit001_separatesProductionPreflightAndControlledWrite_ }
+    ,{ name: "AUDIT-001 / opérateur production non autorisé refusé", test: AKS_testAudit001_refusesUnauthorizedProductionOperator_ }
+    ,{ name: "AUDIT-001 / support persistant invalide refusé sans écriture", test: AKS_testAudit001_rejectsInvalidPersistentRecipeSupportWithoutWrite_ }
+    ,{ name: "AUDIT-001 / port commun persistant", test: AKS_testAudit001_exposesPersistentCommonPort_ }
+    ,{ name: "AUDIT-001 / adaptateur Sheets exact", test: AKS_testAudit001_sheetsGatewayAppendsAndReadsExactTexts_ }
+    ,{ name: "AUDIT-001 / onglet Sheets obligatoire", test: AKS_testAudit001_sheetsGatewayRejectsMissingSheet_ }
+    ,{ name: "AUDIT-001 / service sans API Google", test: AKS_testAudit001_domainServiceContainsNoGoogleApi_ }
+    ,{ name: "AUDIT-001 / aucun audit propre à Inscriptions", test: AKS_testAudit001_requiresNoInscriptionsAuditService_ }
+    ,{ name: "AUDIT-001 / recette cible isolée exacte", test: AKS_testAudit001Recipe_preparesOnlyExactIsolatedTarget_ }
+    ,{ name: "AUDIT-001 / recette administrateur requis", test: AKS_testAudit001Recipe_rejectsUnauthorizedActorBeforeMutation_ }
+    ,{ name: "AUDIT-001 / recette preuves corrélées et configuration restaurée", test: AKS_testAudit001Recipe_persistsCorrelatedProofsAndRestoresConfig_ }
+    ,{ name: "AUDIT-001 / recette connexion persistante sans preuve", test: AKS_testAudit001Recipe_connectsPersistentSupportWithoutAuditWrite_ }
+    ,{ name: "AUDIT-001 / recette conservation via configuration réelle", test: AKS_testAudit001Recipe_connectsRetentionThroughRealConfiguration_ }
+    ,{ name: "AUDIT-001 / recette connexion persistante idempotente", test: AKS_testAudit001Recipe_connectionIsIdempotent_ }
+    ,{ name: "AUDIT-001 / recette déconnexion restaure exactement", test: AKS_testAudit001Recipe_disconnectRestoresExactConfiguration_ }
+    ,{ name: "AUDIT-001 / recette déconnexion interdite avant restauration ACCESS", test: AKS_testAudit001Recipe_refusesDisconnectBeforeAccessRestore_ }
+    ,{ name: "AUDIT-001 / recette récupération après restauration partielle", test: AKS_testAudit001Recipe_recoversPartialConnectionRestore_ }
+    ,{ name: "AUDIT-001 / recette restauration après panne", test: AKS_testAudit001Recipe_restoresConfigAfterPersistenceFailure_ }
+    ,{ name: "AUDIT-001 / recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
+    ,{ name: "AUDIT-001 / recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
+    ,{ name: "AUDIT-001 / recette restauration partielle après conflit", test: AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_ }
   ]);
 }
 

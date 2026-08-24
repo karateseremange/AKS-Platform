@@ -1,5 +1,5 @@
 function AKS_analyticsAdminFixture_(overrides) {
-  var calls = { authorize: 0, preview: 0, publish: 0 };
+  var calls = { authorize: 0, assertions: [], snapshot: 0, preview: 0, publish: 0 };
   var preview = {
     season: "2026-2027",
     state: "PRET",
@@ -29,14 +29,43 @@ function AKS_analyticsAdminFixture_(overrides) {
       };
     })
   };
+  var settings = {
+    snapshot: {
+      email: "analyst@example.test",
+      assignments: [{
+        module: "ANALYTICS",
+        capabilities: ["ANALYTICS_READ", "ANALYTICS_PREVIEW", "ANALYTICS_PUBLISH"]
+      }]
+    },
+    denied: {}
+  };
+  if (overrides) overrides(preview, calls, settings);
+  function snapshotCapabilities_() {
+    var result = {};
+    settings.snapshot.assignments.forEach(function (assignment) {
+      if (assignment.module !== "ANALYTICS") return;
+      assignment.capabilities.forEach(function (capability) { result[capability] = true; });
+    });
+    return result;
+  }
   var values = {
     "platform.activeSeason": "2026-2027",
     "analytics.driveRootFolderId": "ROOT-AKS"
   };
   var controller = AKS_createAdminAnalyticsController_({
-    assertCurrentUserAuthorized: function () {
+    getEffectiveAccessSnapshot: function () {
+      calls.snapshot += 1;
+      return JSON.parse(JSON.stringify(settings.snapshot));
+    },
+    assertAnalyticsCapability: function (capability) {
       calls.authorize += 1;
-      return "admin@example.test";
+      calls.assertions.push(capability);
+      if (settings.denied[capability] || !snapshotCapabilities_()[capability]) {
+        var failure = new Error("Analytics non autorisé.");
+        failure.code = "ACCESS_CAPABILITY_DENIED";
+        throw failure;
+      }
+      return true;
     }
   }, {
     preview: function () {
@@ -61,8 +90,7 @@ function AKS_analyticsAdminFixture_(overrides) {
   }, function () {
     return "https://example.test/exec";
   });
-  if (overrides) overrides(preview, calls);
-  return { controller: controller, preview: preview, calls: calls };
+  return { controller: controller, preview: preview, calls: calls, settings: settings };
 }
 
 function AKS_testAnalyticsAdmin_protectsEveryServerAction_() {
@@ -73,14 +101,71 @@ function AKS_testAnalyticsAdmin_protectsEveryServerAction_() {
   fixture.controller.publish({
     season: "2026-2027", confirmed: true, confirmationToken: "TOKEN-CURRENT"
   });
-  assertEquals_(4, fixture.calls.authorize);
+  assertEquals_(1, fixture.calls.snapshot);
+  assertEquals_(JSON.stringify([
+    "ANALYTICS_READ", "ANALYTICS_PREVIEW", "ANALYTICS_PUBLISH"
+  ]), JSON.stringify(fixture.calls.assertions));
 }
 
-function AKS_testAnalyticsAdmin_buildsNavigationAndSeason_() {
+function AKS_testAnalyticsAdmin_buildsNavigationSeasonAndPermissions_() {
   var model = AKS_analyticsAdminFixture_().controller.getViewModel();
+  assertEquals_("analyst@example.test", model.administrator.email);
   assertEquals_("2026-2027", model.season);
   assertEquals_("https://example.test/exec?app=admin", model.navigation.homeTarget);
   assertEquals_("https://example.test/exec?app=analytics", model.navigation.analyticsTarget);
+  assertEquals_(true, model.permissions.diagnose);
+  assertEquals_(true, model.permissions.preview);
+  assertEquals_(true, model.permissions.publish);
+  assertTrue_(Object.isFrozen(model.permissions));
+}
+
+function AKS_testAnalyticsAdmin_adaptsPartialHistoricalPermissions_() {
+  var previewOnly = AKS_analyticsAdminFixture_(function (preview, calls, settings) {
+    settings.snapshot.assignments[0].capabilities = ["ANALYTICS_PREVIEW"];
+  }).controller.getViewModel();
+  assertEquals_(false, previewOnly.permissions.diagnose);
+  assertEquals_(true, previewOnly.permissions.preview);
+  assertEquals_(false, previewOnly.permissions.publish);
+
+  var publishOnly = AKS_analyticsAdminFixture_(function (preview, calls, settings) {
+    settings.snapshot.assignments[0].capabilities = ["ANALYTICS_PUBLISH"];
+  }).controller.getViewModel();
+  assertEquals_(false, publishOnly.permissions.diagnose);
+  assertEquals_(false, publishOnly.permissions.preview);
+  assertEquals_(false, publishOnly.permissions.publish);
+}
+
+function AKS_testAnalyticsAdmin_preservesBoundedBootstrapAccess_() {
+  var model = AKS_analyticsAdminFixture_(function (preview, calls, settings) {
+    settings.snapshot = {
+      email: "legacy@example.test", assignments: [], bootstrap: true
+    };
+  }).controller.getViewModel();
+  assertEquals_("legacy@example.test", model.administrator.email);
+  assertEquals_(true, model.permissions.diagnose);
+  assertEquals_(true, model.permissions.preview);
+  assertEquals_(true, model.permissions.publish);
+}
+
+function AKS_testAnalyticsAdmin_rejectsRouteWithoutAnalyticsCapability_() {
+  var fixture = AKS_analyticsAdminFixture_(function (preview, calls, settings) {
+    settings.snapshot.assignments = [{
+      module: "ACCESS", capabilities: ["ACCESS_MANAGE"]
+    }];
+  });
+  assertThrows_(function () { fixture.controller.getViewModel(); },
+    "ACCESS_CAPABILITY_DENIED");
+}
+
+function AKS_testAnalyticsAdmin_directRefusalStopsBusinessService_() {
+  var fixture = AKS_analyticsAdminFixture_(function (preview, calls, settings) {
+    settings.denied.ANALYTICS_PREVIEW = true;
+  });
+  assertThrows_(function () {
+    fixture.controller.preview({ season: "2026-2027" });
+  }, "ACCESS_CAPABILITY_DENIED");
+  assertEquals_(0, fixture.calls.preview);
+  assertEquals_(0, fixture.calls.publish);
 }
 
 function AKS_testAnalyticsAdmin_diagnosticContainsNoIndividualData_() {
@@ -119,6 +204,7 @@ function AKS_testAnalyticsAdmin_requiresExplicitConfirmation_() {
     });
   }, "ANALYTICS_ADMIN_CONFIRMATION_REQUIRED");
   assertEquals_(0, fixture.calls.publish);
+  assertEquals_("ANALYTICS_PUBLISH", fixture.calls.assertions[0]);
 }
 
 function AKS_testAnalyticsAdmin_forwardsPreviewTokenAndConfiguredRoot_() {
@@ -138,22 +224,35 @@ function AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_() {
     fixture.controller.preview({ season: "2026" });
   }, "ANALYTICS_ADMIN_SEASON_INVALID");
   assertEquals_(0, fixture.calls.preview);
+  assertEquals_("ANALYTICS_PREVIEW", fixture.calls.assertions[0]);
 }
 
 function AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_() {
   var source = AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsClient");
-  assertEquals_(true, source.indexOf("if (busy)") !== -1);
+  assertEquals_(true, source.indexOf("if (busy || !allowed.diagnose)") !== -1);
+  assertEquals_(true, source.indexOf("if (busy || !allowed.preview)") !== -1);
+  assertEquals_(true, source.indexOf("!allowed.publish") !== -1);
   assertEquals_(true, source.indexOf("resetPreview_") !== -1);
   assertEquals_(true, source.indexOf("confirmed: true") !== -1);
   assertEquals_(true, source.indexOf("withFailureHandler") !== -1);
   assertEquals_(true, source.indexOf('document.createElement("iframe")') !== -1);
   assertEquals_(true, source.indexOf("frame.srcdoc = report.html") !== -1);
+  assertEquals_(true, source.indexOf("if (buttons.preview)") !== -1);
   assertEquals_(-1, source.indexOf('srcdoc="' + " +"));
+}
 
+function AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_() {
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
+  assertEquals_(true, source.indexOf("viewModel.permissions.diagnose") !== -1);
+  assertEquals_(true, source.indexOf("viewModel.permissions.preview") !== -1);
+  assertEquals_(true, source.indexOf("viewModel.permissions.publish") !== -1);
+  assertEquals_(true, source.indexOf("data-can-diagnose") !== -1);
+  assertEquals_(true, source.indexOf("data-can-preview") !== -1);
+  assertEquals_(true, source.indexOf("data-can-publish") !== -1);
 }
 
 function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
-  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
   assertEquals_(true, source.indexOf('role="status"') !== -1);
   assertEquals_(true, source.indexOf('aria-live="polite"') !== -1);
   assertEquals_(true, source.indexOf("Je confirme la publication") !== -1);
@@ -161,7 +260,7 @@ function AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_() {
 }
 
 function AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_() {
-  var source = HtmlService.createHtmlOutputFromFile("ui/admin/Analytics").getContent();
+  var source = AKS_getAdminAnalyticsTemplateSource_("ui/admin/Analytics");
   var style = AKS_includeAdminAnalyticsFile_("ui/admin/AnalyticsStyle");
   assertEquals_(true, source.indexOf('ui/admin/DashboardStyle') !== -1);
   assertEquals_(true, source.indexOf('aks-admin-card__header') !== -1);
@@ -185,14 +284,19 @@ function AKS_testAnalyticsAdmin_navigationPublishesDestination_() {
 
 function AKS_runAnalyticsAdminUiSuite() {
   return AKS_runNamedTestSuite_("AKS Analytics — Centre de pilotage", [
-    { name: "ANALYTICS / actions administratives protégées", test: AKS_testAnalyticsAdmin_protectsEveryServerAction_ },
-    { name: "ANALYTICS / saison et navigation", test: AKS_testAnalyticsAdmin_buildsNavigationAndSeason_ },
+    { name: "ANALYTICS / capacités serveur exactes", test: AKS_testAnalyticsAdmin_protectsEveryServerAction_ },
+    { name: "ANALYTICS / saison navigation et permissions", test: AKS_testAnalyticsAdmin_buildsNavigationSeasonAndPermissions_ },
+    { name: "ANALYTICS / permissions historiques partielles", test: AKS_testAnalyticsAdmin_adaptsPartialHistoricalPermissions_ },
+    { name: "ANALYTICS / bootstrap historique borné", test: AKS_testAnalyticsAdmin_preservesBoundedBootstrapAccess_ },
+    { name: "ANALYTICS / route sans capacité refusée", test: AKS_testAnalyticsAdmin_rejectsRouteWithoutAnalyticsCapability_ },
+    { name: "ANALYTICS / appel direct refusé avant métier", test: AKS_testAnalyticsAdmin_directRefusalStopsBusinessService_ },
     { name: "ANALYTICS / diagnostics sans données individuelles", test: AKS_testAnalyticsAdmin_diagnosticContainsNoIndividualData_ },
     { name: "ANALYTICS / aperçu sans publication", test: AKS_testAnalyticsAdmin_previewDelegatesWithoutPublishing_ },
     { name: "ANALYTICS / confirmation UI obligatoire", test: AKS_testAnalyticsAdmin_requiresExplicitConfirmation_ },
     { name: "ANALYTICS / jeton et racine configurée", test: AKS_testAnalyticsAdmin_forwardsPreviewTokenAndConfiguredRoot_ },
     { name: "ANALYTICS / saison invalide bloquée", test: AKS_testAnalyticsAdmin_rejectsInvalidSeasonBeforeService_ },
     { name: "ANALYTICS / client anti-doublon et aperçu périmé", test: AKS_testAnalyticsAdmin_clientPreventsDuplicateAndStaleActions_ },
+    { name: "ANALYTICS / vue adaptée aux permissions", test: AKS_testAnalyticsAdmin_viewAdaptsToServerPermissions_ },
     { name: "ANALYTICS / vue accessible et confirmation", test: AKS_testAnalyticsAdmin_viewHasAccessibleFeedbackAndConfirmation_ },
     { name: "ANALYTICS / charte visuelle administrative partagée", test: AKS_testAnalyticsAdmin_viewReusesAdministrativeVisualCharter_ },
     { name: "ANALYTICS / destination de navigation", test: AKS_testAnalyticsAdmin_navigationPublishesDestination_ }

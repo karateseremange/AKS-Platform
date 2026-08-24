@@ -28,6 +28,14 @@ function doGet(event) {
     return AKS.Admin.Analytics.render(event.parameter);
   }
 
+  if (event.parameter && event.parameter.app === "access") {
+    return AKS.Admin.AccessAccounts.render(event.parameter);
+  }
+
+  if (event.parameter && event.parameter.app === "my-access") {
+    return AKS.App.MyAccess.render();
+  }
+
   if (event.parameter && event.parameter.app === "attendance-recipe") {
     return AKS.Analytics.AttendanceRecipePage.render();
   }

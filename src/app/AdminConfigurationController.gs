@@ -24,8 +24,60 @@ function AKS_createAdminConfigurationController_(
     return Object.freeze(value);
   }
 
-  function authorizedEmail_() {
-    return accessApi.assertCurrentUserAuthorized();
+  function error_(code, message) {
+    var failure = new Error(message);
+    failure.code = code;
+    return failure;
+  }
+
+  function viewAuthorization_() {
+    if (!accessApi || typeof accessApi.getEffectiveAccessSnapshot !== "function") {
+      throw error_("CONFIG001_ACCESS_UNAVAILABLE", "Paramétrage indisponible.");
+    }
+    var snapshot = accessApi.getEffectiveAccessSnapshot();
+    var email = String(snapshot.email || "").trim().toLowerCase();
+    if (snapshot.bootstrap === true) {
+      return {
+        email: email,
+        permissions: { read: true, write: true, reset: true }
+      };
+    }
+    var capabilities = {};
+    (snapshot.assignments || []).forEach(function (assignment) {
+      if (assignment.module !== "ADMINISTRATION") return;
+      (assignment.capabilities || []).forEach(function (capability) {
+        capabilities[String(capability || "").trim().toUpperCase()] = true;
+      });
+    });
+    var hasAny = capabilities.CONFIG_READ === true ||
+      capabilities.CONFIG_WRITE === true ||
+      capabilities.CONFIG_RESET === true;
+    if (!hasAny) {
+      throw error_("ACCESS_CAPABILITY_DENIED", "Paramétrage non autorisé.");
+    }
+    return {
+      email: email,
+      permissions: {
+        read: capabilities.CONFIG_READ === true,
+        write: capabilities.CONFIG_READ === true &&
+          capabilities.CONFIG_WRITE === true,
+        reset: capabilities.CONFIG_READ === true &&
+          capabilities.CONFIG_WRITE === true &&
+          capabilities.CONFIG_RESET === true
+      }
+    };
+  }
+
+  function authorizeAction_(capabilities) {
+    if (!accessApi ||
+        typeof accessApi.assertAdministrationCapability !== "function" ||
+        typeof accessApi.getCurrentIdentity !== "function") {
+      throw error_("CONFIG001_ACCESS_UNAVAILABLE", "Paramétrage indisponible.");
+    }
+    capabilities.forEach(function (capability) {
+      accessApi.assertAdministrationCapability(capability);
+    });
+    return accessApi.getCurrentIdentity();
   }
 
   function baseUrl_() {
@@ -89,19 +141,22 @@ function AKS_createAdminConfigurationController_(
   }
 
   function getViewModel() {
-    var email = authorizedEmail_();
+    var authorization = viewAuthorization_();
     return deepFreeze_({
-      administrator: { email: email },
+      administrator: { email: authorization.email },
+      permissions: authorization.permissions,
       navigation: {
         homeTarget: baseUrl_() + "?app=admin",
         configurationTarget: baseUrl_() + "?app=config"
       },
-      parameters: configurationService.definitions().map(presentDefinition_)
+      parameters: authorization.permissions.read
+        ? configurationService.definitions().map(presentDefinition_)
+        : []
     });
   }
 
   function save(key, value) {
-    var email = authorizedEmail_();
+    var email = authorizeAction_(["CONFIG_READ", "CONFIG_WRITE"]);
     var definition = definitionByKey_(key);
     if (definition.sensitive) {
       var error = new Error(
@@ -118,7 +173,9 @@ function AKS_createAdminConfigurationController_(
   }
 
   function reset(key) {
-    var email = authorizedEmail_();
+    var email = authorizeAction_([
+      "CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET"
+    ]);
     var definition = definitionByKey_(key);
     if (definition.sensitive) {
       var error = new Error(
@@ -148,7 +205,7 @@ function AKS_createProductionAdminConfigurationController_() {
   );
 
   return AKS_createAdminConfigurationController_(
-    AKS.Admin.Access,
+    AKS_createAccessService_(),
     service,
     function () {
       return ScriptApp.getService().getUrl() || "";
@@ -180,4 +237,9 @@ function AKS_resetAdminConfigurationParameter(key) {
 
 function AKS_includeAdminConfigurationFile_(path) {
   return HtmlService.createHtmlOutputFromFile(path).getContent();
+}
+
+/** Reads the unevaluated Configuration template for structural tests only. */
+function AKS_getAdminConfigurationTemplateSource_(path) {
+  return HtmlService.createTemplateFromFile(path).getRawContent();
 }

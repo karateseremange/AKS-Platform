@@ -1,6 +1,58 @@
 # Changelog
 
-## 1.1.0 — Consolidation de la plateforme — En préparation
+## 1.4.0 — ACCESS et administration sécurisée — Stable en finalisation, non publiée
+
+### ACCESS
+
+- administration des comptes, rôles et habilitations explicites ;
+- portail privé et consultation « Mes accès » ;
+- migration d’Analytics, Paramétrage et Journaux vers les capacités ACCESS ;
+- compatibilité de lecture des registres antérieurs et normalisation interne sans
+  réécriture automatique ;
+- procédures de recette et de récupération réversibles.
+
+### AUDIT
+
+- audit persistant commun pour `RECETTE` et `PRODUCTION` avec supports distincts ;
+- liaison obligatoire au projet Apps Script et contrôle des permissions ;
+- précontrôle sans écriture séparé du test contrôlé d’écriture/relecture ;
+- conservation initiale déclarée à 1 095 jours, sans purge introduite.
+
+### Administration et Analytics
+
+- contrôles serveur fins pour Analytics, Paramétrage et Journaux ;
+- visibilité et actions adaptées aux capacités explicitement attribuées ;
+- maintien du Questionnaire santé comme service public, sans destination privée.
+
+### Contenu cumulatif
+
+- évolutions de saisie des Présences intégrées depuis `v1.2.0` ;
+- fondations INSCRIPTIONS-007 à INSCRIPTIONS-010 conservées internes et non
+  exposées par le routeur Web ;
+- fuseau Apps Script aligné sur `Europe/Paris`.
+
+### Validation et limites
+
+- RC5 `52024ab` admise par le Quality Gate P4 après **8/8** VERSION-001,
+  **15/15** ACCESS administration et **665/665** tests cumulés ;
+- finalisation stable limitée aux marqueurs et documents de version ;
+- aucune publication sur `main`, aucun tag, aucun déploiement et aucune opération
+  de production réalisés à ce stade ;
+- AUDIT de production, amorçage ACCESS et attribution de capacités réelles restent
+  interdits sans leurs autorisations distinctes.
+
+## 1.2.0 — AKS Analytics — Publiée le 28 juillet 2026
+
+- consolidation et indicateurs par saison et par cours ;
+- prévisualisation et publication contrôlée des rapports ;
+- saisie des Présences et contrôles serveur intégrés après le tag `v1.2.0` ;
+- tag de publication : `v1.2.0` au commit `47bb3ca`.
+
+La V1.3.0 est une publication documentaire et opérationnelle AKS Calendar sans
+modification du code Apps Script ; la version applicative sous-jacente reste
+V1.2.0.
+
+## 1.1.0 — Consolidation de la plateforme — Publiée le 19 juillet 2026
 
 ### Administration
 

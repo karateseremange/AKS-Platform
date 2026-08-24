@@ -25,6 +25,8 @@ function AKS_runLogger001Tests() {
     AKS_testLog001Retention_rejectsInvalidPolicy_,
     AKS_testLog001Retention_tracesControlledPurge_,
     AKS_testLog001Admin_rejectsUnauthorizedReadBeforeStorage_,
+    AKS_testLog001Admin_reauthorizesEveryReadWithLogRead_,
+    AKS_testLog001Admin_dashboardDenialIsNotDegraded_,
     AKS_testLog001Admin_normalizesControlledFilters_,
     AKS_testLog001Admin_filtersAndLimitsRecentEvents_,
     AKS_testLog001Admin_presentsMaskedDetailsReadOnly_,

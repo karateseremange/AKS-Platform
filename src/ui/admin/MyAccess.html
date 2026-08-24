@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="fr"><head><base target="_top">
+<?!= AKS_includeMyAccessFile_("ui/admin/AdminFoundationStyle"); ?>
+<?!= AKS_includeMyAccessFile_("ui/admin/MyAccessStyle"); ?></head><body>
+<main class="my-access"><header><div><p class="eyebrow">AKS PLATFORM</p><h1>Mes accès</h1>
+<p>Consultez les habilitations actuellement effectives pour votre compte.</p></div>
+<a href="<?= viewModel.navigation.homeTarget ?>">Retour au Portail AKS</a></header>
+<? if (viewModel.state === "DENIED") { ?><section class="empty" aria-live="polite">
+<h2>Accès non autorisé</h2><p><?= viewModel.message ?></p></section><? } else { ?>
+<section class="identity" aria-labelledby="identity-title"><h2 id="identity-title">Compte connecté</h2>
+<p><?= viewModel.identity.email ?></p><p>Rôles : <?= viewModel.roles.join(", ") ?></p></section>
+<? if (viewModel.state === "NO_ACCESS") { ?><section class="empty" aria-live="polite">
+<h2>Aucun accès attribué</h2><p><?= viewModel.message ?></p></section><? } else { ?>
+<section aria-labelledby="access-title"><h2 id="access-title">Habilitations effectives</h2>
+<div class="cards"><? viewModel.assignments.forEach(function(entry) { ?><article>
+<h3><?= entry.module ?></h3><p>Capacités : <?= entry.capabilities.join(", ") ?></p>
+<dl><div><dt>Saison</dt><dd><?= entry.season || "Toutes" ?></dd></div>
+<div><dt>Section</dt><dd><?= entry.section || "—" ?></dd></div>
+<div><dt>Cours</dt><dd><?= entry.courseCode || "—" ?></dd></div>
+<div><dt>Période</dt><dd><?= entry.validFrom || "Sans début" ?> — <?= entry.validUntil || "Sans fin" ?></dd></div></dl>
+</article><? }); ?></div></section><? } ?><? } ?></main></body></html>

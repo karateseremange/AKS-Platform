@@ -22,6 +22,7 @@ function AKS_createParameterRegistry_() {
     boolean: true,
     number: true,
     integer: true,
+    enum: true,
     url: true,
     resourceId: true
   };
@@ -92,6 +93,11 @@ function AKS_createParameterRegistry_() {
     if (typeof definition.label !== "string" || definition.label.trim() === "") {
       throw error_("CONFIG001_LABEL_REQUIRED", "Le libellé du paramètre est obligatoire.");
     }
+
+    if (definition.type === "enum" &&
+        (!Array.isArray(definition.allowedValues) || definition.allowedValues.length === 0)) {
+      throw error_("CONFIG001_ENUM_VALUES_REQUIRED", "Les valeurs de l'énumération sont obligatoires.");
+    }
   }
 
   function register(definition) {
@@ -117,6 +123,10 @@ function AKS_createParameterRegistry_() {
       hasDefault: Object.prototype.hasOwnProperty.call(definition, "defaultValue"),
       defaultValue: clone_(definition.defaultValue)
     };
+
+    if (definition.type === "enum") {
+      normalized.allowedValues = clone_(definition.allowedValues);
+    }
 
     definitions[normalized.key] = freeze_(normalized);
     return freeze_(clone_(normalized));
@@ -154,6 +164,57 @@ function AKS_createPlatformParameterRegistry_() {
   var registry = AKS_createParameterRegistry_();
 
   [
+    {
+      key: "audit.environment",
+      label: "Environnement d'audit",
+      description: "Environnement strict autorisé pour le support d'audit persistant.",
+      type: "enum",
+      scope: "environment",
+      required: true,
+      sensitive: false,
+      administrable: false,
+      allowedValues: ["RECETTE", "PRODUCTION"]
+    },
+    {
+      key: "audit.scriptId",
+      label: "Projet Apps Script d'audit",
+      description: "Identifiant exact du projet Apps Script autorisé à utiliser le support d'audit.",
+      type: "resourceId",
+      scope: "environment",
+      required: true,
+      sensitive: true,
+      administrable: false
+    },
+    {
+      key: "audit.spreadsheetId",
+      label: "Classeur d'audit",
+      description: "Identifiant restreint du classeur portant AKS_Audit dans l'environnement déclaré.",
+      type: "resourceId",
+      scope: "environment",
+      required: true,
+      sensitive: true,
+      administrable: false
+    },
+    {
+      key: "audit.retentionDays",
+      label: "Durée de conservation de l'audit",
+      description: "Durée initiale contrôlée de conservation des preuves d'audit.",
+      type: "integer",
+      scope: "environment",
+      required: true,
+      sensitive: false,
+      administrable: false
+    },
+    {
+      key: "audit.schemaVersion",
+      label: "Version du schéma d'audit",
+      description: "Version exacte du schéma persistant commun.",
+      type: "string",
+      scope: "environment",
+      required: true,
+      sensitive: false,
+      administrable: false
+    },
     {
       key: "club.name",
       label: "Nom du club",
