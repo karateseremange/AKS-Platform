@@ -21,9 +21,18 @@ function AKS_access002AdminUiFixture_(authorized) {
   var history = { getAccountHistory: function () {
     calls.push("history"); return { entries: [], hasMore: false };
   }};
+  var historyProvider = function () {
+    calls.push("history-provider");
+    if (authorized === "audit-denied") {
+      throw new Error(
+        "Exception: accès au document refusé (ligne 100, fichier AuditSheetsGateway)"
+      );
+    }
+    return history;
+  };
   return { calls: calls, controller: AKS_createAdminAccessAccountController_({
     accessService: access, projection: projection, lifecycle: lifecycle, detail: detail,
-    history: history,
+    historyProvider: historyProvider,
     baseUrlProvider: function () { return "https://example.test/exec"; }
   }) };
 }
@@ -61,8 +70,31 @@ function AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_() {
   fixture.controller.getAccountHistory("teacher@example.com", "");
   assertEquals_(JSON.stringify([
     "authorize:ACCESS_MANAGE", "detail", "authorize:ACCESS_MANAGE", "preview",
-    "authorize:ACCESS_MANAGE", "save-access", "authorize:ACCESS_MANAGE", "history"
+    "authorize:ACCESS_MANAGE", "save-access", "authorize:ACCESS_MANAGE",
+    "history-provider", "history"
   ]), JSON.stringify(fixture.calls));
+}
+
+function AKS_testAccess002AdminUi_defersAndMinimizesAuditFailure_() {
+  var listFixture = AKS_access002AdminUiFixture_(true);
+  listFixture.controller.getViewModel({});
+  assertEquals_(-1, listFixture.calls.indexOf("history-provider"));
+
+  var auditFixture = AKS_access002AdminUiFixture_("audit-denied");
+  var failure = null;
+  try {
+    auditFixture.controller.getAccountHistory("teacher@example.com", "");
+  } catch (error) {
+    failure = error;
+  }
+  assertTrue_(!!failure);
+  assertEquals_("ACCESS_HISTORY_UNAVAILABLE", failure.code);
+  assertEquals_(
+    "L’historique des modifications est temporairement indisponible.",
+    failure.message
+  );
+  assertEquals_(-1, failure.message.indexOf("AuditSheetsGateway"));
+  assertEquals_(-1, failure.message.indexOf("ligne 100"));
 }
 
 function AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_() {
@@ -147,6 +179,7 @@ function AKS_runAccess002AdminUiSuite() {
     { name: "modèle protégé", test: AKS_testAccess002AdminUi_buildsProtectedViewModel_ },
     { name: "commandes réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ },
     { name: "fiche et prévisualisation réautorisées", test: AKS_testAccess002AdminUi_reauthorizesDetailAndPreview_ },
+    { name: "AUDIT différé et erreur minimisée", test: AKS_testAccess002AdminUi_defersAndMinimizesAuditFailure_ },
     { name: "navigation conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ },
     { name: "états interactifs sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
     ,{ name: "quatre cartes d'habilitations", test: AKS_testAccess002AdminUi_exposesFourAccessCards_ }
