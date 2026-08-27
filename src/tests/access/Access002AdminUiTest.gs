@@ -116,12 +116,22 @@ function AKS_testAccess002AdminUi_exposesSafeInteractiveStates_() {
   assertTrue_(html.indexOf("clearAssignments") !== -1);
 }
 
-function AKS_testAccess002AdminUi_exposesFourAccessCards_() {
+function AKS_testAccess002AdminUi_exposesFiveAccessCards_() {
   var html = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccounts");
-  ["ATTENDANCE", "ANALYTICS", "INSCRIPTIONS", "ACCESS"].forEach(function (module) {
-    assertTrue_(html.indexOf('data-module="' + module + '"') !== -1);
-  });
+  var client = AKS_includeAdminAccessAccountFile_("ui/admin/AccessAccountsClient");
+  ["ATTENDANCE", "ANALYTICS", "INSCRIPTIONS", "ADMINISTRATION", "ACCESS"]
+    .forEach(function (module) {
+      assertTrue_(html.indexOf('data-module="' + module + '"') !== -1);
+    });
+  assertTrue_(html.indexOf("<option>ADMINISTRATION</option>") !== -1);
+  assertTrue_(html.indexOf("Configuration et journaux") !== -1);
+  assertTrue_(client.indexOf('["ANALYTICS","ADMINISTRATION","ACCESS"].indexOf(module)') !== -1);
+  assertTrue_(client.indexOf('["ANALYTICS","ADMINISTRATION","ACCESS"].indexOf(row.dataset.module)') !== -1);
   assertTrue_(html.indexOf("Rôles descriptifs") !== -1);
+}
+
+function AKS_testAccess002AdminUi_exposesFourAccessCards_() {
+  AKS_testAccess002AdminUi_exposesFiveAccessCards_();
 }
 
 function AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_() {
@@ -193,7 +203,7 @@ function AKS_runAccess002AdminUiSuite() {
     { name: "AUDIT différé et erreur minimisée", test: AKS_testAccess002AdminUi_defersAndMinimizesAuditFailure_ },
     { name: "navigation conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ },
     { name: "états interactifs sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
-    ,{ name: "quatre cartes d'habilitations", test: AKS_testAccess002AdminUi_exposesFourAccessCards_ }
+    ,{ name: "cinq cartes d'habilitations", test: AKS_testAccess002AdminUi_exposesFiveAccessCards_ }
     ,{ name: "workflow de fiche protégé", test: AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_ }
     ,{ name: "dates commentaire et synthèse", test: AKS_testAccess002AdminUi_exposesDatesCommentAndSummary_ }
     ,{ name: "fiche inactive en lecture seule", test: AKS_testAccess002AdminUi_keepsInactiveDetailReadOnly_ }
