@@ -24,13 +24,20 @@
 - recette restaurée depuis la sauvegarde préalable puis relue à **261/261
   fichiers** sans différence ;
 - intégration dans `develop` par la PR #135 au commit
-  `6d7815a2f3e20256de4c55c361670c7fd3fdaddb`.
+  `6d7815a2f3e20256de4c55c361670c7fd3fdaddb` ;
+- candidate finale V1.4.1 exacte `60cc727e` synchronisée et relue à
+  **261/261 fichiers sans différence** ;
+- VERSION-001 : **8/8 réussis, 0 échec** ;
+- nouvelle validation ciblée ACCESS : **15/15 réussis, 0 échec** ;
+- nouvelle campagne cumulative : **665/665 réussis, 0 échec** ;
+- recette restaurée à **261/261 fichiers sans différence**, avec ses deux
+  déploiements préservés et sans suffixe de production `wgNc37`.
 
 ### État de publication
 
 - métadonnées préparées : version `1.4.1`, build `20260827.1`, nom
   « ACCESS et administration sécurisée — correctif d’attribution » ;
-- recette finale des métadonnées V1.4.1 encore requise avant toute publication ;
+- Quality Gate final de la candidate V1.4.1 réussi en recette ;
 - `main`, le tag `v1.4.0` et la production V1.4.0 restent inchangés ;
 - aucun tag `v1.4.1`, aucune version Apps Script et aucun déploiement créés ;
 - INSCRIPTIONS-011 n’est pas engagé par ce correctif.
