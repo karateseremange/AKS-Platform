@@ -122,12 +122,12 @@ function AKS_testVersion001NormalizesRequiredStrings_() {
 
 function AKS_testVersion001ExposesExactStableRelease_() {
   var releaseInfo = AKS.Version.getReleaseInfo();
-  AKS_assertVersion001_(releaseInfo.version === "1.4.0",
+  AKS_assertVersion001_(releaseInfo.version === "1.4.1",
     "La version embarquée doit identifier exactement la version stable.");
-  AKS_assertVersion001_(releaseInfo.build === "20260824.1",
+  AKS_assertVersion001_(releaseInfo.build === "20260827.1",
     "Le build stable doit être explicite et traçable.");
   AKS_assertVersion001_(releaseInfo.releaseName ===
-    "ACCESS et administration sécurisée",
+    "ACCESS et administration sécurisée — correctif d’attribution",
     "Le nom de release doit identifier explicitement la version stable.");
   AKS_assertVersion001_(AKS.version === releaseInfo.version,
     "Le marqueur historique et l'API de version doivent rester alignés.");

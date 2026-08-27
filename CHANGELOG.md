@@ -1,5 +1,47 @@
 # Changelog
 
+
+## 1.4.1 — ACCESS et administration sécurisée — correctif d’attribution — Préparation du 27 août 2026
+
+### ACCESS-002-07
+
+- ajout du module `ADMINISTRATION` au filtre des comptes ;
+- ajout de la carte « Configuration et journaux » dans la gestion des
+  habilitations ;
+- exposition explicite de `CONFIG_READ`, `CONFIG_WRITE`, `CONFIG_RESET`
+  et `LOG_READ` ;
+- conservation de la portée globale `season: "*"` lors de la sérialisation ;
+- maintien de la compatibilité de la suite cumulative ;
+- aucun droit implicite, aucune exception d’adresse et aucune attribution
+  réelle de capacité.
+
+### Validation acquise
+
+- candidate fonctionnelle exacte `c2efda48` relue à **261/261 fichiers**
+  sans différence dans le projet Apps Script de recette ;
+- suite ciblée ACCESS : **15/15 réussis, 0 échec** ;
+- campagne cumulative : **665/665 réussis, 0 échec** ;
+- recette restaurée depuis la sauvegarde préalable puis relue à **261/261
+  fichiers** sans différence ;
+- intégration dans `develop` par la PR #135 au commit
+  `6d7815a2f3e20256de4c55c361670c7fd3fdaddb` ;
+- candidate finale V1.4.1 exacte `60cc727e` synchronisée et relue à
+  **261/261 fichiers sans différence** ;
+- VERSION-001 : **8/8 réussis, 0 échec** ;
+- nouvelle validation ciblée ACCESS : **15/15 réussis, 0 échec** ;
+- nouvelle campagne cumulative : **665/665 réussis, 0 échec** ;
+- recette restaurée à **261/261 fichiers sans différence**, avec ses deux
+  déploiements préservés et sans suffixe de production `wgNc37`.
+
+### État de publication
+
+- métadonnées préparées : version `1.4.1`, build `20260827.1`, nom
+  « ACCESS et administration sécurisée — correctif d’attribution » ;
+- Quality Gate final de la candidate V1.4.1 réussi en recette ;
+- `main`, le tag `v1.4.0` et la production V1.4.0 restent inchangés ;
+- aucun tag `v1.4.1`, aucune version Apps Script et aucun déploiement créés ;
+- INSCRIPTIONS-011 n’est pas engagé par ce correctif.
+
 ## 1.4.0 — ACCESS et administration sécurisée — Publiée sur Git le 24 août 2026
 
 ### ACCESS
