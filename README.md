@@ -78,21 +78,26 @@ Le Project Book du dépôt `AKS-Platform-ProjectBook` constitue la référence f
 
 ## Validation de référence
 
-ACCESS-002-07 a été validé sur la candidate exacte `c2efda48` dans le projet
-Apps Script de recette :
+La candidate finale V1.4.1 exacte
+`60cc727e531355accf51a4ccf3a63a348e3aad96` a été synchronisée dans le
+projet Apps Script de recette suffixé `eIRxs4` :
 
-- relecture : **261/261 fichiers sans différence** ;
+- relecture post-push : **261/261 fichiers sans différence** ;
+- VERSION-001 : **8/8 réussis** ;
 - suite ciblée ACCESS : **15/15 réussis** ;
 - campagne cumulative : **665/665 réussis** ;
-- restauration de la recette : **261/261 fichiers sans différence**.
-
-Ces résultats couvrent le correctif fonctionnel avant l’actualisation des
-métadonnées de version. La candidate finale V1.4.1 devra être synchronisée et
-recettée séparément, après autorisation explicite, notamment avec
-VERSION-001 et la campagne cumulative.
+- sauvegarde préalable vérifiée par SHA-256
+  `D9EE0441F4149FE0503BD678F8B40820BE3554FB18BF4360F8D37CC831E49C6D` ;
+- restauration de la recette : **261/261 fichiers sans différence** ;
+- les deux déploiements de recette sont préservés et le suffixe de production
+  `wgNc37` est absent.
 
 La référence historique V1.4.0 reste le commit stable `5f16d907`, validé à
 **8/8** VERSION-001 et **665/665** tests cumulés avant sa publication.
+
+Ces résultats rendent la candidate V1.4.1 admissible à une décision séparée
+d’intégration dans `develop`. Ils n’autorisent ni fusion, ni publication dans
+`main`, ni tag, ni déploiement de production.
 
 ## Branches
 
