@@ -2,32 +2,47 @@
 
 Plateforme numérique officielle de l’Association Karaté Serémange.
 
-## Version Git publiée
+## Version stable publiée
 
-La référence Git stable est **AKS Platform V1.4.0 — ACCESS et administration
-sécurisée**, publiée le 24 août 2026.
+La référence Git stable publiée reste **AKS Platform V1.4.0 — ACCESS et
+administration sécurisée**.
 
-- tag : `v1.4.0` ;
-- commit `main` : `fa8876fcc57dcc46b943c8a3ce451e006bfa5bb5` ;
-- build : `20260824.1` ;
-- candidate admise : `1.4.0-rc.5` au commit
-  `52024aba72a76247179bb801cfb93006151ebbb9`.
+- tag immuable : `v1.4.0` ;
+- snapshot applicatif tagué :
+  `fa8876fcc57dcc46b943c8a3ce451e006bfa5bb5` ;
+- tête `main` actuelle :
+  `7a6b70a341bc869f10e1a18efda8ad4d6ab8fe6d`, avancée uniquement par une
+  correction documentaire post-release ;
+- build publié : `20260824.1`.
 
-Le tag et le commit `main` ont été vérifiés comme strictement identiques.
+## Correctif V1.4.1 en préparation
+
+Le correctif **V1.4.1 — ACCESS et administration sécurisée — correctif
+d’attribution** est préparé depuis `develop`.
+
+- intégration ACCESS-002-07 dans `develop` :
+  `6d7815a2f3e20256de4c55c361670c7fd3fdaddb` ;
+- version préparée : `1.4.1` ;
+- build préparé : `20260827.1` ;
+- branche de finalisation : `release/v1.4.1-finalization`.
+
+Cette préparation ne constitue ni une publication dans `main`, ni un tag, ni
+un déploiement Apps Script.
 
 ## Statut de production
 
-La publication Git V1.4.0 ne constitue pas un déploiement Apps Script.
-La production historique reste sur la version Apps Script **53** et n'exécute
-pas encore V1.4.0.
+La production exécute toujours **AKS Platform V1.4.0** sur la version Apps
+Script **54** du déploiement public existant `wgNc37`, dont l’identifiant et
+l’URL sont préservés.
 
-- aucun `clasp push` de production n'a été effectué ;
-- aucune nouvelle version Apps Script ni modification du déploiement public
-  n'a été réalisée ;
-- AUDIT de production n'est pas configuré ;
-- ACCESS n'est pas amorcé et aucun compte réel n'a reçu de capacité ;
+- AUDIT de production est configuré sur un support privé et validé ;
+- ACCESS est amorcé avec deux gestionnaires actifs ;
+- le Questionnaire santé public a été vérifié sans régression ;
+- V1.4.1 n’est ni publiée ni déployée ;
+- aucune attribution réelle de `CONFIG_*` ou `LOG_READ` n’est incluse dans
+  la préparation V1.4.1 ;
 - les fondations Inscriptions 007 à 010 restent internes, sans route publiée ;
-- P6 et chaque opération de production exigent leurs autorisations propres.
+- l’implémentation d’INSCRIPTIONS-011 n’est pas engagée.
 
 ## Fonctionnalités
 
@@ -63,25 +78,26 @@ Le Project Book du dépôt `AKS-Platform-ProjectBook` constitue la référence f
 
 ## Validation de référence
 
-Dans Apps Script, exécuter :
+La candidate finale V1.4.1 exacte
+`60cc727e531355accf51a4ccf3a63a348e3aad96` a été synchronisée dans le
+projet Apps Script de recette suffixé `eIRxs4` :
 
-```text
-AKS_runValidationSuiteV11
-```
+- relecture post-push : **261/261 fichiers sans différence** ;
+- VERSION-001 : **8/8 réussis** ;
+- suite ciblée ACCESS : **15/15 réussis** ;
+- campagne cumulative : **665/665 réussis** ;
+- sauvegarde préalable vérifiée par SHA-256
+  `D9EE0441F4149FE0503BD678F8B40820BE3554FB18BF4360F8D37CC831E49C6D` ;
+- restauration de la recette : **261/261 fichiers sans différence** ;
+- les deux déploiements de recette sont préservés et le suffixe de production
+  `wgNc37` est absent.
 
-La candidate RC5 exacte `52024ab` a réussi :
+La référence historique V1.4.0 reste le commit stable `5f16d907`, validé à
+**8/8** VERSION-001 et **665/665** tests cumulés avant sa publication.
 
-- VERSION-001 : **8/8** ;
-- ACCESS administration : **15/15** ;
-- campagne cumulative : **665/665**.
-
-La finalisation stable exacte `5f16d907` a ensuite réussi **8/8**
-VERSION-001 et **665/665** tests cumulés après synchronisation de **261
-fichiers** en RECETTE. Elle a été intégrée dans `develop` à `32a511a`,
-publiée dans `main` à `fa8876f` et taguée `v1.4.0`.
-
-Ces validations et cette publication Git n'autorisent aucune opération de
-production.
+Ces résultats rendent la candidate V1.4.1 admissible à une décision séparée
+d’intégration dans `develop`. Ils n’autorisent ni fusion, ni publication dans
+`main`, ni tag, ni déploiement de production.
 
 ## Branches
 
