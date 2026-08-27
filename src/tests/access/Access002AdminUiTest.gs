@@ -125,8 +125,13 @@ function AKS_testAccess002AdminUi_exposesFiveAccessCards_() {
     });
   assertTrue_(html.indexOf("<option>ADMINISTRATION</option>") !== -1);
   assertTrue_(html.indexOf("Configuration et journaux") !== -1);
-  assertTrue_(client.indexOf('"ANALYTICS","ADMINISTRATION","ACCESS"') !== -1);
+  assertTrue_(client.indexOf('["ANALYTICS","ADMINISTRATION","ACCESS"].indexOf(module)') !== -1);
+  assertTrue_(client.indexOf('["ANALYTICS","ADMINISTRATION","ACCESS"].indexOf(row.dataset.module)') !== -1);
   assertTrue_(html.indexOf("Rôles descriptifs") !== -1);
+}
+
+function AKS_testAccess002AdminUi_exposesFourAccessCards_() {
+  AKS_testAccess002AdminUi_exposesFiveAccessCards_();
 }
 
 function AKS_testAccess002AdminUi_connectsProtectedDetailWorkflow_() {
