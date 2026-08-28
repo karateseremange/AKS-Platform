@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 1.4.1 — ACCESS et administration sécurisée — correctif d’attribution — Préparation du 27 août 2026
+## 1.4.1 — ACCESS et administration sécurisée — correctif d’attribution — Publiée sur Git le 27 août 2026
 
 ### ACCESS-002-07
 
@@ -35,11 +35,14 @@
 
 ### État de publication
 
-- métadonnées préparées : version `1.4.1`, build `20260827.1`, nom
+- métadonnées publiées : version `1.4.1`, build `20260827.1`, nom
   « ACCESS et administration sécurisée — correctif d’attribution » ;
 - Quality Gate final de la candidate V1.4.1 réussi en recette ;
-- `main`, le tag `v1.4.0` et la production V1.4.0 restent inchangés ;
-- aucun tag `v1.4.1`, aucune version Apps Script et aucun déploiement créés ;
+- publication dans `main` au commit
+  `7e5125e759703fa7628cceae1b7545a3dfc597e6` ;
+- tag léger `v1.4.1` vérifié sur ce même commit ;
+- aucune version Apps Script et aucun déploiement de production créés ;
+- la production reste sur V1.4.0, version Apps Script 54 ;
 - INSCRIPTIONS-011 n’est pas engagé par ce correctif.
 
 ## 1.4.0 — ACCESS et administration sécurisée — Publiée sur Git le 24 août 2026

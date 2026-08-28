@@ -4,30 +4,24 @@ Plateforme numérique officielle de l’Association Karaté Serémange.
 
 ## Version stable publiée
 
-La référence Git stable publiée reste **AKS Platform V1.4.0 — ACCESS et
-administration sécurisée**.
+La référence Git stable publiée est **AKS Platform V1.4.1 — ACCESS et
+administration sécurisée — correctif d’attribution**.
 
-- tag immuable : `v1.4.0` ;
+- tag léger immuable : `v1.4.1` ;
 - snapshot applicatif tagué :
-  `fa8876fcc57dcc46b943c8a3ce451e006bfa5bb5` ;
-- tête `main` actuelle :
-  `7a6b70a341bc869f10e1a18efda8ad4d6ab8fe6d`, avancée uniquement par une
-  correction documentaire post-release ;
-- build publié : `20260824.1`.
+  `7e5125e759703fa7628cceae1b7545a3dfc597e6` ;
+- intégration dans `develop` :
+  `62c859a704d3879a105893ecfd38ba25935af393` ;
+- build publié : `20260827.1`.
 
-## Correctif V1.4.1 en préparation
+## Correctif V1.4.1 publié dans Git
 
 Le correctif **V1.4.1 — ACCESS et administration sécurisée — correctif
-d’attribution** est préparé depuis `develop`.
+d’attribution** est publié dans `main` et identifié par le tag léger
+`v1.4.1`.
 
-- intégration ACCESS-002-07 dans `develop` :
-  `6d7815a2f3e20256de4c55c361670c7fd3fdaddb` ;
-- version préparée : `1.4.1` ;
-- build préparé : `20260827.1` ;
-- branche de finalisation : `release/v1.4.1-finalization`.
-
-Cette préparation ne constitue ni une publication dans `main`, ni un tag, ni
-un déploiement Apps Script.
+La publication Git ne constitue pas un déploiement Apps Script. La production
+reste distincte et demeure sur V1.4.0.
 
 ## Statut de production
 
@@ -38,9 +32,9 @@ l’URL sont préservés.
 - AUDIT de production est configuré sur un support privé et validé ;
 - ACCESS est amorcé avec deux gestionnaires actifs ;
 - le Questionnaire santé public a été vérifié sans régression ;
-- V1.4.1 n’est ni publiée ni déployée ;
+- V1.4.1 est publiée et taguée dans Git, mais n’est pas déployée ;
 - aucune attribution réelle de `CONFIG_*` ou `LOG_READ` n’est incluse dans
-  la préparation V1.4.1 ;
+  la publication Git V1.4.1 ;
 - les fondations Inscriptions 007 à 010 restent internes, sans route publiée ;
 - l’implémentation d’INSCRIPTIONS-011 n’est pas engagée.
 
@@ -95,9 +89,10 @@ projet Apps Script de recette suffixé `eIRxs4` :
 La référence historique V1.4.0 reste le commit stable `5f16d907`, validé à
 **8/8** VERSION-001 et **665/665** tests cumulés avant sa publication.
 
-Ces résultats rendent la candidate V1.4.1 admissible à une décision séparée
-d’intégration dans `develop`. Ils n’autorisent ni fusion, ni publication dans
-`main`, ni tag, ni déploiement de production.
+Ces résultats ont fondé l’intégration de V1.4.1 dans `develop`, sa
+publication dans `main` au commit `7e5125e7` et la création du tag léger
+`v1.4.1` sur ce même commit. Ils n’autorisent aucun déploiement de
+production.
 
 ## Branches
 
