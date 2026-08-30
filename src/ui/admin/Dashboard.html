@@ -109,7 +109,10 @@
             <a href="<?= viewModel.recentLogs.navigation.logsTarget ?>">Consulter les journaux</a>
           </div>
           <? if (!viewModel.recentLogs.available) { ?>
-            <p class="aks-admin-empty-state">Le journal est momentanément indisponible.</p>
+            <div class="aks-admin-empty-state" role="status" aria-live="polite">
+              <p>Journaux temporairement indisponibles.</p>
+              <a href="?app=admin">Réessayer</a>
+            </div>
           <? } else if (viewModel.recentLogs.events.length === 0) { ?>
             <p class="aks-admin-empty-state">Aucun événement n’est encore journalisé.</p>
           <? } else { ?>
