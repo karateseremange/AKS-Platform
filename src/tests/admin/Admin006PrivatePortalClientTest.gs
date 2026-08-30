@@ -37,7 +37,8 @@ function AKS_admin006LotCFixture_(options) {
       },
       getCurrentIdentity: function () {
         calls.identity += 1;
-        return { email: options.email || " Reader@Example.com " };
+        return { email: Object.prototype.hasOwnProperty.call(options, "email")
+          ? options.email : " Reader@Example.com " };
       }
     },
     configuration: {
