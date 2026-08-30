@@ -233,6 +233,15 @@ function AKS_createPrivatePortalLogDashboardModel_(client, logsTarget) {
   });
 }
 
+function AKS_createProductionPrivatePortalLogClient_() {
+  var inert = AKS_createInertPrivatePortalAdapters_();
+  return AKS_createPrivatePortalLogClient_({
+    accessApi: AKS_createAccessService_(),
+    configuration: inert.configuration,
+    transport: inert.transport
+  });
+}
+
 AKS.Core.PrivatePortalLogClient = Object.freeze({
   create: AKS_createPrivatePortalLogClient_,
   createInertAdapters: AKS_createInertPrivatePortalAdapters_,
