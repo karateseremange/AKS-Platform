@@ -99,11 +99,21 @@ AKS.Admin.Dashboard = (function () {
       baseUrlProvider: function () { return baseUrl; }
     }).getPortalModel();
     var recentLogs = null;
-    try {
-      if (AKS_portalHasDestination_(portal, "admin.logs")) {
-        recentLogs = AKS.Admin.Logs.getDashboardModel();
+    if (AKS_portalHasDestination_(portal, "admin.logs")) {
+      try {
+        recentLogs = AKS.Core.PrivatePortalLogClient.createDashboardModel(
+          AKS_createProductionPrivatePortalLogClient_(),
+          baseUrl + "?app=logs"
+        );
+      } catch (ignoredLogsFailure) {
+        recentLogs = Object.freeze({
+          status: "UNAVAILABLE",
+          available: false,
+          events: Object.freeze([]),
+          navigation: Object.freeze({ logsTarget: baseUrl + "?app=logs" })
+        });
       }
-    } catch (ignoredLogsFailure) {}
+    }
     return AKS_buildPortalDashboardViewModel_(
       portal, AKS.Version.getReleaseInfo(), baseUrl, recentLogs);
   }
