@@ -48,8 +48,9 @@ function AKS_createPrivatePortalLogClient_(dependencies) {
     }
     accessApi.assertAdministrationCapability("LOG_READ");
     var identity = accessApi.getCurrentIdentity();
-    var email = String(identity && identity.email || identity || "")
-      .trim().toLowerCase();
+    var identityValue = identity && typeof identity === "object"
+      ? identity.email : identity;
+    var email = String(identityValue || "").trim().toLowerCase();
     if (!email) {
       fail_("PRIVATE_AUTH_REQUIRED", "Identité privée indisponible.");
     }
