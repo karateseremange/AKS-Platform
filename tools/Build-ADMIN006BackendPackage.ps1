@@ -38,6 +38,45 @@ foreach ($RelativePath in $Sources) {
     )
 }
 
+$ManifestPath = Join-Path $Destination "appsscript.json"
+$Manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+$ExpectedTopLevel = @(
+    "dependencies"
+    "exceptionLogging"
+    "runtimeVersion"
+    "timeZone"
+    "webapp"
+) | Sort-Object
+$ObservedTopLevel = @(
+    $Manifest.PSObject.Properties.Name | Sort-Object
+)
+if (($ExpectedTopLevel -join "|") -cne ($ObservedTopLevel -join "|")) {
+    throw "Unexpected backend manifest fields."
+}
+if (
+    [string]$Manifest.timeZone -cne "Europe/Paris" -or
+    [string]$Manifest.exceptionLogging -cne "STACKDRIVER" -or
+    [string]$Manifest.runtimeVersion -cne "V8"
+) {
+    throw "Unexpected backend manifest runtime configuration."
+}
+if (@($Manifest.dependencies.PSObject.Properties).Count -ne 0) {
+    throw "Backend manifest dependencies must remain empty."
+}
+$ExpectedWebApp = @("access", "executeAs") | Sort-Object
+$ObservedWebApp = @(
+    $Manifest.webapp.PSObject.Properties.Name | Sort-Object
+)
+if (($ExpectedWebApp -join "|") -cne ($ObservedWebApp -join "|")) {
+    throw "Unexpected backend webapp manifest fields."
+}
+if (
+    [string]$Manifest.webapp.access -cne "ANYONE_ANONYMOUS" -or
+    [string]$Manifest.webapp.executeAs -cne "USER_DEPLOYING"
+) {
+    throw "Unexpected backend webapp identity or audience."
+}
+
 $InventoryPath = Join-Path $Destination "package-sha256.csv"
 $Inventory = @(
     Get-ChildItem -LiteralPath $Destination -File |
@@ -61,3 +100,4 @@ Write-Host "[OK] ADMIN-006 backend package built"
 Write-Host "Package : $Destination"
 Write-Host "Files   : $($Inventory.Count)"
 Write-Host "Enabled : false unless explicitly configured"
+Write-Host "Web app : ANYONE_ANONYMOUS / USER_DEPLOYING"
