@@ -5,6 +5,37 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const crypto = require("node:crypto");
+const cp = require("node:child_process");
+const args = process.argv.slice(2);
+const urlModes = ["valid", "empty", "null"];
+const allowedArgs = ["--d4", "--recipe", "--url-matrix"].concat(urlModes.map(mode => "--web-app-url=" + mode));
+if (args.some(arg => !allowedArgs.includes(arg)) || new Set(args).size !== args.length ||
+    args.filter(arg => arg.startsWith("--web-app-url=")).length > 1) {
+  throw new Error("Invalid offline test arguments");
+}
+if (args.includes("--url-matrix")) {
+  if (args.includes("--recipe") || args.some(arg => arg.startsWith("--web-app-url="))) {
+    throw new Error("The URL matrix already includes both project identities and every URL mode");
+  }
+  const runs = [];
+  for (const recipe of [false, true]) for (const mode of urlModes) {
+    const childArgs = [__filename, "--web-app-url=" + mode]
+      .concat(recipe ? ["--recipe"] : [], args.includes("--d4") ? ["--d4"] : []);
+    const child = cp.spawnSync(process.execPath, childArgs, {
+      encoding: "utf8", shell: false, timeout: 120000, maxBuffer: 4 * 1024 * 1024
+    });
+    if (child.error || ![0, 1].includes(child.status)) throw new Error("Offline matrix child failed");
+    const report = JSON.parse(child.stdout);
+    if ((report.failed === 0) !== (child.status === 0)) throw new Error("Inconsistent offline child result");
+    runs.push(report);
+  }
+  console.log(JSON.stringify({ environment: "offline Node URL/project matrix", node: process.version,
+    generatedAt: new Date().toISOString(), scenarios: runs.length,
+    failedScenarios: runs.filter(run => run.failed > 0).length, runs }, null, 2));
+  process.exit(runs.some(run => run.failed > 0) ? 1 : 0);
+}
+const urlMode = (args.find(arg => arg.startsWith("--web-app-url=")) || "--web-app-url=valid").split("=")[1];
+const projectMode = args.includes("--recipe") ? "RECETTE" : "UNRELATED";
 const root = path.resolve(process.env.AKS_TEST_SOURCE || path.join(__dirname, "../src"));
 const logs = [];
 const blocked = name => () => { throw new Error("Offline service unavailable: " + name); };
@@ -79,7 +110,13 @@ context = vm.createContext({
   },
   Session: { getActiveUser: () => ({ getEmail: () => "karate.seremange@gmail.com" }),
     getScriptTimeZone: () => "Europe/Paris" },
-  ScriptApp: { getScriptId: () => "OFFLINE_UNRELATED_PROJECT", getService: () => ({ getUrl: () => "https://example.test/exec" }) },
+  ScriptApp: {
+    getScriptId: () => projectMode === "RECETTE"
+      ? "1quyIoxSMlxe6xpADPlxRxGikRF3OCTEid0-xhOHeSRZH0sU0AOeIRxs4" : "OFFLINE_UNRELATED_PROJECT",
+    getService: () => ({ getUrl: () => {
+      return urlMode === "null" ? null : urlMode === "empty" ? "" : "https://example.test/exec";
+    } })
+  },
   PropertiesService: { getScriptProperties: () => propertyStore("script"),
     getUserProperties: () => propertyStore("user"), getDocumentProperties: () => propertyStore("document") },
   HtmlService: { createTemplateFromFile: template,
@@ -97,7 +134,7 @@ context = vm.createContext({
   MailApp: { sendEmail: blocked("MailApp") },
   MimeType: { PDF: "application/pdf", HTML: "text/html" }
 });
-const files = list(root).filter(file => file.endsWith(".gs")).sort();
+const files = list(root).filter(file => /\.(gs|js)$/.test(file)).sort();
 const source = files.map(file => fs.readFileSync(file, "utf8")).join("\n;\n");
 vm.runInContext(source, context, { filename: "offline-apps-script.gs", timeout: 10000 });
 const originalRunner = context.AKS_runNamedTestSuite_;
@@ -114,12 +151,20 @@ for (const test of tests) {
   try { test.test(); } catch (error) { failures.push({ name: test.name, error: error.message }); }
 }
 const digest = crypto.createHash("sha256");
-for (const file of list(root).filter(file => /\.(gs|html|json)$/.test(file)).sort()) {
+const packageFiles = list(root).filter(file => /\.(gs|js|html)$/.test(file) || file === path.join(root, "appsscript.json"))
+  .sort((a, b) => {
+    const left = path.relative(root, a).split(path.sep).join("/");
+    const right = path.relative(root, b).split(path.sep).join("/");
+    return left < right ? -1 : left > right ? 1 : 0;
+  });
+for (const file of packageFiles) {
   digest.update(path.relative(root, file).split(path.sep).join("/") + "\0");
   digest.update(fs.readFileSync(file)); digest.update("\0");
 }
 const report = { mode, environment: "offline Node simulation", node: process.version,
+  projectMode, webAppUrlMode: urlMode,
   generatedAt: new Date().toISOString(), sourceSha256: digest.digest("hex"), sourceFiles: files.length,
+  packageFiles: packageFiles.length, digestScope: "src: gs, js, html and root appsscript.json; sorted POSIX paths and bytes separated by NUL",
   cumulativeInventory: inventory.tests.length, uniqueTests: unique.size,
   total: tests.length, passed: tests.length - failures.length, failed: failures.length, failures };
 console.log(JSON.stringify(report, null, 2));

@@ -336,10 +336,19 @@ function AKS_admin006D4WithPortalRoutes_(recipe, access, callback) {
   var originalAccess = AKS_createAccessService_;
   var originalLegacy = AKS_createProductionAdminLogController_;
   var originalClient = AKS_createProductionPrivatePortalLogClient_;
+  var originalProjection = AKS.Core.AccessPortalProjection;
   var legacyCalls = 0;
   try {
     AKS_privatePortalIsRecipe_ = function () { return recipe; };
     AKS_createAccessService_ = function () { return access; };
+    // Exercise the real projection with a synthetic navigation URL. An editor-only
+    // project may return null from ScriptApp.getService().getUrl(); that is not
+    // part of these tests' LOG_READ contract. Never patch a native Google service.
+    AKS.Core.AccessPortalProjection = Object.freeze({ create: function (options) {
+      return originalProjection.create(Object.assign({}, options, {
+        baseUrlProvider: function () { return "https://example.test/exec"; }
+      }));
+    } });
     AKS_createProductionPrivatePortalLogClient_ = function () {
       throw new Error("A shell must not build the private client");
     };
@@ -355,6 +364,7 @@ function AKS_admin006D4WithPortalRoutes_(recipe, access, callback) {
     AKS_createAccessService_ = originalAccess;
     AKS_createProductionAdminLogController_ = originalLegacy;
     AKS_createProductionPrivatePortalLogClient_ = originalClient;
+    AKS.Core.AccessPortalProjection = originalProjection;
   }
 }
 function AKS_testAdmin006D4_recipePageAndGettersNeverUseDirectRepository_() {
@@ -368,20 +378,26 @@ function AKS_testAdmin006D4_recipePageAndGettersNeverUseDirectRepository_() {
   });
 }
 function AKS_testAdmin006D4_recipeDashboardRendersBeforePrivateClient_() {
+  var originalProjection = AKS.Core.AccessPortalProjection;
   AKS_admin006D4WithPortalRoutes_(true, AKS_admin006D4Access_(), function (legacyCalls) {
     var model = AKS.Admin.Dashboard.getViewModel();
     assertEquals_("LOADING", model.recentLogs.status);
     assertEquals_(true, model.recentLogs.privateAsync);
     assertTrue_(model.actions.some(function (entry) { return entry.id === "access.my-access"; }));
     assertEquals_(false, model.actions.some(function (entry) { return entry.id === "admin.config"; }));
+    assertTrue_(model.actions.some(function (entry) {
+      return entry.id === "admin.logs" && entry.target === "https://example.test/exec?app=logs";
+    }));
     assertEquals_(0, legacyCalls());
   });
+  assertTrue_(AKS.Core.AccessPortalProjection === originalProjection);
 }
 function AKS_testAdmin006D4_recipeWithoutLogReadDoesNotLoadWidget_() {
   AKS_admin006D4WithPortalRoutes_(true, AKS_admin006D4Access_({ noLogRead: true }), function (legacyCalls) {
     var model = AKS.Admin.Dashboard.getViewModel();
     assertEquals_(null, model.recentLogs);
     assertTrue_(model.actions.some(function (entry) { return entry.id === "admin.config"; }));
+    assertEquals_(false, model.actions.some(function (entry) { return entry.id === "admin.logs"; }));
     assertEquals_(0, legacyCalls());
   });
 }
@@ -391,4 +407,18 @@ function AKS_testAdmin006D4_unrelatedProjectPreservesLegacyGetters_() {
     assertTrue_(AKS.Admin.Logs.getDashboardModel().legacy);
     assertEquals_(2, legacyCalls());
   });
+  var originals = [AKS_privatePortalIsRecipe_, AKS_createAccessService_,
+    AKS_createProductionAdminLogController_, AKS_createProductionPrivatePortalLogClient_,
+    AKS.Core.AccessPortalProjection];
+  var failure = new Error("Synthetic fixture cleanup check");
+  var caught = null;
+  try {
+    AKS_admin006D4WithPortalRoutes_(true, AKS_admin006D4Access_(), function () { throw failure; });
+  } catch (error) { caught = error; }
+  assertTrue_(caught === failure);
+  [AKS_privatePortalIsRecipe_, AKS_createAccessService_,
+    AKS_createProductionAdminLogController_, AKS_createProductionPrivatePortalLogClient_,
+    AKS.Core.AccessPortalProjection].forEach(function (value, index) {
+      assertTrue_(value === originals[index]);
+    });
 }
