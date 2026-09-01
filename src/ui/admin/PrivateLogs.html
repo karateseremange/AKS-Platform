@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <?!= AKS_includeAdminLogFile_("ui/admin/AdminFoundationStyle"); ?>
+    <?!= AKS_includeAdminLogFile_("ui/admin/LogsStyle"); ?>
+  </head>
+  <body>
+    <main class="aks-logs-shell">
+      <header class="aks-logs-header">
+        <div><p class="aks-logs-eyebrow">Administration</p><h1>Journaux</h1>
+          <p>Consultez jusqu’à vingt événements récents.</p></div>
+        <a class="aks-logs-back" href="<?= privateLogsModel.navigation.homeTarget ?>">Retour au Portail AKS</a>
+      </header>
+      <?!= AKS_renderPrivatePortalLogContent_(privateLogsModel); ?>
+    </main>
+    <?!= AKS_includeAdminLogFile_("ui/admin/PrivateLogsClient"); ?>
+  </body>
+</html>

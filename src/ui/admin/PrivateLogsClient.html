@@ -1,0 +1,100 @@
+<script>
+/** D4 browser adapter: one in-flight RPC, late responses discarded, no auto retry. */
+function AKS_mountPrivateLogs(root, dependencies) {
+  if (!root || root.getAttribute("data-authorized") !== "true") return null;
+  var deps = dependencies || {};
+  var documentApi = root.ownerDocument;
+  var status = root.querySelector("[data-private-status]");
+  var events = root.querySelector("[data-private-events]");
+  var retry = root.querySelector("[data-private-retry]");
+  var filter = root.querySelector("[data-private-filter]");
+  var severity = root.querySelector("[data-private-severity]");
+  var filterButton = root.querySelector("[data-private-filter-button]");
+  var later = deps.setTimeout || window.setTimeout.bind(window);
+  var cancel = deps.clearTimeout || window.clearTimeout.bind(window);
+  var send = deps.send || function (input, success, failure) {
+    google.script.run.withSuccessHandler(success).withFailureHandler(failure)
+      .AKS_readPrivatePortalLogs(input);
+  };
+  var pending = false;
+  var sequence = 0;
+  var labels = { DEBUG: "Diagnostic", INFO: "Information", WARN: "Avertissement",
+    ERROR: "Erreur", CRITICAL: "Critique" };
+  function busy(value) {
+    retry.disabled = value;
+    if (severity) severity.disabled = value;
+    if (filterButton) filterButton.disabled = value;
+    root.setAttribute("aria-busy", value ? "true" : "false");
+  }
+  function text(parent, tag, value) {
+    var node = documentApi.createElement(tag);
+    node.textContent = String(value || "");
+    parent.appendChild(node);
+    return node;
+  }
+  function display(result) {
+    if (!result || result.available !== true || !Array.isArray(result.events) ||
+        result.events.length > (root.getAttribute("data-view") === "widget" ? 5 : 20)) {
+      status.textContent = result && result.status === "DENIED"
+        ? "Accès aux journaux non autorisé." : "Journaux temporairement indisponibles.";
+      return;
+    }
+    status.textContent = result.events.length
+      ? result.events.length + " événement(s) affiché(s)."
+      : "Aucun événement correspondant dans la fenêtre consultée (au plus 500 dernières lignes).";
+    result.events.forEach(function (event) {
+      var item = documentApi.createElement("li");
+      text(item, "strong", labels[event.severity] || event.severity);
+      text(item, "p", event.message);
+      text(item, "time", event.occurredAt);
+      if (root.getAttribute("data-view") === "page") {
+        text(item, "p", "Code : " + event.code);
+        text(item, "p", "Corrélation : " + event.correlationId);
+      }
+      events.appendChild(item);
+    });
+  }
+  function load() {
+    if (pending) return;
+    pending = true;
+    busy(true);
+    sequence += 1;
+    var current = sequence;
+    var expired = false;
+    events.textContent = "";
+    status.textContent = "Chargement des journaux…";
+    var timer = later(function () {
+      expired = true;
+      status.textContent = "Journaux temporairement indisponibles. La requête se termine ; le réessai sera ensuite disponible.";
+      // UI timeout cannot cancel Apps Script. Keep retry disabled until settlement.
+      root.setAttribute("aria-busy", "false");
+    }, 10000);
+    function settle(result) {
+      if (current !== sequence || !pending) return;
+      cancel(timer);
+      pending = false;
+      busy(false);
+      if (expired) {
+        status.textContent = "Journaux temporairement indisponibles. Vous pouvez réessayer.";
+        return;
+      }
+      display(result);
+    }
+    var input = { view: root.getAttribute("data-view") };
+    if (severity && severity.value) input.severity = severity.value;
+    try { send(input, settle, function () { settle(null); }); }
+    catch (ignoredFailure) { settle(null); }
+  }
+  retry.addEventListener("click", load);
+  if (filter) filter.addEventListener("submit", function (event) {
+    event.preventDefault(); load();
+  });
+  load();
+  return { load: load };
+}
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", function () {
+    AKS_mountPrivateLogs(document.getElementById("aks-private-logs"));
+  });
+}
+</script>
