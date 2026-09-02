@@ -205,15 +205,24 @@ function AKS_createProductionAdminLogController_() {
 
 AKS.Admin.Logs = Object.freeze({
   getViewModel: function (filters) {
+    if (AKS_privatePortalIsRecipe_()) {
+      return AKS_privatePortalLogShell_(AKS_createAccessService_(), "page",
+        ScriptApp.getService().getUrl() || "");
+    }
     return AKS_createProductionAdminLogController_().getViewModel(filters);
   },
   getDashboardModel: function () {
+    if (AKS_privatePortalIsRecipe_()) {
+      return AKS_privatePortalLogShell_(AKS_createAccessService_(), "widget",
+        ScriptApp.getService().getUrl() || "");
+    }
     return AKS_createProductionAdminLogController_().getDashboardModel();
   },
   getDashboardModelForAuthorizedUser: function () {
-    return AKS_createProductionAdminLogController_().getDashboardModel();
+    return AKS.Admin.Logs.getDashboardModel();
   },
   render: function (filters) {
+    if (AKS_privatePortalIsRecipe_()) return AKS_renderPrivatePortalLogs_();
     var template = HtmlService.createTemplateFromFile("ui/admin/Logs");
     template.viewModel = this.getViewModel(filters);
     return template

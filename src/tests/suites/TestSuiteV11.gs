@@ -780,6 +780,38 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "AUDIT-001 / recette restauration après installation partielle", test: AKS_testAudit001Recipe_restoresConfigAfterPartialInstallationFailure_ }
     ,{ name: "AUDIT-001 / recette conflit de configuration refusé", test: AKS_testAudit001Recipe_refusesToOverwriteConcurrentConfig_ }
     ,{ name: "AUDIT-001 / recette restauration partielle après conflit", test: AKS_testAudit001Recipe_restoresNonConflictingConfigOnConflict_ }
+    ,{ name: "ADMIN-006 D4-A / refusesWrongProjectBeforeProperties", test: AKS_testAdmin006D4_refusesWrongProjectBeforeProperties_ }
+    ,{ name: "ADMIN-006 D4-A / refusesEmptyIdentityBeforeProperties", test: AKS_testAdmin006D4_refusesEmptyIdentityBeforeProperties_ }
+    ,{ name: "ADMIN-006 D4-A / refusesAccessFailureBeforeProperties", test: AKS_testAdmin006D4_refusesAccessFailureBeforeProperties_ }
+    ,{ name: "ADMIN-006 D4-A / refusesBootstrapException", test: AKS_testAdmin006D4_refusesBootstrapException_ }
+    ,{ name: "ADMIN-006 D4-A / disabledDoesNotReadSecret", test: AKS_testAdmin006D4_disabledDoesNotReadSecret_ }
+    ,{ name: "ADMIN-006 D4-A / refusesInvalidServerConfiguration", test: AKS_testAdmin006D4_refusesInvalidServerConfiguration_ }
+    ,{ name: "ADMIN-006 D4-A / rejectsReservedPayloadFields", test: AKS_testAdmin006D4_rejectsReservedPayloadFields_ }
+    ,{ name: "ADMIN-006 D4-A / nominalSignedExchangeMinimizesDto", test: AKS_testAdmin006D4_nominalSignedExchangeMinimizesDto_ }
+    ,{ name: "ADMIN-006 D4-A / rechecksAccessAfterRevocation", test: AKS_testAdmin006D4_rechecksAccessAfterRevocation_ }
+    ,{ name: "ADMIN-006 D4-A / rejectsAlteredOrUncorrelatedResponse", test: AKS_testAdmin006D4_rejectsAlteredOrUncorrelatedResponse_ }
+    ,{ name: "ADMIN-006 D4-A / isolatesFetchException", test: AKS_testAdmin006D4_isolatesFetchException_ }
+    ,{ name: "ADMIN-006 D4-A / enforcesResultLimitAndSeverity", test: AKS_testAdmin006D4_enforcesResultLimitAndSeverity_ }
+    ,{ name: "ADMIN-006 D4-A / usesFreshIdentifiersAndTwoUuidNonce", test: AKS_testAdmin006D4_usesFreshIdentifiersAndTwoUuidNonce_ }
+    ,{ name: "ADMIN-006 D4-A / rejectsInvalidOrRepeatedUuid", test: AKS_testAdmin006D4_rejectsInvalidOrRepeatedUuid_ }
+    ,{ name: "ADMIN-006 D4-A / rpcSetsServerLimits", test: AKS_testAdmin006D4_rpcSetsServerLimits_ }
+    ,{ name: "ADMIN-006 D4-A / rpcRejectsBrowserControlFields", test: AKS_testAdmin006D4_rpcRejectsBrowserControlFields_ }
+    ,{ name: "ADMIN-006 D4-A / shellNeverLoadsEvents", test: AKS_testAdmin006D4_shellNeverLoadsEvents_ }
+    ,{ name: "ADMIN-006 D4-A / templateStatesAndClosedFilters", test: AKS_testAdmin006D4_templateStatesAndClosedFilters_ }
+    ,{ name: "ADMIN-006 D4-A / realAccessRejectsExpiredAndSuspended", test: AKS_testAdmin006D4_realAccessRejectsExpiredAndSuspended_ }
+    ,{ name: "ADMIN-006 D4-A / transportUsesExactPostWithoutUserToken", test: AKS_testAdmin006D4_transportUsesExactPostWithoutUserToken_ }
+    ,{ name: "ADMIN-006 D4-A / transportFollowsOnlyResponseGet", test: AKS_testAdmin006D4_transportFollowsOnlyResponseGet_ }
+    ,{ name: "ADMIN-006 D4-A / transportRejectsArbitraryRedirects", test: AKS_testAdmin006D4_transportRejectsArbitraryRedirects_ }
+    ,{ name: "ADMIN-006 D4-A / transportRejectsHttpHtmlAndRedirectChains", test: AKS_testAdmin006D4_transportRejectsHttpHtmlAndRedirectChains_ }
+    ,{ name: "ADMIN-006 D4-A / transportEnforcesUtf8ByteBounds", test: AKS_testAdmin006D4_transportEnforcesUtf8ByteBounds_ }
+    ,{ name: "ADMIN-006 D4-A / windowIncludes499And500DataRows", test: AKS_testAdmin006D4_windowIncludes499And500DataRows_ }
+    ,{ name: "ADMIN-006 D4-A / window501ExcludesOnlyOlderRow", test: AKS_testAdmin006D4_window501ExcludesOnlyOlderRow_ }
+    ,{ name: "ADMIN-006 D4-A / outsideMatchCanProduceEmptyResult", test: AKS_testAdmin006D4_outsideMatchCanProduceEmptyResult_ }
+    ,{ name: "ADMIN-006 D4-A / filtersBeforeLimitingFiveAndTwenty", test: AKS_testAdmin006D4_filtersBeforeLimitingFiveAndTwenty_ }
+    ,{ name: "ADMIN-006 D4-A / recipePageAndGettersNeverUseDirectRepository", test: AKS_testAdmin006D4_recipePageAndGettersNeverUseDirectRepository_ }
+    ,{ name: "ADMIN-006 D4-A / recipeDashboardRendersBeforePrivateClient", test: AKS_testAdmin006D4_recipeDashboardRendersBeforePrivateClient_ }
+    ,{ name: "ADMIN-006 D4-A / recipeWithoutLogReadDoesNotLoadWidget", test: AKS_testAdmin006D4_recipeWithoutLogReadDoesNotLoadWidget_ }
+    ,{ name: "ADMIN-006 D4-A / unrelatedProjectPreservesLegacyGetters", test: AKS_testAdmin006D4_unrelatedProjectPreservesLegacyGetters_ }
   ]);
 }
 

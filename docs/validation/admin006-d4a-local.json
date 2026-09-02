@@ -1,0 +1,14 @@
+{
+  "mode": "cumulative",
+  "environment": "offline Node simulation",
+  "node": "v24.19.0",
+  "generatedAt": "2026-09-01T10:52:21.538Z",
+  "sourceSha256": "02b38ac172087275c40ea1753f47af551970e1300b4a30c188a1bae39df8cda0",
+  "sourceFiles": 236,
+  "cumulativeInventory": 761,
+  "uniqueTests": 761,
+  "total": 761,
+  "passed": 761,
+  "failed": 0,
+  "failures": []
+}

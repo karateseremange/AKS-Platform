@@ -1,0 +1,34 @@
+<style>
+  #aks-private-logs { overflow-wrap: anywhere; }
+  #aks-private-logs [data-private-events] { list-style: none; padding: 0; margin: 1rem 0; }
+  #aks-private-logs [data-private-events] li { padding: 1rem 0; border-bottom: 1px solid #d9e0ed; }
+  #aks-private-logs [data-private-events] p { margin: .45rem 0; }
+  #aks-private-logs time { display: block; color: #52617a; font-size: .9rem; }
+  #aks-private-logs button { min-height: 44px; padding: .65rem 1rem; cursor: pointer; }
+  #aks-private-logs button:disabled { cursor: wait; }
+</style>
+<section id="aks-private-logs" data-view="<?= privateLogsModel.view ?>"
+  data-authorized="<?= privateLogsModel.status === 'LOADING' ? 'true' : 'false' ?>">
+  <p>Consultation limitée aux 500 dernières lignes du journal ; historique non exhaustif.</p>
+  <? if (privateLogsModel.status === "LOADING") { ?>
+    <? if (privateLogsModel.view === "page") { ?>
+      <form data-private-filter class="aks-logs-filters">
+        <label>Sévérité
+          <select data-private-severity name="severity">
+            <option value="">Toutes</option>
+            <option value="DEBUG">Diagnostic</option><option value="INFO">Information</option>
+            <option value="WARN">Avertissement</option><option value="ERROR">Erreur</option>
+            <option value="CRITICAL">Critique</option>
+          </select>
+        </label>
+        <button type="submit" data-private-filter-button>Filtrer</button>
+      </form>
+    <? } ?>
+    <p data-private-status role="status" aria-live="polite">Chargement des journaux…</p>
+    <ol data-private-events></ol>
+    <button type="button" data-private-retry>Réessayer</button>
+    <noscript>Activez JavaScript pour consulter les journaux.</noscript>
+  <? } else { ?>
+    <p role="status">Accès aux journaux non autorisé.</p>
+  <? } ?>
+</section>

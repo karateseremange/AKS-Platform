@@ -100,7 +100,10 @@ AKS.Admin.Dashboard = (function () {
     }).getPortalModel();
     var recentLogs = null;
     if (AKS_portalHasDestination_(portal, "admin.logs")) {
-      try {
+      if (AKS_privatePortalIsRecipe_()) {
+        // Render the shell before any private configuration/signature/transport.
+        recentLogs = AKS_privatePortalLogShell_(accessService, "widget", baseUrl);
+      } else try {
         recentLogs = AKS.Core.PrivatePortalLogClient.createDashboardModel(
           AKS_createProductionPrivatePortalLogClient_(),
           baseUrl + "?app=logs"

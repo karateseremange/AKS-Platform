@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: no request for a denied shell
+ok 1 - no request for a denied shell
+  ---
+  duration_ms: 2.151389
+  type: 'test'
+  ...
+# Subtest: one RPC and double-click guard; fresh manual retry
+ok 2 - one RPC and double-click guard; fresh manual retry
+  ---
+  duration_ms: 0.932514
+  type: 'test'
+  ...
+# Subtest: timeout drops late data and keeps retry blocked until server settles
+ok 3 - timeout drops late data and keeps retry blocked until server settles
+  ---
+  duration_ms: 0.864862
+  type: 'test'
+  ...
+# Subtest: transport failure and disabled state remain generic without automatic retries
+ok 4 - transport failure and disabled state remain generic without automatic retries
+  ---
+  duration_ms: 0.597199
+  type: 'test'
+  ...
+# Subtest: empty state describes the search window, never whole history
+ok 5 - empty state describes the search window, never whole history
+  ---
+  duration_ms: 0.615547
+  type: 'test'
+  ...
+# Subtest: HTML-looking events render only text, including code and correlation
+ok 6 - HTML-looking events render only text, including code and correlation
+  ---
+  duration_ms: 0.775608
+  type: 'test'
+  ...
+# Subtest: page sends only severity; widget requests no filter or client limit
+ok 7 - page sends only severity; widget requests no filter or client limit
+  ---
+  duration_ms: 1.074197
+  type: 'test'
+  ...
+# Subtest: a synchronous RPC error releases controls and leaks no exception
+ok 8 - a synchronous RPC error releases controls and leaks no exception
+  ---
+  duration_ms: 0.612983
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 87.500593

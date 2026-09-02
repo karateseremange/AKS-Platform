@@ -108,7 +108,9 @@
             </div>
             <a href="<?= viewModel.recentLogs.navigation.logsTarget ?>">Consulter les journaux</a>
           </div>
-          <? if (!viewModel.recentLogs.available) { ?>
+          <? if (viewModel.recentLogs.privateAsync) { ?>
+            <?!= AKS_renderPrivatePortalLogContent_(viewModel.recentLogs); ?>
+          <? } else if (!viewModel.recentLogs.available) { ?>
             <div class="aks-admin-empty-state" role="status" aria-live="polite">
               <p>Journaux temporairement indisponibles.</p>
               <a href="?app=admin">Réessayer</a>
@@ -129,5 +131,8 @@
         </article><? } ?>
       </section>
     </main>
+    <? if (viewModel.recentLogs && viewModel.recentLogs.privateAsync) { ?>
+      <?!= AKS_includeAdminDashboardFile_("ui/admin/PrivateLogsClient"); ?>
+    <? } ?>
   </body>
 </html>
