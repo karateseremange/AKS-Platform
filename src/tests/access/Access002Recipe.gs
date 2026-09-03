@@ -20,6 +20,8 @@ function AKS_createAccess002Recipe_(ports) {
   var lock = ports.lock;
   var clock = ports.clock || function () { return new Date(); };
   var idProvider = ports.idProvider;
+  // Closed editor-only variant; the historical recipe stays the default.
+  var logReadRecipe = ports.recipeProfile === "LOG_READ";
   var REGISTRY_KEY = "AKS_ACCESS_REGISTRY";
   var BACKUP_KEY = "AKS_ACCESS002_RECIPE_BACKUP";
   var ENVIRONMENT_KEY = "AKS_ACCESS002_RECIPE_ENVIRONMENT";
@@ -80,7 +82,8 @@ function AKS_createAccess002Recipe_(ports) {
     var manager = normalizeEmail_(propertyStore.getProperty(MANAGER_KEY));
     var denied = normalizeEmail_(propertyStore.getProperty(DENIED_KEY));
     if (environment !== "RECETTE" || !/^[A-Za-z0-9_-]{20,128}$/.test(expectedScriptId) ||
-        actualScriptId !== expectedScriptId) {
+        actualScriptId !== expectedScriptId ||
+        (logReadRecipe && actualScriptId !== AKS_privatePortalRecipeId_())) {
       throw failure_("ACCESS_RECIPE_TARGET_REFUSED", "La cible Apps Script de recette n'est pas confirmée.");
     }
     if (!validEmail_(manager) || !validEmail_(denied) || manager === denied) {
@@ -121,6 +124,11 @@ function AKS_createAccess002Recipe_(ports) {
           !Object.prototype.hasOwnProperty.call(backup, "beforeRaw")) {
         throw new Error("invalid");
       }
+      if ((backup.recipeProfile || "") !== (logReadRecipe ? "LOG_READ" : "") ||
+          backup.scriptId !== settings_().actualScriptId ||
+          backup.manager !== settings_().manager || backup.denied !== settings_().denied) {
+        throw new Error("foreign backup");
+      }
       return backup;
     } catch (failure) {
       throw failure_("ACCESS_RECIPE_BACKUP_INVALID", "La sauvegarde ACCESS de recette est invalide.");
@@ -145,6 +153,7 @@ function AKS_createAccess002Recipe_(ports) {
       deniedIdentity: maskedEmail_(settings.denied)
     };
     Object.keys(details || {}).forEach(function (key) { result[key] = details[key]; });
+    if (logReadRecipe) result.recipeProfile = "LOG_READ";
     return Object.freeze(result);
   }
 
@@ -160,8 +169,20 @@ function AKS_createAccess002Recipe_(ports) {
   }
 
   function targetRegistry_(view, settings) {
+    if (logReadRecipe) {
+      // This campaign starts from the confirmed absent registry, never from
+      // existing accounts or a pending ACCESS recipe.
+      if (propertyStore.getProperty(REGISTRY_KEY) !== null || view.bootstrap !== true ||
+          view.accounts.length !== 0) {
+        throw failure_("ACCESS_LOG_RECIPE_INITIAL_STATE_REQUIRED", "Le registre ACCESS doit être absent.");
+      }
+      if (propertyStore.getProperty("AKS_PRIVATE_PORTAL_ENABLED") !== null ||
+          propertyStore.getProperty("AKS_PRIVATE_BACKEND_URL") !== null) {
+        throw failure_("ACCESS_LOG_RECIPE_PRIVATE_STATE_REQUIRED", "Le portail privé doit rester non configuré.");
+      }
+    }
     var target = {
-      schemaVersion: view.schemaVersion,
+      schemaVersion: logReadRecipe ? "access/1.2" : view.schemaVersion,
       accounts: JSON.parse(JSON.stringify(view.accounts))
     };
     var denied = target.accounts.filter(function (account) {
@@ -192,6 +213,13 @@ function AKS_createAccess002Recipe_(ports) {
         module: "ACCESS", section: "", courseCode: "", season: "*",
         status: "ACTIVE", roles: ["ADMINISTRATEUR"],
         extraCapabilities: ["ACCESS_MANAGE"], validFrom: "", validUntil: ""
+      });
+    }
+    if (logReadRecipe) {
+      manager.assignments.push({
+        module: "ADMINISTRATION", section: "", courseCode: "", season: "*",
+        status: "ACTIVE", roles: ["ADMINISTRATEUR"],
+        extraCapabilities: ["LOG_READ"], validFrom: "", validUntil: ""
       });
     }
     return target;
@@ -241,6 +269,14 @@ function AKS_createAccess002Recipe_(ports) {
 
   function verifyDecision_(settings) {
     createAccessService(settings.manager).assertAdministrativeCapability("ACCESS_MANAGE");
+    if (logReadRecipe) {
+      var managerService = createAccessService(settings.manager);
+      AKS_authorizePrivatePortal_(managerService);
+      ["CONFIG_READ", "CONFIG_WRITE", "CONFIG_RESET"].forEach(function (capability) {
+        assertAdministrationDenied_(managerService, capability);
+      });
+      assertAdministrationDenied_(createAccessService(settings.denied), "LOG_READ");
+    }
     try {
       createAccessService(settings.denied).assertAdministrativeCapability("ACCESS_MANAGE");
     } catch (failure) {
@@ -249,6 +285,16 @@ function AKS_createAccess002Recipe_(ports) {
       throw failure;
     }
     throw failure_("ACCESS_RECIPE_DENIAL_FAILED", "L'identité non habilitée n'a pas été refusée.");
+  }
+
+  function assertAdministrationDenied_(service, capability) {
+    try { service.assertAdministrationCapability(capability); }
+    catch (failure) {
+      if (failure && (failure.code === "ACCESS_DENIED" ||
+          failure.code === "ACCESS_CAPABILITY_DENIED")) return;
+      throw failure;
+    }
+    throw failure_("ACCESS_RECIPE_DENIAL_FAILED", "Une capacité non prévue est autorisée.");
   }
 
   function apply() {
@@ -261,6 +307,7 @@ function AKS_createAccess002Recipe_(ports) {
         throw failure_("ACCESS_RECIPE_LOCK_UNAVAILABLE", "Le registre de recette est momentanément indisponible.");
       }
       lockHeld = true;
+      if (logReadRecipe) assertPersistentAudit_();
       var existingBackup = readBackup_();
       if (existingBackup) {
         var currentView = createAccessService(settings.manager, true)
@@ -292,6 +339,7 @@ function AKS_createAccess002Recipe_(ports) {
         afterRaw: null,
         correlationId: ""
       };
+      if (logReadRecipe) backup.recipeProfile = "LOG_READ";
       writeVerifiedBackup_(backup);
       var result;
       try {
@@ -421,6 +469,7 @@ function AKS_createDefaultAccess002Recipe_(options) {
     });
   }
   return AKS_createAccess002Recipe_({
+    recipeProfile: options.recipeProfile,
     propertyStore: propertyStore,
     scriptIdProvider: function () { return ScriptApp.getScriptId(); },
     resolveActor: function () { return Session.getActiveUser().getEmail(); },

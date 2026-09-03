@@ -533,6 +533,26 @@ function AKS_runValidationSuiteV11() {
     ,{ name: "ACCESS-002-03 / commandes UI réautorisées", test: AKS_testAccess002AdminUi_reauthorizesEveryCommand_ }
     ,{ name: "ACCESS-002-03 / navigation UI conditionnelle", test: AKS_testAccess002AdminUi_hidesUnauthorizedNavigation_ }
     ,{ name: "ACCESS-002-03 / états UI sûrs", test: AKS_testAccess002AdminUi_exposesSafeInteractiveStates_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / preflightReadOnly", test: AKS_testAccess002LogRead_preflightReadOnly_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / grantsOnlyManageAndLog", test: AKS_testAccess002LogRead_grantsOnlyManageAndLog_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / deniesOtherIdentity", test: AKS_testAccess002LogRead_deniesOtherIdentity_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / rejectsOtherTarget", test: AKS_testAccess002LogRead_rejectsOtherTarget_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / rejectsExistingRegistry", test: AKS_testAccess002LogRead_rejectsExistingRegistry_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / rejectsConfiguredPrivatePortal", test: AKS_testAccess002LogRead_rejectsConfiguredPrivatePortal_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / requiresActorAuditAndLock", test: AKS_testAccess002LogRead_requiresActorAuditAndLock_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / backupBeforeSingleMutation", test: AKS_testAccess002LogRead_backupBeforeSingleMutation_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / idempotentAndRestoresExactly", test: AKS_testAccess002LogRead_idempotentAndRestoresExactly_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / foreignBackupRefused", test: AKS_testAccess002LogRead_foreignBackupRefused_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / concurrentEditPreserved", test: AKS_testAccess002LogRead_concurrentEditPreserved_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / backupFailureBeforeMutation", test: AKS_testAccess002LogRead_backupFailureBeforeMutation_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / finalBackupFailureRollsBack", test: AKS_testAccess002LogRead_finalBackupFailureRollsBack_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / restoreAuditFailurePreservesBackup", test: AKS_testAccess002LogRead_restoreAuditFailurePreservesBackup_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / incompleteBackupStops", test: AKS_testAccess002LogRead_incompleteBackupStops_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / serviceAuditFailureRollsBack", test: AKS_testAccess002LogRead_serviceAuditFailureRollsBack_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / restoreRemainsAvailableAfterPrivateConfiguration", test: AKS_testAccess002LogRead_restoreRemainsAvailableAfterPrivateConfiguration_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / legacyCannotClaimLogBackup", test: AKS_testAccess002LogRead_legacyCannotClaimLogBackup_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / preflightRejectsPendingRecipe", test: AKS_testAccess002LogRead_preflightRejectsPendingRecipe_ }
+    ,{ name: "ADMIN-006 LOG_READ recipe / restoreFailureRetainsEvidence", test: AKS_testAccess002LogRead_restoreFailureRetainsEvidence_ }
     ,{ name: "ACCESS-002-03 / recette précontrôle sans écriture", test: AKS_testAccess002AccountRecipe_preflightIsReadOnly_ }
     ,{ name: "ACCESS-002-03 / recette compte existant refusé", test: AKS_testAccess002AccountRecipe_rejectsExistingAccount_ }
     ,{ name: "ACCESS-002-03 / recette cycle vérifié", test: AKS_testAccess002AccountRecipe_runsVerifiedLifecycle_ }

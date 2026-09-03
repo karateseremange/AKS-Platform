@@ -1,6 +1,7 @@
 function AKS_access002RecipeFixture_(overrides) {
   overrides = overrides || {};
-  var scriptId = "1RecipeAccess002ScriptId123456789";
+  var scriptId = overrides.recipeProfile === "LOG_READ"
+    ? AKS_privatePortalRecipeId_() : "1RecipeAccess002ScriptId123456789";
   var values = {};
   var operations = [];
   var auditEvents = [];
@@ -23,10 +24,12 @@ function AKS_access002RecipeFixture_(overrides) {
     },
     setProperty: function (key, value) {
       operations.push("SET:" + key);
+      if (overrides.beforeSet) overrides.beforeSet(key, value, values);
       values[key] = String(value);
     },
     deleteProperty: function (key) {
       operations.push("DELETE:" + key);
+      if (overrides.beforeDelete) overrides.beforeDelete(key, values);
       delete values[key];
     }
   };
@@ -37,6 +40,7 @@ function AKS_access002RecipeFixture_(overrides) {
     },
     recordUnderExistingLock: function (event) {
       auditEvents.push(event);
+      if (overrides.beforeAudit) overrides.beforeAudit(event);
       if (overrides.failRestoreSuccessAudit && event.result === "REUSSI" &&
           event.metadata.restored === true) throw new Error("audit failure");
       return { correlation_id: event.correlationId, audit_id: "aud-lock" };
@@ -72,6 +76,7 @@ function AKS_access002RecipeFixture_(overrides) {
     });
   }
   var recipe = AKS_createAccess002Recipe_({
+    recipeProfile: overrides.recipeProfile,
     propertyStore: propertyStore,
     scriptIdProvider: function () { return overrides.scriptId || scriptId; },
     resolveActor: function () { return overrides.actor || "admin@example.com"; },
@@ -95,6 +100,8 @@ function AKS_access002RecipeFixture_(overrides) {
     values: values,
     operations: operations,
     auditEvents: auditEvents,
+    accessService: accessService_,
+    propertyStore: propertyStore,
     registryLockReleases: function () { return registryLockReleases; },
     recipeLockAttempts: function () { return recipeLockAttempts; },
     recipeLockReleases: function () { return recipeLockReleases; }
